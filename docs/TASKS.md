@@ -669,6 +669,7 @@ Rules for every task:
 
 ### T071 — Connect historical charts to server and resource views
 
+- **Status:** Complete
 - **Commit:** `feat(web): add historical telemetry charts`
 - **Description:** Add range controls (1h/6h/24h/7d/30d/custom), server and resource charts, summary statistics, annotations, loading states, resolution detail, and explicit gap rendering.
 - **Implement:** Default resource CPU to host-normalized percentage; include memory/network/block I/O where meaningful; preserve inactive versus collector-failure gap semantics.

@@ -4,16 +4,19 @@
   import 'uplot/dist/uPlot.min.css';
   import { summary, toSeries, type Point } from '../chart';
   type Gap = { from: string; to: string; reason: string };
+  type Marker = { at: number; label: string };
   let {
     points,
     label,
     variant = 'line',
     gaps = [],
+    markers = [],
   }: {
     points: Point[];
     label: string;
     variant?: 'line' | 'area' | 'sparkline';
     gaps?: Gap[];
+    markers?: Marker[];
   } = $props();
   let root: HTMLDivElement;
   let plot: uPlot | undefined;
@@ -31,6 +34,27 @@
         },
       ],
       axes: variant === 'sparkline' ? [] : [{}, {}],
+      plugins: [
+        {
+          hooks: {
+            draw: [
+              (u) => {
+                const ctx = u.ctx;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(245,196,81,.8)';
+                for (const marker of markers) {
+                  const x = Math.round(u.valToPos(marker.at, 'x', true));
+                  ctx.beginPath();
+                  ctx.moveTo(x, u.bbox.top);
+                  ctx.lineTo(x, u.bbox.top + u.bbox.height);
+                  ctx.stroke();
+                }
+                ctx.restore();
+              },
+            ],
+          },
+        },
+      ],
     };
   }
   onMount(() => {
@@ -77,3 +101,8 @@
       >{gaps.length} explicit data gap{gaps.length === 1 ? '' : 's'}.</span
     >{/if}</button
 >
+{#if markers.length}<ul class="sr-only" aria-label="Chart event annotations">
+    {#each markers as marker (marker.at + marker.label)}<li>
+        {new Date(marker.at * 1000).toLocaleString()}: {marker.label}
+      </li>{/each}
+  </ul>{/if}

@@ -37,8 +37,8 @@
           <Badge state={value.state}>{name}: {value.state}</Badge>
         </p>{/each}
     </div>
-  </section>
-  <HistoryCharts
-    scope="host"
-    metrics={['cpu', 'memory', 'network_rx', 'network_tx']}
-  />{/if}
+  </section>{/if}
+<HistoryCharts
+  scope="host"
+  metrics={['cpu', 'memory', 'network_rx', 'network_tx']}
+/>

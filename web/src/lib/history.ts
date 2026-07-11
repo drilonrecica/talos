@@ -53,6 +53,18 @@ export function validateRange(from: Date, to: Date): string | null {
     return 'Custom ranges cannot exceed 30 days.';
   return null;
 }
+
+export function chartPoints(series: HistorySeries, gaps: HistoryGap[]) {
+  const points = series.points.map((point) => ({
+    at: new Date(point.at).getTime() / 1000,
+    value: point.avg,
+  }));
+  for (const gap of gaps) {
+    points.push({ at: new Date(gap.from).getTime() / 1000, value: null });
+    points.push({ at: new Date(gap.to).getTime() / 1000, value: null });
+  }
+  return points.sort((a, b) => a.at - b.at);
+}
 export async function fetchHistory(
   scope: 'host' | 'resource',
   id: string | undefined,

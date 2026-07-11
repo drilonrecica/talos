@@ -3,6 +3,7 @@
   import TimeSeries from './ui/TimeSeries.svelte';
   import {
     fetchHistory,
+    chartPoints,
     rangeFor,
     validateRange,
     type HistoryResponse,
@@ -147,11 +148,12 @@
         <h3>{labels[series.metric]}</h3>
         <TimeSeries
           label={labels[series.metric]}
-          points={series.points.map((point) => ({
-            at: new Date(point.at).getTime() / 1000,
-            value: point.avg,
-          }))}
+          points={chartPoints(series, data.gaps)}
           gaps={data.gaps}
+          markers={annotations.map((event) => ({
+            at: new Date(event.ts).getTime() / 1000,
+            label: event.summary,
+          }))}
         />
         <dl>
           <dt>Current</dt>

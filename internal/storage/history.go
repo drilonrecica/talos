@@ -115,17 +115,40 @@ func (m *Manager) QueryMetrics(ctx context.Context, q MetricQuery) (MetricsRespo
 		return MetricsResponse{}, err
 	}
 	r := MetricsResponse{Scope: q.Scope, ID: q.ID, From: q.From.UTC(), To: q.To.UTC(), Resolution: selectResolution(q.To.Sub(q.From))}
-	for _, metric := range q.Metrics {
+	for index, metric := range q.Metrics {
 		points, err := m.metricPoints(ctx, q, metric, r.Resolution)
 		if err != nil {
 			return MetricsResponse{}, err
 		}
 		r.Series = append(r.Series, Series{Metric: metric, Unit: metricUnit(metric), Points: points})
-		if gaps := findGaps(q.From, q.To, r.Resolution, points); len(gaps) > 0 {
-			r.Gaps = append(r.Gaps, gaps...)
+		if index == 0 {
+			gaps := findGaps(q.From, q.To, r.Resolution, points)
+			for i := range gaps {
+				gaps[i].Reason = m.classifyGap(ctx, q, gaps[i])
+			}
+			r.Gaps = gaps
 		}
 	}
 	return r, nil
+}
+
+func (m *Manager) classifyGap(ctx context.Context, q MetricQuery, gap Gap) string {
+	var count int
+	if q.Scope == "resource" {
+		_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM resource_samples_10s WHERE resource_id=? AND ts>=? AND ts<? AND (active_instance_count=0 OR status IN ('paused','archived'))`, q.ID, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
+		if count > 0 {
+			return "inactive"
+		}
+	}
+	_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM collector_state_events WHERE ts>=? AND ts<? AND new_state IN ('degraded','down')`, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
+	if count > 0 {
+		return "collector_unavailable"
+	}
+	_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM events WHERE ts>=? AND ts<? AND type IN ('persistence_degraded','persistence_gap')`, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
+	if count > 0 {
+		return "persistence_failure"
+	}
+	return "missing"
 }
 func (m *Manager) metricPoints(ctx context.Context, q MetricQuery, metric Metric, res Resolution) ([]Point, error) {
 	column, table, err := metricSource(q.Scope, metric, res)
