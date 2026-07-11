@@ -357,6 +357,7 @@ Rules for every task:
 
 ### T037 — Add Docker event subscription and cache reconciliation
 
+- **Status:** Complete
 - **Commit:** `feat(docker): maintain event-driven metadata cache`
 - **Description:** Subscribe to Docker lifecycle events, update/invalidate metadata cache, reconnect with bounded backoff, and reconcile at the configured low-frequency interval.
 - **Implement:** Handle create/start/stop/die/destroy/rename/health/OOM events; deduplicate replayed events safely; reconciliation corrects missed events without clearing current state prematurely.

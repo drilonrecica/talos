@@ -43,6 +43,7 @@ func (c *Cache) Get(id string) (Metadata, bool) {
 	v, ok := c.values[id]
 	return v, ok
 }
+func (c *Cache) Remove(id string) { c.mu.Lock(); delete(c.values, id); c.mu.Unlock() }
 func copyLabels(v map[string]string) map[string]string {
 	o := map[string]string{}
 	for k, x := range v {
