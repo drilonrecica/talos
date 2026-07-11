@@ -63,3 +63,31 @@ func TestSameOriginRejectsSpoofing(t *testing.T) {
 		t.Fatal("missing origin accepted")
 	}
 }
+
+func TestLoginAndSetupLimitsRecover(t *testing.T) {
+	now := time.Unix(0, 0)
+	p := NewProtection(32, TrustedProxies{})
+	p.limiter.now = func() time.Time { return now }
+	r := httptest.NewRequest("POST", "http://talos.test/api/v1/setup/verify", nil)
+	r.RemoteAddr = "192.0.2.10:1234"
+	for i := 0; i < 5; i++ {
+		if ok, _ := p.AllowSetup(r); !ok {
+			t.Fatal("setup denied early")
+		}
+	}
+	if ok, _ := p.AllowSetup(r); ok {
+		t.Fatal("setup burst accepted")
+	}
+	now = now.Add(5 * time.Minute)
+	if ok, _ := p.AllowSetup(r); !ok {
+		t.Fatal("setup did not recover")
+	}
+	for i := 0; i < 5; i++ {
+		if ok, _ := p.AllowLogin(r, "admin"); !ok {
+			t.Fatal("login denied early")
+		}
+	}
+	if ok, _ := p.AllowLogin(r, "admin"); ok {
+		t.Fatal("account burst accepted")
+	}
+}
