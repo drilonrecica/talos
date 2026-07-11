@@ -66,7 +66,3 @@ the [Developer Certificate of Origin 1.1](https://developercertificate.org/).
 
 Do not open a public issue for a suspected vulnerability. Follow
 [SECURITY.md](SECURITY.md).
-
-## Community standards
-
-All participants must follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
