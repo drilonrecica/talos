@@ -52,7 +52,6 @@ func Load() (Config, map[string]Effective, error) {
 }
 func LoadWith(getenv func(string) string, exists func(string) bool, provider OverrideProvider) (Config, map[string]Effective, error) {
 	c := Defaults()
-	c.Normalize()
 	sources := map[string]Source{}
 	path := Discover(getenv, exists)
 	if path != "" {
