@@ -67,4 +67,128 @@ func TestScopedDeletionPreservesConfigurationAndSupportsRetry(t *testing.T) {
 	if err = m.RetryDeletion(ctx, retry.ID); err != nil {
 		t.Fatal(err)
 	}
+	if err = m.RunDeletion(ctx, retry.ID); err != nil {
+		t.Fatal(err)
+	}
+	completed, err := m.DeletionJob(ctx, retry.ID)
+	if err != nil || completed.State != "completed" || completed.DeletedRows != completed.TotalRows {
+		t.Fatalf("job=%+v err=%v", completed, err)
+	}
+}
+
+func TestResourceDeletionAndArchivedPurgeBoundaries(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	if err := m.Open(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer m.Close()
+	now := time.Now().UTC().UnixMilli()
+	if _, err := m.db.ExecContext(ctx, "INSERT INTO hosts(id,identity_hash,name,updated_at) VALUES('host','identity','host','now')"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := m.db.ExecContext(ctx, "INSERT INTO resources(id,host_id,stable_key,source_kind,name,category,status,first_seen_at,last_seen_at) VALUES('res_test','host','stable','compose','test','service','healthy',?,?)", now, now); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := m.db.ExecContext(ctx, "INSERT INTO container_instances(id,resource_id,name,created_at) VALUES('container123','res_test','container',?)", now); err != nil {
+		t.Fatal(err)
+	}
+	insert := func() {
+		if _, err := m.db.ExecContext(ctx, "INSERT INTO resource_samples_10s(ts,resource_id,active_instance_count) VALUES(?,'res_test',1)", now); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := m.db.ExecContext(ctx, "INSERT INTO container_instance_samples_10s(ts,container_instance_id) VALUES(?,'container123')", now); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := m.db.ExecContext(ctx, "INSERT INTO events(id,ts,resource_id,type,severity,summary,source,created_at) VALUES(?,?,?,?,?,?,?,?)", "evt_"+newID(t), now, "res_test", "test", "info", "test", "test", now); err != nil {
+			t.Fatal(err)
+		}
+	}
+	insert()
+	preview, err := m.PreviewDeletion(ctx, DeletionRequest{Kind: DeleteResource, ResourceID: "res_test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	job, err := m.CreateDeletion(ctx, preview.Token, preview.Confirmation, "usr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = m.RunDeletion(ctx, job.ID); err != nil {
+		t.Fatal(err)
+	}
+	var resources, instances, samples int
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM resources").Scan(&resources)
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM container_instances").Scan(&instances)
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM resource_samples_10s").Scan(&samples)
+	if resources != 1 || instances != 1 || samples != 0 {
+		t.Fatalf("resource=%d instances=%d samples=%d", resources, instances, samples)
+	}
+	if _, err = m.db.ExecContext(ctx, "UPDATE resources SET status='archived',archived_at=? WHERE id='res_test'", now); err != nil {
+		t.Fatal(err)
+	}
+	insert()
+	preview, err = m.PreviewDeletion(ctx, DeletionRequest{Kind: DeleteArchived, ResourceID: "res_test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	job, err = m.CreateDeletion(ctx, preview.Token, preview.Confirmation, "usr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = m.RunDeletion(ctx, job.ID); err != nil {
+		t.Fatal(err)
+	}
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM resources").Scan(&resources)
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM container_instances").Scan(&instances)
+	if resources != 0 || instances != 0 {
+		t.Fatalf("archived resource=%d instances=%d", resources, instances)
+	}
+	if _, err = m.db.ExecContext(ctx, "INSERT INTO resources(id,host_id,stable_key,source_kind,name,category,status,first_seen_at,last_seen_at) VALUES('res_reset','host','reset','compose','reset','service','healthy',?,?)", now, now); err != nil {
+		t.Fatal(err)
+	}
+	reset, err := m.PreviewDeletion(ctx, DeletionRequest{Kind: DeleteAll})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resetJob, err := m.CreateDeletion(ctx, reset.Token, reset.Confirmation, "usr")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = m.RunDeletion(ctx, resetJob.ID); err != nil {
+		t.Fatal(err)
+	}
+	var hosts int
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM hosts").Scan(&hosts)
+	_ = m.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM resources").Scan(&resources)
+	if hosts != 0 || resources != 0 {
+		t.Fatalf("reset hosts=%d resources=%d", hosts, resources)
+	}
+}
+
+func TestDeletionJobsConflict(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	if err := m.Open(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer m.Close()
+	one, _ := m.PreviewDeletion(ctx, DeletionRequest{Kind: DeleteAll})
+	if _, err := m.CreateDeletion(ctx, one.Token, one.Confirmation, "usr"); err != nil {
+		t.Fatal(err)
+	}
+	two, _ := m.PreviewDeletion(ctx, DeletionRequest{Kind: DeleteAll})
+	if _, err := m.CreateDeletion(ctx, two.Token, two.Confirmation, "usr"); err == nil {
+		t.Fatal("conflicting job accepted")
+	}
+}
+
+func newID(t *testing.T) string {
+	t.Helper()
+	id, err := newDeletionID()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return id
 }

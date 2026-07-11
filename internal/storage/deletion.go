@@ -190,8 +190,24 @@ func (m *Manager) RunDeletion(ctx context.Context, id string) error {
 		}
 	}
 	if kind == DeleteArchived {
-		_, _ = m.db.ExecContext(ctx, "DELETE FROM container_instances WHERE resource_id=?", resource.String)
-		_, _ = m.db.ExecContext(ctx, "DELETE FROM resources WHERE id=? AND status='archived'", resource.String)
+		for _, query := range []string{"DELETE FROM container_instances WHERE resource_id=?", "DELETE FROM resources WHERE id=? AND status='archived'"} {
+			result, e := m.db.ExecContext(ctx, query, resource.String)
+			if e != nil {
+				return e
+			}
+			n, _ := result.RowsAffected()
+			deleted += n
+		}
+	}
+	if kind == DeleteAll {
+		for _, query := range []string{"DELETE FROM container_instances", "DELETE FROM resources", "DELETE FROM boot_sessions", "DELETE FROM hosts"} {
+			result, e := m.db.ExecContext(ctx, query)
+			if e != nil {
+				return e
+			}
+			n, _ := result.RowsAffected()
+			deleted += n
+		}
 	}
 	_, err := m.db.ExecContext(ctx, "UPDATE history_deletion_jobs SET state='completed',deleted_rows=?,finished_at=?,current_table=NULL WHERE id=?", deleted, time.Now().UTC().UnixMilli(), id)
 	return err
@@ -230,7 +246,15 @@ func (m *Manager) deleteBatch(ctx context.Context, table string, kind DeletionKi
 		where = "ts<?"
 		args = []any{before}
 	}
-	if (kind == DeleteResource || kind == DeleteArchived) && table != "host_samples_10s" && table != "host_rollups_1m" && table != "host_rollups_15m" && table != "host_rollups_1h" && table != "collector_state_events" {
+	if (kind == DeleteResource || kind == DeleteArchived) && table == "container_instance_samples_10s" {
+		q := "DELETE FROM container_instance_samples_10s WHERE rowid IN (SELECT samples.rowid FROM container_instance_samples_10s samples JOIN container_instances instances ON instances.id=samples.container_instance_id WHERE samples.ts<=? AND instances.resource_id=? LIMIT 500)"
+		result, err := m.db.ExecContext(ctx, q, fence, resource)
+		if err != nil {
+			return 0, err
+		}
+		return result.RowsAffected()
+	}
+	if (kind == DeleteResource || kind == DeleteArchived) && resourceScopedTable(table) {
 		where += " AND resource_id=?"
 		args = append(args, resource)
 	}
@@ -258,7 +282,15 @@ func (m *Manager) deletionCountTx(ctx context.Context, q queryer, k DeletionKind
 			where = "ts<?"
 			args = []any{b}
 		}
-		if (k == DeleteResource || k == DeleteArchived) && table != "host_samples_10s" && table != "host_rollups_1m" && table != "host_rollups_15m" && table != "host_rollups_1h" && table != "collector_state_events" {
+		if (k == DeleteResource || k == DeleteArchived) && table == "container_instance_samples_10s" {
+			var n int64
+			if err := q.QueryRowContext(ctx, "SELECT COUNT(*) FROM container_instance_samples_10s samples JOIN container_instances instances ON instances.id=samples.container_instance_id WHERE samples.ts<=? AND instances.resource_id=?", f, r).Scan(&n); err != nil {
+				return 0, err
+			}
+			total += n
+			continue
+		}
+		if (k == DeleteResource || k == DeleteArchived) && resourceScopedTable(table) {
 			where += " AND resource_id=?"
 			args = append(args, r)
 		}
@@ -268,7 +300,28 @@ func (m *Manager) deletionCountTx(ctx context.Context, q queryer, k DeletionKind
 		}
 		total += n
 	}
+	if k == DeleteArchived {
+		for _, query := range []string{"SELECT COUNT(*) FROM container_instances WHERE resource_id=?", "SELECT COUNT(*) FROM resources WHERE id=? AND status='archived'"} {
+			var n int64
+			if err := q.QueryRowContext(ctx, query, r).Scan(&n); err != nil {
+				return 0, err
+			}
+			total += n
+		}
+	}
+	if k == DeleteAll {
+		for _, table := range []string{"container_instances", "resources", "boot_sessions", "hosts"} {
+			var n int64
+			if err := q.QueryRowContext(ctx, "SELECT COUNT(*) FROM "+table).Scan(&n); err != nil {
+				return 0, err
+			}
+			total += n
+		}
+	}
 	return total, nil
+}
+func resourceScopedTable(table string) bool {
+	return table == "resource_samples_10s" || table == "resource_rollups_1m" || table == "resource_rollups_15m" || table == "resource_rollups_1h" || table == "events"
 }
 func validDeletion(r DeletionRequest) error {
 	switch r.Kind {
