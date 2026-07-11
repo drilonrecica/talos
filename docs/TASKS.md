@@ -366,6 +366,7 @@ Rules for every task:
 
 ### T038 — Normalize Docker CPU metrics
 
+- **Status:** Complete
 - **Commit:** `feat(docker): normalize container CPU metrics`
 - **Description:** Convert Docker stats deltas into host-normalized CPU percent, Docker-style percent, and core equivalents with explicit online-CPU semantics.
 - **Implement:** Use host-normalized percentage as default; preserve legitimate multi-core usage in core equivalents; null invalid/reset intervals and clamp only display values later.
