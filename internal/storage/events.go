@@ -7,16 +7,30 @@ import (
 )
 
 type HistoricalEvent struct {
-	ID                              string    `json:"id"`
-	At                              time.Time `json:"ts"`
-	Type, Severity, Summary, Source string    `json:"type"`
+	ID       string    `json:"id"`
+	At       time.Time `json:"ts"`
+	Type     string    `json:"type"`
+	Severity string    `json:"severity"`
+	Summary  string    `json:"summary"`
+	Source   string    `json:"source"`
 }
 
 func (m *Manager) Events(ctx context.Context, from, to time.Time, limit int) ([]HistoricalEvent, error) {
+	return m.EventsFor(ctx, from, to, limit, "")
+}
+func (m *Manager) EventsFor(ctx context.Context, from, to time.Time, limit int, resourceID string) ([]HistoricalEvent, error) {
 	if limit < 1 || limit > 200 {
 		limit = 100
 	}
-	rows, e := m.db.QueryContext(ctx, "SELECT id,ts,type,severity,summary,source FROM events WHERE ts>=? AND ts<=? ORDER BY ts DESC,id DESC LIMIT ?", from.UnixMilli(), to.UnixMilli(), limit)
+	query := "SELECT id,ts,type,severity,summary,source FROM events WHERE ts>=? AND ts<=?"
+	args := []any{from.UnixMilli(), to.UnixMilli()}
+	if resourceID != "" {
+		query += " AND resource_id=?"
+		args = append(args, resourceID)
+	}
+	query += " ORDER BY ts DESC,id DESC LIMIT ?"
+	args = append(args, limit)
+	rows, e := m.db.QueryContext(ctx, query, args...)
 	if e != nil {
 		return nil, e
 	}

@@ -50,8 +50,10 @@ type Gap struct {
 	Reason string    `json:"reason"`
 }
 type MetricsResponse struct {
-	Scope, ID  string
-	From, To   time.Time
+	Scope      string     `json:"scope"`
+	ID         string     `json:"id,omitempty"`
+	From       time.Time  `json:"from"`
+	To         time.Time  `json:"to"`
 	Resolution Resolution `json:"resolution"`
 	Series     []Series   `json:"series"`
 	Gaps       []Gap      `json:"gaps"`
@@ -114,7 +116,7 @@ func (m *Manager) QueryMetrics(ctx context.Context, q MetricQuery) (MetricsRespo
 	if err := q.Validate(); err != nil {
 		return MetricsResponse{}, err
 	}
-	r := MetricsResponse{Scope: q.Scope, ID: q.ID, From: q.From.UTC(), To: q.To.UTC(), Resolution: selectResolution(q.To.Sub(q.From))}
+	r := MetricsResponse{Scope: q.Scope, ID: q.ID, From: q.From.UTC(), To: q.To.UTC(), Resolution: selectResolution(q.To.Sub(q.From)), Gaps: []Gap{}}
 	for index, metric := range q.Metrics {
 		points, err := m.metricPoints(ctx, q, metric, r.Resolution)
 		if err != nil {
@@ -134,19 +136,30 @@ func (m *Manager) QueryMetrics(ctx context.Context, q MetricQuery) (MetricsRespo
 
 func (m *Manager) classifyGap(ctx context.Context, q MetricQuery, gap Gap) string {
 	var count int
-	if q.Scope == "resource" {
-		_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM resource_samples_10s WHERE resource_id=? AND ts>=? AND ts<? AND (active_instance_count=0 OR status IN ('paused','archived'))`, q.ID, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
-		if count > 0 {
-			return "inactive"
-		}
-	}
-	_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM collector_state_events WHERE ts>=? AND ts<? AND new_state IN ('degraded','down')`, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
-	if count > 0 {
-		return "collector_unavailable"
-	}
 	_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM events WHERE ts>=? AND ts<? AND type IN ('persistence_degraded','persistence_gap')`, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
 	if count > 0 {
 		return "persistence_failure"
+	}
+	collector := "host"
+	if q.Scope == "resource" {
+		collector = "docker"
+	}
+	var state string
+	_ = m.db.QueryRowContext(ctx, "SELECT new_state FROM collector_state_events WHERE collector_name=? AND ts<=? ORDER BY ts DESC LIMIT 1", collector, gap.From.UnixMilli()).Scan(&state)
+	if state == "degraded" || state == "down" {
+		return "collector_unavailable"
+	}
+	_ = m.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM collector_state_events WHERE collector_name=? AND ts>=? AND ts<? AND new_state IN ('degraded','down')`, collector, gap.From.UnixMilli(), gap.To.UnixMilli()).Scan(&count)
+	if count > 0 {
+		return "collector_unavailable"
+	}
+	if q.Scope == "resource" {
+		var status string
+		var active int
+		_ = m.db.QueryRowContext(ctx, `SELECT COALESCE(status,''),active_instance_count FROM resource_samples_10s WHERE resource_id=? AND ts<? ORDER BY ts DESC LIMIT 1`, q.ID, gap.To.UnixMilli()).Scan(&status, &active)
+		if active == 0 || status == "paused" || status == "archived" {
+			return "inactive"
+		}
 	}
 	return "missing"
 }

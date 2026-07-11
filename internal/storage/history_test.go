@@ -3,7 +3,9 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -64,6 +66,19 @@ func TestNullBucketsBecomeExplicitMergedGaps(t *testing.T) {
 	merged := mergeGaps(gaps)
 	if len(merged) != 1 || !merged[0].From.Equal(base) || !merged[0].To.Equal(base.Add(20*time.Second)) {
 		t.Fatalf("gaps=%+v", merged)
+	}
+}
+
+func TestMetricsResponseJSONContract(t *testing.T) {
+	encoded, err := json.Marshal(MetricsResponse{Scope: "host", From: time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC), To: time.Date(2026, 7, 11, 13, 0, 0, 0, time.UTC), Resolution: ResolutionRaw, Series: []Series{}, Gaps: []Gap{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(encoded)
+	for _, field := range []string{`"scope":"host"`, `"from":"2026-07-11T12:00:00Z"`, `"to":"2026-07-11T13:00:00Z"`, `"series":[]`, `"gaps":[]`} {
+		if !strings.Contains(text, field) {
+			t.Fatalf("json=%s missing %s", text, field)
+		}
 	}
 }
 func floatPtr(v float64) *float64 { return &v }

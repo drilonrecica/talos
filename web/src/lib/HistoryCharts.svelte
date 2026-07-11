@@ -4,6 +4,7 @@
   import {
     fetchHistory,
     chartPoints,
+    eventHistoryURL,
     rangeFor,
     validateRange,
     type HistoryResponse,
@@ -41,6 +42,20 @@
     if (metric === 'memory') return formatBytes(value);
     return formatRate(value);
   }
+  function weightedAverage(
+    points: HistoryResponse['series'][number]['points'],
+  ) {
+    const measured = points.filter(
+      (point) => point.avg != null && point.count > 0,
+    );
+    const count = measured.reduce((sum, point) => sum + point.count, 0);
+    return count
+      ? measured.reduce(
+          (sum, point) => sum + (point.avg ?? 0) * point.count,
+          0,
+        ) / count
+      : null;
+  }
   async function load() {
     controller?.abort();
     controller = new AbortController();
@@ -66,8 +81,11 @@
         controller.signal,
       );
       const events = await fetch(
-        `/api/v1/events?from=${encodeURIComponent(selected.from.toISOString())}`,
-        { credentials: 'same-origin', signal: controller.signal },
+        eventHistoryURL(scope, id, selected.from, selected.to),
+        {
+          credentials: 'same-origin',
+          signal: controller.signal,
+        },
       );
       annotations = events.ok
         ? (
@@ -187,6 +205,8 @@
               ),
             )}
           </dd>
+          <dt>Average</dt>
+          <dd>{display(series.metric, weightedAverage(series.points))}</dd>
           <dt>Maximum</dt>
           <dd>
             {display(

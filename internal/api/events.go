@@ -27,7 +27,15 @@ func (s *Server) EnableEvents(store *storage.Manager, auth Authorizer) {
 				return
 			}
 		}
-		v, e := store.Events(r.Context(), from, to, 100)
+		if raw := r.URL.Query().Get("to"); raw != "" {
+			var e error
+			to, e = time.Parse(time.RFC3339, raw)
+			if e != nil || !from.Before(to) {
+				WriteError(w, 400, Error{Code: "invalid_time_range", Message: "Invalid to timestamp."})
+				return
+			}
+		}
+		v, e := store.EventsFor(r.Context(), from, to, 100, r.URL.Query().Get("resource_id"))
 		if e != nil {
 			WriteError(w, 500, Error{Code: "storage_error", Message: "Event history is unavailable."})
 			return

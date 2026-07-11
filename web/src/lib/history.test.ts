@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { chartPoints, rangeFor, validateRange } from './history';
+import {
+  chartPoints,
+  eventHistoryURL,
+  rangeFor,
+  validateRange,
+} from './history';
 
 describe('history ranges', () => {
   it('uses bounded preset and custom ranges', () => {
@@ -29,5 +34,15 @@ describe('history ranges', () => {
       ],
     );
     expect(points.map((point) => point.value)).toEqual([1, null, null]);
+  });
+  it('scopes resource annotations to the selected range and resource', () => {
+    const url = eventHistoryURL(
+      'resource',
+      'res_test',
+      new Date('2026-07-11T11:00:00Z'),
+      new Date('2026-07-11T12:00:00Z'),
+    );
+    expect(url).toContain('resource_id=res_test');
+    expect(url).toContain('from=2026-07-11T11%3A00%3A00.000Z');
   });
 });

@@ -65,6 +65,19 @@ export function chartPoints(series: HistorySeries, gaps: HistoryGap[]) {
   }
   return points.sort((a, b) => a.at - b.at);
 }
+export function eventHistoryURL(
+  scope: 'host' | 'resource',
+  id: string | undefined,
+  from: Date,
+  to: Date,
+) {
+  const query = new URLSearchParams({
+    from: from.toISOString(),
+    to: to.toISOString(),
+  });
+  if (scope === 'resource' && id) query.set('resource_id', id);
+  return `/api/v1/events?${query}`;
+}
 export async function fetchHistory(
   scope: 'host' | 'resource',
   id: string | undefined,

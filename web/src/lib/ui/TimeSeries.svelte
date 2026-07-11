@@ -21,6 +21,7 @@
   let root: HTMLDivElement;
   let plot: uPlot | undefined;
   let selected = $state(0);
+  let cursorText = $state('');
   function options(): uPlot.Options {
     return {
       width: root.clientWidth || 1,
@@ -50,6 +51,18 @@
                   ctx.stroke();
                 }
                 ctx.restore();
+              },
+            ],
+            setCursor: [
+              (u) => {
+                const index = u.cursor.idx;
+                if (index == null || index < 0) {
+                  cursorText = '';
+                  return;
+                }
+                const at = u.data[0][index];
+                const value = u.data[1][index];
+                cursorText = `${new Date(at * 1000).toLocaleString()}: ${value ?? 'gap'}`;
               },
             ],
           },
@@ -85,6 +98,8 @@
 </script>
 
 <div class="chart-canvas" bind:this={root} aria-hidden="true"></div>
+{#if cursorText}<span class="chart-tooltip" role="status">{cursorText}</span
+  >{/if}
 <button
   type="button"
   class="chart-inspector"
