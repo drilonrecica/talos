@@ -173,6 +173,7 @@ Rules for every task:
 
 ### T017 — Add snapshot subscriptions and bounded fan-out
 
+- **Status:** Complete
 - **Commit:** `feat(metrics): add bounded live snapshot subscriptions`
 - **Description:** Add subscription lifecycle management to the Metrics Engine for snapshot and discrete-event consumers.
 - **Implement:** Give each subscriber a bounded output buffer; replace stale queued snapshots with the newest one; retain discrete events where feasible; disconnect or cancel persistently slow subscribers without delaying collection.
