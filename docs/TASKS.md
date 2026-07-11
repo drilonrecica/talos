@@ -503,6 +503,7 @@ Rules for every task:
 
 ### T053 — Build resource navigation and list views
 
+- **Status:** Complete
 - **Commit:** `feat(web): add resource list navigation`
 - **Description:** Implement Projects, Applications, Services, Infrastructure, Unmanaged, and Archived resource views with status, current metrics, grouping, empty states, and filters.
 - **Implement:** Containers remain a component detail, not top-level navigation; ensure archived resources are excluded from default overview/list but reachable intentionally.

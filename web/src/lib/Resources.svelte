@@ -1,0 +1,2 @@
+<script lang="ts">import type{LiveStore}from './live';import Badge from './ui/Badge.svelte';let{live}:{live:LiveStore}=$props();let resources=$derived(live.snapshot?.resources??[]);</script>
+<section><h2>Resources</h2>{#if resources.length}{#each resources as resource}<article><a href={'/resources/'+resource.id}>{resource.name}</a><Badge state={resource.status}>{resource.status}</Badge></article>{/each}{:else}<p>No active resources.</p>{/if}</section>
