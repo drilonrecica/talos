@@ -24,6 +24,7 @@ export interface LiveEvent {
 }
 export type ConnectionState =
   'connecting' | 'connected' | 'disconnected' | 'unauthorized';
+
 export class LiveStore {
   snapshot = $state<LiveSnapshot | null>(null);
   events = $state<LiveEvent[]>([]);

@@ -3,19 +3,18 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/drilonrecica/talos/internal/auth"
 )
 
 // EnableSetup intentionally exposes only the one-time claim flow. It is
 // unavailable as soon as an admin has been created.
-func (s *Server) EnableSetup(setup *auth.SetupService, limiter *auth.Limiter, proxies auth.TrustedProxies) {
+func (s *Server) EnableSetup(setup *auth.SetupService, protection *auth.Protection) {
 	allow := func(w http.ResponseWriter, r *http.Request) bool {
-		if limiter == nil {
+		if protection == nil {
 			return true
 		}
-		ok, retry := limiter.Allow("setup:"+proxies.ClientPrefix(r), auth.BucketPolicy{Capacity: 5, Refill: 5 * time.Minute})
+		ok, retry := protection.AllowSetup(r)
 		if ok {
 			return true
 		}

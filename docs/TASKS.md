@@ -707,6 +707,7 @@ Rules for every task:
 
 ### T075 — Add login/setup rate limits and CSRF defenses
 
+- **Status:** Complete
 - **Commit:** `feat(auth): protect state-changing browser requests`
 - **Description:** Add bounded rate limiting for login, setup-token attempts, diagnostics generation, and expensive metric queries; implement CSRF protection for session and settings mutations.
 - **Implement:** Key limits safely by IP prefix/account where applicable, avoid unbounded attacker-controlled maps, return actionable retry responses, and integrate SameSite cookie behavior.

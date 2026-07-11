@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { LiveStore } from './live';
+  import type { LiveStore } from './live.svelte';
   let { live }: { live: LiveStore } = $props();
 </script>
 

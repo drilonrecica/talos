@@ -32,15 +32,17 @@ type Session struct {
 }
 
 type Sessions struct {
-	db  *sql.DB
-	now func() time.Time
-	cfg SessionConfig
+	db      *sql.DB
+	now     func() time.Time
+	cfg     SessionConfig
+	proxies TrustedProxies
 }
 
 func NewSessions(db *sql.DB, cfg SessionConfig) *Sessions {
 	return &Sessions{db: db, cfg: cfg, now: func() time.Time { return time.Now().UTC() }}
 }
-func (s *Sessions) SetDB(db *sql.DB) { s.db = db }
+func (s *Sessions) SetDB(db *sql.DB)                         { s.db = db }
+func (s *Sessions) SetTrustedProxies(proxies TrustedProxies) { s.proxies = proxies }
 
 func (s *Sessions) Issue(ctx context.Context, userID string) (string, Session, error) {
 	token, _, session, err := s.issue(ctx, userID, "", "")
@@ -87,6 +89,9 @@ func (s *Sessions) Actor(r *http.Request) (string, bool) {
 }
 
 func (s *Sessions) ValidCSRF(r *http.Request) bool {
+	if !SameOrigin(r, s.proxies) {
+		return false
+	}
 	token := TokenFromRequest(r)
 	if token == "" || s == nil || s.db == nil {
 		return false

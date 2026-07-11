@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"sync"
@@ -32,6 +33,18 @@ func TestSessionLifecycleAndHashedPersistence(t *testing.T) {
 	}
 	if token == "" || csrf == "" || !session.ExpiresAt.Equal(now.Add(time.Hour)) {
 		t.Fatal("invalid issued session")
+	}
+	mutation := httptest.NewRequest("POST", "https://talos.test/api/v1/auth/logout", nil)
+	mutation.Header.Set("Origin", "https://talos.test")
+	mutation.Header.Set("X-CSRF-Token", csrf)
+	mutation.AddCookie(&http.Cookie{Name: SessionCookieName, Value: token})
+	mutation.AddCookie(&http.Cookie{Name: CSRFCookieName, Value: csrf})
+	if !sessions.ValidCSRF(mutation) {
+		t.Fatal("valid CSRF rejected")
+	}
+	mutation.Header.Set("Origin", "https://evil.test")
+	if sessions.ValidCSRF(mutation) {
+		t.Fatal("cross-origin CSRF accepted")
 	}
 	var stored, ua, ip string
 	if err = manager.DB().QueryRowContext(ctx, "SELECT id_hash,user_agent_hash,ip_prefix_hash FROM sessions").Scan(&stored, &ua, &ip); err != nil {

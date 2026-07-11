@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { LiveStore } from './live';
+  import type { LiveStore } from './live.svelte';
   import Badge from './ui/Badge.svelte';
   let { live }: { live: LiveStore } = $props();
   let resources = $derived(live.snapshot?.resources ?? []);

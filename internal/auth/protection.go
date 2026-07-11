@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -105,6 +106,36 @@ type Limiter struct {
 	now    func() time.Time
 }
 
+type Protection struct {
+	limiter *Limiter
+	proxies TrustedProxies
+}
+
+func NewProtection(max int, proxies TrustedProxies) *Protection {
+	return &Protection{limiter: NewLimiter(max), proxies: proxies}
+}
+func (p *Protection) Proxies() TrustedProxies { return p.proxies }
+func (p *Protection) allow(scope, key string, policy BucketPolicy) (bool, time.Duration) {
+	return p.limiter.Allow(scope+":"+key, policy)
+}
+func (p *Protection) AllowLogin(r *http.Request, account string) (bool, time.Duration) {
+	a, ra := p.allow("login-ip", p.proxies.ClientPrefix(r), BucketPolicy{Capacity: 10, Refill: time.Minute})
+	b, rb := p.allow("login-account", strings.ToLower(strings.TrimSpace(account)), BucketPolicy{Capacity: 5, Refill: 5 * time.Minute})
+	if rb > ra {
+		ra = rb
+	}
+	return a && b, ra
+}
+func (p *Protection) AllowSetup(r *http.Request) (bool, time.Duration) {
+	return p.allow("setup", p.proxies.ClientPrefix(r), BucketPolicy{Capacity: 5, Refill: 5 * time.Minute})
+}
+func (p *Protection) AllowDiagnostics(r *http.Request, actor string) (bool, time.Duration) {
+	return p.allow("diagnostics", actor+":"+p.proxies.ClientPrefix(r), BucketPolicy{Capacity: 3, Refill: 15 * time.Minute})
+}
+func (p *Protection) AllowMetrics(r *http.Request) (bool, time.Duration) {
+	return p.allow("metrics", p.proxies.ClientPrefix(r), BucketPolicy{Capacity: 60, Refill: time.Minute})
+}
+
 func NewLimiter(max int) *Limiter {
 	if max < 1 {
 		max = 4096
@@ -177,4 +208,20 @@ func ValidCSRF(r *http.Request, expectedHash string) bool {
 		return false
 	}
 	return subtle.ConstantTimeCompare([]byte(CSRFHash(header)), []byte(expectedHash)) == 1
+}
+
+func SameOrigin(r *http.Request, proxies TrustedProxies) bool {
+	raw := r.Header.Get("Origin")
+	if raw == "" {
+		raw = r.Referer()
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	scheme := "http"
+	if proxies.Secure(r) {
+		scheme = "https"
+	}
+	return strings.EqualFold(u.Scheme, scheme) && strings.EqualFold(u.Host, r.Host)
 }

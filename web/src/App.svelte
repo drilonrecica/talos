@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { LiveStore, sessionActive } from './lib/live';
+  import { LiveStore, sessionActive } from './lib/live.svelte';
   import {
     applyPreferences,
     preferences,

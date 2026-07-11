@@ -11,19 +11,17 @@ import (
 	"github.com/drilonrecica/talos/internal/storage"
 )
 
-func (s *Server) EnableMetrics(store *storage.Manager, auth Authorizer) {
-	limiter := authpkg.NewLimiter(4096)
+func (s *Server) EnableMetrics(store *storage.Manager, authz Authorizer, protection *authpkg.Protection) {
 	s.Handle("/api/v1/metrics", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			WriteError(w, http.StatusMethodNotAllowed, Error{Code: "method_not_allowed", Message: "Only GET is supported."})
 			return
 		}
-		if auth == nil || !auth.Authorize(r) {
+		if authz == nil || !authz.Authorize(r) {
 			WriteError(w, http.StatusUnauthorized, Error{Code: "unauthorized", Message: "Authentication is required."})
 			return
 		}
-		key := authpkg.TrustedProxies{}.ClientPrefix(r)
-		if ok, retry := limiter.Allow("metrics:"+key, authpkg.BucketPolicy{Capacity: 60, Refill: time.Minute}); !ok {
+		if ok, retry := protection.AllowMetrics(r); !ok {
 			w.Header().Set("Retry-After", fmt.Sprintf("%d", maxRetry(retry)))
 			WriteError(w, http.StatusTooManyRequests, Error{Code: "rate_limited", Message: "Too many metric queries. Try again shortly.", Details: map[string]int{"retryAfterSeconds": maxRetry(retry)}})
 			return

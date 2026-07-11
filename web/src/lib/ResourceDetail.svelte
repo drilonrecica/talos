@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { LiveStore } from './live';
+  import type { LiveStore } from './live.svelte';
   import Badge from './ui/Badge.svelte';
   import { formatBytes, formatNumber } from './i18n';
   import HistoryCharts from './HistoryCharts.svelte';

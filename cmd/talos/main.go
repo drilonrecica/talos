@@ -68,6 +68,11 @@ func main() {
 		application.Add(sessions)
 	}
 	apiServer := api.New()
+	proxies, _ := auth.ParseTrustedProxies(config.HTTP.TrustedProxyCIDRs)
+	protection := auth.NewProtection(4096, proxies)
+	if sessions != nil {
+		sessions.SetTrustedProxies(proxies)
+	}
 	var authorizer api.Authorizer = api.DemoAuthorizer(*demoMode || config.Demo)
 	if sessions != nil {
 		authorizer = sessions
@@ -75,13 +80,12 @@ func main() {
 	apiServer.EnableLive(engine, authorizer)
 	apiServer.EnableCurrent(engine, authorizer)
 	apiServer.EnableResources(engine, authorizer)
-	apiServer.EnableMetrics(store, authorizer)
+	apiServer.EnableMetrics(store, authorizer, protection)
 	apiServer.EnableEvents(store, authorizer)
 	apiServer.EnableHistoryDeletion(store, authorizer, sessions)
 	if setup != nil {
-		proxies, _ := auth.ParseTrustedProxies(config.HTTP.TrustedProxyCIDRs)
-		apiServer.EnableSetup(setup, auth.NewLimiter(4096), proxies)
-		apiServer.EnableAuth(credentials, sessions, auth.NewLimiter(4096), proxies)
+		apiServer.EnableSetup(setup, protection)
+		apiServer.EnableAuth(credentials, sessions, protection)
 	}
 	application.Add(app.NewHTTPServer(config.HTTP.ListenAddress, version, application, apiServer.Handler(), webembed.Handler()))
 	if err := application.Run(ctx); err != nil {

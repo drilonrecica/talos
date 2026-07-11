@@ -3,16 +3,15 @@ package api
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/drilonrecica/talos/internal/auth"
 )
 
-func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessions, limiter *auth.Limiter, proxies auth.TrustedProxies) {
+func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessions, protection *auth.Protection) {
+	proxies := protection.Proxies()
 	limited := func(w http.ResponseWriter, r *http.Request, username string) bool {
-		ok, _ := limiter.Allow("login-ip:"+proxies.ClientPrefix(r), auth.BucketPolicy{Capacity: 10, Refill: time.Minute})
-		ok2, _ := limiter.Allow("login-user:"+username, auth.BucketPolicy{Capacity: 5, Refill: 5 * time.Minute})
-		if ok && ok2 {
+		ok, _ := protection.AllowLogin(r, username)
+		if ok {
 			return true
 		}
 		w.Header().Set("Retry-After", "60")
