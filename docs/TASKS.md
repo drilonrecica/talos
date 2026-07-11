@@ -310,6 +310,7 @@ Rules for every task:
 
 ### T032 — Persist host identity and boot sessions
 
+- **Status:** Complete
 - **Commit:** `feat(storage): persist host and boot entities`
 - **Description:** Add migrations and repository operations for `hosts` and `boot_sessions`, including hashed machine identity where available and boot-session lifecycle updates.
 - **Implement:** Store only safe host identity metadata; create/close boot sessions deterministically; keep writer ownership rules intact.
