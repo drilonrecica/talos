@@ -449,6 +449,7 @@ Rules for every task:
 
 ### T047 — Implement stable identity fallback and manual category overrides
 
+- **Status:** Complete
 - **Commit:** `feat(resources): add identity fallback and category overrides`
 - **Description:** Implement precedence of Coolify UUID, Compose project/service, stable derived metadata, and persisted manual mapping; persist user category override across redeployments.
 - **Implement:** Derived keys must be deterministic, collision-resistant within a host, and never based solely on container ID; define override validation against alpha categories.

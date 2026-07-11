@@ -9,6 +9,19 @@ import (
 
 type Identity struct{ StableKey, Name, Source, Project, Service string }
 
+var categories = map[string]bool{"application": true, "service": true, "database": true, "cache": true, "worker": true, "proxy": true, "infrastructure": true, "unmanaged": true}
+
+func ValidCategory(v string) bool { return categories[strings.ToLower(v)] }
+func Resolve(labels map[string]string, fallback, manual string) Identity {
+	if manual != "" {
+		return Identity{StableKey: "manual:" + safe(manual), Name: fallback, Source: "manual"}
+	}
+	if id := strings.TrimSpace(labels["coolify.resource.uuid"]); id != "" {
+		return Identity{StableKey: "coolify:" + safe(id), Name: fallback, Source: "coolify"}
+	}
+	return Compose(labels, fallback)
+}
+
 func Compose(labels map[string]string, fallback string) Identity {
 	p, s := strings.TrimSpace(labels["com.docker.compose.project"]), strings.TrimSpace(labels["com.docker.compose.service"])
 	if p != "" && s != "" {
