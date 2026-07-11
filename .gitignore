@@ -1,32 +1,87 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Go build outputs and local toolchain state
+/bin/
+/dist/
+/talos
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
-
-# Code coverage profiles and other test artifacts
-*.out
+*.prof
+*.pprof
 coverage.*
 *.coverprofile
 profile.cov
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
 go.work
 go.work.sum
 
-# env file
-.env
+# Frontend dependencies and generated Svelte/Vite output
+/web/node_modules/
+/web/dist/
+/web/.vite/
+/web/.svelte-kit/
+/web/.cache/
+/web/coverage/
+/web/*.tsbuildinfo
+/.pnpm-store/
+*.tsbuildinfo
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# Browser-test artifacts
+/web/test-results/
+/web/playwright-report/
+/web/blob-report/
+/test-results/
+/playwright-report/
+/blob-report/
+/coverage/
+
+# Local runtime data and SQLite files
+/data/
+/runtime/
+/tmp/
+/talos-data/
+talos.db
+talos.db-wal
+talos.db-shm
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+
+# Local configuration, credentials, and TLS material
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and local diagnostic artifacts
+*.log
+*.log.*
+*.trace
+*.heap
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
