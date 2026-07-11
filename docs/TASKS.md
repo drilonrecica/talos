@@ -467,6 +467,7 @@ Rules for every task:
 
 ### T049 — Implement deterministic resource status rollups
 
+- **Status:** Complete
 - **Commit:** `feat(resources): add resource status rollups`
 - **Description:** Derive alpha resource states from container/lifecycle/collector signals using documented precedence `Down > Degraded > Unknown > Paused > Healthy`.
 - **Implement:** Keep health-check state out of alpha; attach the most-specific failing component/event while reflecting parent status; make intentional stop/paused behavior explicit.
