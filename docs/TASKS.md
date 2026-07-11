@@ -779,6 +779,7 @@ Rules for every task:
 
 ### T083 — Implement diagnostics preview and download bundle
 
+- **Status:** Complete
 - **Commit:** `feat(diagnostics): add preview-first support bundle`
 - **Description:** Generate a reviewable diagnostics bundle containing version/commit, OS/architecture, schema version, collector health, sanitized configuration, recent internal errors, Docker version, counts, DB size, and self-metric summary.
 - **Implement:** Preview exact fields before download; exclude passwords, tokens, secret URLs, full domains/IPs unless necessary, environment variables, app logs, and database contents; rate-limit generation.

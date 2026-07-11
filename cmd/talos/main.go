@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -105,6 +106,31 @@ func main() {
 	apiServer.EnableMetrics(store, authorizer, protection)
 	apiServer.EnableEvents(store, authorizer)
 	apiServer.EnableHistoryDeletion(store, authorizer, sessions)
+	bundleService := diagnostics.NewBundleService(func(ctx context.Context) diagnostics.BundleData {
+		schema, schemaErr := store.SchemaVersion(ctx)
+		var databaseBytes int64
+		stat, sizeErr := os.Stat(config.Paths.DatabasePath)
+		if sizeErr == nil {
+			databaseBytes = stat.Size()
+		}
+		fields := map[string]any{
+			"version": version, "os": runtime.GOOS, "architecture": runtime.GOARCH,
+			"schemaVersion": schema, "collectorHealth": engine.Snapshot().Collectors,
+			"configuration": effectiveSettings, "resourceCount": len(engine.Snapshot().Resources),
+			"databaseBytes": databaseBytes, "recentInternalErrors": []string{},
+			"dockerVersion": nil, "selfMetrics": map[string]int64{},
+		}
+		failures := []string{}
+		if schemaErr != nil {
+			failures = append(failures, "database schema version unavailable")
+		}
+		if sizeErr != nil {
+			failures = append(failures, "database size unavailable")
+		}
+		failures = append(failures, "Docker version unavailable")
+		return diagnostics.BundleData{Fields: fields, PartialFailures: failures}
+	})
+	apiServer.EnableDiagnostics(bundleService, authorizer, protection)
 	if setup != nil {
 		apiServer.EnableSetup(setup, protection, sessions)
 		apiServer.EnableAuth(credentials, sessions, protection)

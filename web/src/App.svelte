@@ -20,6 +20,7 @@
   import { onboardingState, setupAvailable } from './lib/onboarding';
   import Setup from './lib/Setup.svelte';
   import Onboarding from './lib/Onboarding.svelte';
+  import Diagnostics from './lib/Diagnostics.svelte';
 
   const live = new LiveStore();
   const routes = [
@@ -168,7 +169,8 @@
           {live}
         />{:else if route === 'checks'}<p>
           Checks are planned for a later release.
-        </p>{:else if route === 'settings'}<Settings />{:else}<p>
+        </p>{:else if route === 'settings' && resourceID === 'diagnostics'}<Diagnostics
+        />{:else if route === 'settings'}<Settings />{:else}<p>
           {live.state === 'connected'
             ? 'Live connection active.'
             : 'Connecting to live monitoring…'}
