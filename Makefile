@@ -3,12 +3,14 @@ SHELL := /bin/bash
 GO ?= go
 GOFMT ?= gofmt
 PNPM ?= pnpm
+DOCKER ?= docker
 TALOS_BIN ?= bin/talos
+VERSION ?= dev
 GO_SOURCE_FILES := $(shell find cmd internal -type f -name '*.go' -print)
 
 .DEFAULT_GOAL := help
 
-.PHONY: help dev dev-demo dev-host test check build format-check go-test web-test web-check go-vet
+.PHONY: help dev dev-demo dev-host test check build image image-multi format-check go-test web-test web-check go-vet
 
 help: ## Show the supported local development commands.
 
@@ -41,6 +43,14 @@ build: ## Build the production frontend and CGO-enabled TALOS binary.
 	$(PNPM) --dir web build
 	mkdir -p $(dir $(TALOS_BIN))
 	CGO_ENABLED=1 $(GO) build -o $(TALOS_BIN) ./cmd/talos
+
+image: build ## Build a local container image for the current platform.
+
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:local .
+
+image-multi: ## Build a multi-arch container image (requires buildx and a registry push).
+
+	$(DOCKER) buildx build --platform linux/amd64,linux/arm64 -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:$(VERSION) --push .
 
 format-check: ## Check Go and frontend formatting without modifying source.
 
