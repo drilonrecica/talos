@@ -46,7 +46,9 @@ func main() {
 		application.Add(&demo.Component{Generator: demo.New(*demoSeed, realClock{}), Engine: engine})
 	}
 	application.Add(storage.New(config.Paths.DatabasePath, config.Paths.RuntimeDir))
-	application.Add(app.NewHTTPServer(config.HTTP.ListenAddress, version, application, api.New().Handler(), webembed.Handler()))
+	apiServer := api.New()
+	apiServer.EnableLive(engine, api.DemoAuthorizer(*demoMode || config.Demo))
+	application.Add(app.NewHTTPServer(config.HTTP.ListenAddress, version, application, apiServer.Handler(), webembed.Handler()))
 	if err := application.Run(ctx); err != nil {
 		log.Error("application exited with error", "error", err)
 		os.Exit(1)

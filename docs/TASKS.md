@@ -182,6 +182,7 @@ Rules for every task:
 
 ### T018 — Implement authenticated SSE transport semantics
 
+- **Status:** Complete
 - **Commit:** `feat(api): stream live snapshots over SSE`
 - **Description:** Implement `/api/v1/live` with `snapshot`, `event`, `collector_state`, and heartbeat frames, reconnect-safe IDs, and a 15–30 second keepalive.
 - **Implement:** Serialize a compact snapshot once per publish for shared fan-out; omit static metadata blobs; apply the authentication hook before stream creation; set proxy-safe SSE headers and cancel work on client disconnect.
