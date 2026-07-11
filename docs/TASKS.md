@@ -633,6 +633,7 @@ Rules for every task:
 
 ### T067 — Implement safe bounded retention deletion
 
+- **Status:** Complete
 - **Commit:** `feat(retention): delete expired telemetry safely`
 - **Description:** Add hourly retention worker that verifies eligible downstream rollups, deletes expired rows in bounded batches, yields between transactions, and reports work/health.
 - **Implement:** Delete only after destination tier is confirmed; keep settings/auth/recent events protected; make cancellation safe and resumable.
