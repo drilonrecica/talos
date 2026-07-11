@@ -512,6 +512,7 @@ Rules for every task:
 
 ### T054 — Build resource detail current-state and component views
 
+- **Status:** Complete
 - **Commit:** `feat(web): add resource detail current panels`
 - **Description:** Implement resource header/context, current CPU/memory/network/block-I/O summaries, status explanation, expandable component list, deployment/replacement summary, events preview, and metadata drawer.
 - **Implement:** Clearly label host-normalized CPU; keep raw IDs/paths in monospace technical disclosure; show Unknown/stale/Archived states explicitly.
