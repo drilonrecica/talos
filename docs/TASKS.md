@@ -523,6 +523,7 @@ Rules for every task:
 
 ### T055 — Add raw sample, event, collector-state, and settings schema
 
+- **Status:** Complete
 - **Commit:** `feat(storage): add alpha telemetry tables`
 - **Description:** Add typed migrations for raw host/resource/optional instance samples, filesystem/interface samples, events, collector-state events, settings, encrypted secrets, users, and sessions with required indexes.
 - **Implement:** Follow the normative schemas; use nullable metric columns and integer Unix milliseconds; do not use EAV storage or persist application logs.
