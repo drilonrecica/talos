@@ -265,6 +265,7 @@ Rules for every task:
 
 ### T027 — Collect host memory, swap, load, uptime, and boot identity
 
+- **Status:** Complete
 - **Commit:** `feat(host): collect memory load and boot state`
 - **Description:** Add `/proc/meminfo`, `/proc/loadavg`, `/proc/uptime`, and boot-identity collection with normalized memory/swap/load observations.
 - **Implement:** Use `MemTotal - MemAvailable` as primary used memory; preserve cache/buffer details separately; detect reboot boundaries, emit an event, and prevent counter continuity across boots.
