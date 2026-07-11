@@ -164,6 +164,7 @@ Rules for every task:
 
 ### T016 — Implement the Metrics Engine current-state event loop
 
+- **Status:** Complete
 - **Commit:** `feat(metrics): add in-memory current-state engine`
 - **Description:** Create the central Metrics Engine that ingests typed collector messages, tracks current host/container/resource state, freshness, metadata, events, boot identity, and sequence numbers.
 - **Implement:** Use bounded channels or a carefully synchronized store; publish immutable snapshots; do not write SQLite or serialize HTTP payloads in collector paths; preserve unknown/missing values rather than manufacturing zeroes.
