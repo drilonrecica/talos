@@ -301,6 +301,7 @@ Rules for every task:
 
 ### T031 — Implement resilient host collector scheduling and health
 
+- **Status:** Complete
 - **Commit:** `feat(host): schedule host collection with health states`
 - **Description:** Compose host subcollectors into the configured interval collector with independent optional-field failure handling, durations, freshness, and stateful healthy/degraded/down transitions.
 - **Implement:** A missing optional Linux source must not erase available host metrics; respect root-context cancellation and minimum interval; publish collector-state events only after transient-failure policy is exceeded.
