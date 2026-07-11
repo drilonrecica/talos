@@ -402,6 +402,7 @@ Rules for every task:
 
 ### T042 — Normalize lifecycle, health, and OOM events
 
+- **Status:** Complete
 - **Commit:** `feat(events): normalize Docker lifecycle and OOM events`
 - **Description:** Convert Docker events and inspected state into stable event types, severity, safe details, correlation keys, health transitions, restart/replacement hints, and OOM deduplication.
 - **Implement:** Deduplicate `oom`, `die` with `OOMKilled`, and cgroup evidence into one user-visible OOM; retain raw diagnostic references only when non-sensitive.
