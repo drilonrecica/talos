@@ -375,6 +375,7 @@ Rules for every task:
 
 ### T039 — Normalize Docker memory and PID metrics
 
+- **Status:** Complete
 - **Commit:** `feat(docker): normalize container memory and PIDs`
 - **Description:** Collect raw memory usage, cgroup-v2 working set where available, finite limit, host-relative fallback denominator, memory percent, and PID count.
 - **Implement:** Calculate working set as `max(0, current - inactive_file)` where supported; label unlimited-limit comparisons accurately; do not claim precision unavailable from an Engine payload.
