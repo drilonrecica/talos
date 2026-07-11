@@ -72,6 +72,7 @@ Rules for every task:
 
 ### T006 — Define the application lifecycle and structured logging contract
 
+- **Status:** Complete
 - **Commit:** `feat(app): add root lifecycle and structured logging`
 - **Description:** Build the application composition root with a root context, structured JSON logging, component start/stop registration, SIGINT/SIGTERM handling, bounded 15-second shutdown budget, and a basic health endpoint.
 - **Implement:** Shutdown order must stop HTTP acceptance, stop new collection work, await/cancel bounded in-flight work, flush persistence when available, and close storage. Log safe diagnostic fields only; never log credentials, setup tokens, session tokens, or complete Docker metadata.
