@@ -485,6 +485,7 @@ Rules for every task:
 
 ### T051 — Archive disappeared logical resources
 
+- **Status:** Complete
 - **Commit:** `feat(resources): archive removed logical resources`
 - **Description:** After reconciliation confirms a resource has disappeared, mark it Archived, preserve history, disable active monitoring membership, and hide it from default current lists.
 - **Implement:** Avoid archiving during transient Docker outages or rollout windows; retain last-seen timestamp and allow later manual purge through a separate task.
