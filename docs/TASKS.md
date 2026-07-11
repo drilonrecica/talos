@@ -99,6 +99,7 @@ Rules for every task:
 
 ### T009 — Implement TOML, environment, and effective-source configuration loading
 
+- **Status:** Complete
 - **Commit:** `feat(config): load TOML and environment overrides`
 - **Description:** Load TOML from the documented discovery order or `TALOS_CONFIG_FILE`, map environment variables, and report an effective value plus source for every setting.
 - **Implement:** Apply precedence `defaults < file < environment < persisted eligible override`; prevent persisted overrides from changing paths, listen address, master key, Docker socket, or host proc/sys mounts. Treat missing optional files as normal and malformed configured files as startup failures with safe diagnostics.
