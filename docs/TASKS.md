@@ -624,6 +624,7 @@ Rules for every task:
 
 ### T066 — Implement retention presets and advanced retention validation
 
+- **Status:** Complete
 - **Commit:** `feat(retention): add retention presets and overrides`
 - **Description:** Implement Minimal, Balanced, and Long-term presets plus validated advanced per-tier duration overrides.
 - **Implement:** Enforce downstream retention not shorter than required rollup production horizon; expose effective setting source and mark UI-editable values; do not silently reset a custom plan when preset changes.

@@ -86,6 +86,17 @@ func Defaults() Config {
 		Retention: Retention{Preset: "balanced", Raw: 48 * time.Hour, OneMinute: 30 * 24 * time.Hour, FifteenMinute: 365 * 24 * time.Hour, OneHour: 0}, Database: Database{TargetBudgetBytes: 1073741824, WarningRatio: .80, CriticalRatio: .95, EmergencyPauseRatio: .98}, Charts: Charts{MaxPointsPerSeries: 1000}, Docker: Docker{SocketPath: "/var/run/docker.sock", MaxConcurrency: 4}, Checks: Checks{MaxConcurrency: 8}, Logs: Logs{MaxResponseBytes: 1048576, MaxLines: 5000}, Sessions: Sessions{IdleTimeout: 12 * time.Hour, AbsoluteLifetime: 720 * time.Hour},
 	}
 }
+func RetentionPreset(name string) (Retention, bool) {
+	switch name {
+	case "minimal":
+		return Retention{Preset: name, Raw: 12 * time.Hour, OneMinute: 7 * 24 * time.Hour, FifteenMinute: 90 * 24 * time.Hour, OneHour: 365 * 24 * time.Hour}, true
+	case "balanced":
+		return Defaults().Retention, true
+	case "long-term":
+		return Retention{Preset: name, Raw: 7 * 24 * time.Hour, OneMinute: 90 * 24 * time.Hour, FifteenMinute: 2 * 365 * 24 * time.Hour}, true
+	}
+	return Retention{}, false
+}
 
 func (c *Config) Normalize() {
 	if c.Paths.DatabasePath == "" {
