@@ -106,6 +106,16 @@ var editable = map[string]ApplyMode{
 	"database.target_budget_bytes": ApplyLive, "charts.max_points_per_series": ApplyLive,
 	"sessions.idle_timeout": ApplyLive, "sessions.absolute_lifetime": ApplyLive,
 }
+var visible = func() map[string]ApplyMode {
+	result := map[string]ApplyMode{
+		"paths.data_dir": ApplyRestart, "http.listen_address": ApplyRestart,
+		"docker.socket_path": ApplyRestart, "paths.host_proc": ApplyRestart, "paths.host_sys": ApplyRestart,
+	}
+	for key, mode := range editable {
+		result[key] = mode
+	}
+	return result
+}()
 
 func (s *Service) Snapshot(ctx context.Context) (Snapshot, error) {
 	s.mu.RLock()
@@ -123,7 +133,7 @@ func (s *Service) Snapshot(ctx context.Context) (Snapshot, error) {
 		return Snapshot{}, err
 	}
 	values := map[string]SettingView{}
-	for key, mode := range editable {
+	for key, mode := range visible {
 		source := SourceDefault
 		if base, ok := s.effective[key]; ok {
 			source = base.Source
@@ -214,7 +224,7 @@ func (s *Service) snapshotLocked(ctx context.Context) (Snapshot, error) {
 		return Snapshot{}, err
 	}
 	values := map[string]SettingView{}
-	for key, mode := range editable {
+	for key, mode := range visible {
 		source := SourceDefault
 		if base, ok := s.effective[key]; ok {
 			source = base.Source

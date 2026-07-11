@@ -13,7 +13,7 @@
   import Resources from './lib/Resources.svelte';
   import Events from './lib/Events.svelte';
   import ResourceDetail from './lib/ResourceDetail.svelte';
-  import HistoryDeletion from './lib/HistoryDeletion.svelte';
+  import Settings from './lib/Settings.svelte';
   import Login from './lib/Login.svelte';
   import SessionControls from './lib/SessionControls.svelte';
   import { currentSession, type SessionInfo } from './lib/auth';
@@ -168,7 +168,7 @@
           {live}
         />{:else if route === 'checks'}<p>
           Checks are planned for a later release.
-        </p>{:else if route === 'settings'}<HistoryDeletion />{:else}<p>
+        </p>{:else if route === 'settings'}<Settings />{:else}<p>
           {live.state === 'connected'
             ? 'Live connection active.'
             : 'Connecting to live monitoring…'}

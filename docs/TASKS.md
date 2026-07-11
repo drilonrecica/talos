@@ -770,6 +770,7 @@ Rules for every task:
 
 ### T082 — Build collection, retention, appearance, and system settings UI
 
+- **Status:** Complete
 - **Commit:** `feat(web): add alpha settings dashboard`
 - **Description:** Implement settings sections for collection, retention/storage, authentication session policy, appearance, privacy/network status, and system health with effective-source and apply-mode labels.
 - **Implement:** Include aggressive-interval warnings, DB budget state, retention advanced mode, theme/density choices, and clear links to restart-required deployment action; do not expose post-alpha integrations as active controls.
