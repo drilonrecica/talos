@@ -135,6 +135,7 @@ Rules for every task:
 
 ### T013 — Embed production web assets into the Go binary
 
+- **Status:** Complete
 - **Commit:** `build(web): embed compiled frontend assets`
 - **Description:** Connect Vite production output to Go `embed`, serve immutable hashed assets with suitable cache headers, and fall back to the SPA entrypoint only for recognized UI routes.
 - **Implement:** Ensure API routes are never swallowed by SPA fallback; serve no external scripts, fonts, or icons; make missing/invalid embedded assets a build failure.

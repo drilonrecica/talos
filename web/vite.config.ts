@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [svelte()],
   build: {
     target: 'es2022',
+    outDir: '../internal/webembed/dist',
+    emptyOutDir: true,
   },
   server: {
     host: '127.0.0.1',
