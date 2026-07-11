@@ -256,6 +256,7 @@ Rules for every task:
 
 ### T026 — Parse `/proc/stat` and compute host CPU deltas
 
+- **Status:** Complete
 - **Commit:** `feat(host): collect host CPU utilization`
 - **Description:** Implement fixture-driven `/proc/stat` parsing and delta calculations for total/per-core busy, user, system, iowait, steal, and online CPU count.
 - **Implement:** Exclude guest/guest_nice from duplicated total accounting; treat zero/negative deltas and counter reset boundaries as missing samples; resolve paths through configured host proc mount.
