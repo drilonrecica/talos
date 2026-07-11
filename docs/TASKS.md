@@ -348,6 +348,7 @@ Rules for every task:
 
 ### T036 — Implement Docker startup discovery and metadata model
 
+- **Status:** Complete
 - **Commit:** `feat(docker): discover containers and cache metadata`
 - **Description:** Discover containers at startup and build sanitized metadata records containing IDs, names, labels, images, timestamps, state, health, Compose labels, networks, and safe mount metadata.
 - **Implement:** Do not retain environment variables or secret-bearing inspect fields; populate cache misses only through controlled inspection; represent stopped/destroyed timestamps explicitly.
