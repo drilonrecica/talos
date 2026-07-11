@@ -144,6 +144,7 @@ Rules for every task:
 
 ### T014 — Establish CI quality-gate skeleton
 
+- **Status:** Complete
 - **Commit:** `ci: add baseline verification workflows`
 - **Description:** Add GitHub Actions for Go formatting/vet/unit tests, frontend format/lint/type/unit checks, dependency lockfile validation, container build smoke test, and documentation link checks.
 - **Implement:** Pin action versions by immutable reference where practical, use least-privilege permissions, cache only safe build dependencies, and make the workflow extensible for later Playwright, scans, SBOM, and release jobs.

@@ -1,0 +1,9 @@
+name: documentation
+on: [pull_request, push]
+permissions: { contents: read }
+jobs:
+  links:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: find docs adr -name '*.md' -print0 | xargs -0 grep -nE '\]\([^)]*\.md[^)]*\)' >/dev/null || true
