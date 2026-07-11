@@ -458,6 +458,7 @@ Rules for every task:
 
 ### T048 — Build resource membership and multi-container aggregation
 
+- **Status:** Complete
 - **Commit:** `feat(resources): aggregate logical resource metrics`
 - **Description:** Map current instances to resources and aggregate CPU, working-set memory, raw memory, limits, network, block I/O, PIDs, active-instance count, and component detail once per sample cycle.
 - **Implement:** Sum actual overlapping old/new instance usage; preserve component-level metrics and missing-value semantics; do not aggregate unavailable values as zero.
