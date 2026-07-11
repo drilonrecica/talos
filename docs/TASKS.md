@@ -218,6 +218,7 @@ Rules for every task:
 
 ### T022 — Create reusable accessible UI primitives
 
+- **Status:** Complete
 - **Commit:** `feat(web): add accessible core UI primitives`
 - **Description:** Build small project-owned primitives for buttons, form fields, badges, alerts, disclosure panels, dialogs, menus, tabs, empty states, loading states, and technical-detail drawers.
 - **Implement:** Use native semantics first; implement focus trapping/return only where dialogs require it; do not add a broad component framework. All strings must use translation keys from the start.
