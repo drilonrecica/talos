@@ -93,6 +93,19 @@ func (c *Credentials) Authenticate(ctx context.Context, username, password strin
 	return u, nil
 }
 
+func (c *Credentials) UserByID(ctx context.Context, id string) (User, error) {
+	if c == nil || c.db == nil || id == "" {
+		return User{}, ErrInvalidCredentials
+	}
+	var user User
+	var created int64
+	if err := c.db.QueryRowContext(ctx, "SELECT id,username,created_at FROM users WHERE id=?", id).Scan(&user.ID, &user.Username, &created); err != nil {
+		return User{}, ErrInvalidCredentials
+	}
+	user.CreatedAt = time.UnixMilli(created).UTC()
+	return user, nil
+}
+
 func randomID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { LiveStore, sessionActive } from './lib/live.svelte';
+  import { LiveStore } from './lib/live.svelte';
   import {
     applyPreferences,
     preferences,
@@ -14,6 +14,9 @@
   import Events from './lib/Events.svelte';
   import ResourceDetail from './lib/ResourceDetail.svelte';
   import HistoryDeletion from './lib/HistoryDeletion.svelte';
+  import Login from './lib/Login.svelte';
+  import SessionControls from './lib/SessionControls.svelte';
+  import { currentSession, type SessionInfo } from './lib/auth';
 
   const live = new LiveStore();
   const routes = [
@@ -30,13 +33,15 @@
   let resourceID = $state(location.pathname.split('/')[2] || '');
   let theme = $state<Theme>('system');
   let density = $state<Density>('comfortable');
+  let session = $state<SessionInfo | null>(null);
   onMount(() => {
     ({ theme, density } = preferences());
     applyPreferences({ theme, density });
-    void sessionActive()
-      .catch(() => false)
-      .then((active) => {
-        allowed = active;
+    void currentSession()
+      .catch(() => null)
+      .then((value) => {
+        session = value;
+        allowed = value !== null;
         loading = false;
         if (allowed) live.connect();
         else if (route !== 'login' && route !== 'setup') {
@@ -54,6 +59,24 @@
     density = value;
     applyPreferences({ theme, density });
   }
+  function authenticated(path: string) {
+    void currentSession().then((value) => {
+      if (!value) return;
+      session = value;
+      allowed = true;
+      history.replaceState({}, '', path);
+      route = path.split('/')[1] || 'overview';
+      resourceID = path.split('/')[2] || '';
+      live.connect();
+    });
+  }
+  function signedOut() {
+    live.close();
+    session = null;
+    allowed = false;
+    route = 'login';
+    history.replaceState({}, '', '/login');
+  }
 </script>
 
 <svelte:head><title>TALOS</title></svelte:head>
@@ -62,8 +85,9 @@
   <main aria-busy="true"><p>{t('shell.access')}</p></main>
 {:else if !allowed}
   <main id="content">
-    <h1>{route === 'setup' ? 'Setup TALOS' : 'Sign in to TALOS'}</h1>
-    <p>Authentication is not configured in this build.</p>
+    {#if route === 'setup'}<h1>Setup TALOS</h1>
+      <p>Setup is loading…</p>
+    {:else}<Login onauthenticated={authenticated} />{/if}
   </main>
 {:else}
   <div class="shell">
@@ -85,6 +109,7 @@
           ><option value="light">Light</option></select
         ></label
       >
+      {#if session}<SessionControls {session} onlogout={signedOut} />{/if}
       <label
         >Density <select
           value={density}

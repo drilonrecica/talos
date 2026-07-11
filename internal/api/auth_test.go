@@ -4,6 +4,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -70,6 +71,22 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	}
 	if _, err = sessions.Authenticate(ctx, second.Value); err != nil {
 		t.Fatal(err)
+	}
+	current := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/auth/session", nil)
+	current.AddCookie(second)
+	currentResponse := httptest.NewRecorder()
+	server.Handler().ServeHTTP(currentResponse, current)
+	if currentResponse.Code != http.StatusOK {
+		t.Fatalf("current session status=%d body=%s", currentResponse.Code, currentResponse.Body.String())
+	}
+	var currentBody struct {
+		User struct {
+			Username string `json:"username"`
+		} `json:"user"`
+		ExpiresAt string `json:"expiresAt"`
+	}
+	if err = json.Unmarshal(currentResponse.Body.Bytes(), &currentBody); err != nil || currentBody.User.Username != "admin" || currentBody.ExpiresAt == "" {
+		t.Fatalf("current session body=%s err=%v", currentResponse.Body.String(), err)
 	}
 	missing := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/logout", nil)
 	missing.Header.Set("Origin", "http://talos.test")

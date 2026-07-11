@@ -63,6 +63,27 @@ body {
   background: var(--bg);
   color: var(--text);
 }
+.auth-card {
+  width: min(28rem, 100%);
+  margin: 8vh auto;
+  padding: var(--space-8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.auth-card form {
+  display: grid;
+  gap: var(--space-3);
+}
+.auth-card input,
+.auth-card button,
+.session-controls button {
+  min-height: 2.5rem;
+  font: inherit;
+}
+.session-controls {
+  position: relative;
+}
 a {
   color: inherit;
 }

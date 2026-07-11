@@ -4,6 +4,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/drilonrecica/talos/internal/auth"
 )
@@ -53,6 +54,27 @@ func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessio
 		auth.SetSessionCookie(w, token, secure, session.AbsoluteExpires)
 		auth.SetCSRFCookie(w, csrf, secure, session.AbsoluteExpires)
 		w.WriteHeader(http.StatusNoContent)
+	}))
+	s.Handle("/api/v1/auth/session", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			WriteError(w, 405, Error{Code: "method_not_allowed", Message: "Only GET is supported."})
+			return
+		}
+		session, err := sessions.Authenticate(r.Context(), auth.TokenFromRequest(r))
+		if err != nil {
+			WriteError(w, 401, Error{Code: "unauthorized", Message: "Authentication is required."})
+			return
+		}
+		user, err := credentials.UserByID(r.Context(), session.UserID)
+		if err != nil {
+			WriteError(w, 401, Error{Code: "unauthorized", Message: "Authentication is required."})
+			return
+		}
+		WriteJSON(w, 200, map[string]any{
+			"user":              map[string]string{"id": user.ID, "username": user.Username},
+			"expiresAt":         session.ExpiresAt.UTC().Format(time.RFC3339),
+			"absoluteExpiresAt": session.AbsoluteExpires.UTC().Format(time.RFC3339),
+		})
 	}))
 	s.Handle("/api/v1/auth/logout", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

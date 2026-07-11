@@ -734,6 +734,7 @@ Rules for every task:
 
 ### T078 — Implement authentication API endpoints and login UI
 
+- **Status:** Complete
 - **Commit:** `feat(web): add login logout and session controls`
 - **Description:** Expose login/logout/logout-all endpoints and build accessible login/session UI with rate-limit feedback and safe redirect behavior.
 - **Implement:** Return generic credential-failure errors, rotate session on success, protect mutation endpoints with CSRF token/header flow, and avoid open redirects.
