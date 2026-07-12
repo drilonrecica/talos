@@ -25,9 +25,16 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+type MetadataCache interface {
+	Get(id string) (dockercollector.Metadata, bool)
+	Set(v dockercollector.Metadata)
+	Remove(id string)
+}
+
 type Sampler struct {
 	Engine               *metrics.Engine
 	Docker               dockerapi.Client
+	Cache                MetadataCache
 	HostProc             string
 	DataDir              string
 	Interval             func() time.Duration
@@ -43,6 +50,8 @@ type Sampler struct {
 	haveCPU           bool
 	previousNetwork   hostcollector.NetworkCounters
 	previousNetworkAt time.Time
+	previousDisk      hostcollector.DiskCounters
+	previousDiskAt    time.Time
 	previousStats     map[string]dockerSample
 	lastResources     []metrics.ResourceSnapshot
 	hostFailures      int
@@ -97,6 +106,7 @@ func (s *Sampler) run(ctx context.Context) {
 					dockerEvents = nil
 					continue
 				}
+				s.handleDockerEvent(ctx, event)
 				if normalized, accepted := events.NormalizeDocker(event, false); accepted {
 					if len(pending) == 128 {
 						pending = pending[1:]
@@ -114,7 +124,10 @@ func (s *Sampler) collect(ctx context.Context, pending []metrics.Event) {
 	started := time.Now()
 	defer func() { s.LastDurationNanos.Store(time.Since(started).Nanoseconds()) }()
 	now := time.Now().UTC()
-	host, boot, hostErr := s.collectHost(now)
+	host, filesystems, boot, hostErr := s.collectHost(now)
+	if len(filesystems) > 0 {
+		s.Engine.PublishFilesystems(filesystems)
+	}
 	collectors := map[string]metrics.CollectorHealth{}
 	if hostErr != nil {
 		s.hostFailures++
@@ -144,6 +157,26 @@ func (s *Sampler) collect(ctx context.Context, pending []metrics.Event) {
 	}
 	s.Engine.Publish(metrics.Snapshot{At: now, BootIdentity: metrics.BootIdentity(boot), Host: host, Resources: resourceValues, Collectors: collectors}, pending...)
 }
+func (s *Sampler) handleDockerEvent(ctx context.Context, event dockerapi.Event) {
+	if s.Cache == nil {
+		return
+	}
+	switch strings.ToLower(event.Action) {
+	case "destroy":
+		s.Cache.Remove(event.ID)
+	case "die", "stop", "pause":
+		if v, ok := s.Cache.Get(event.ID); ok {
+			v.State = strings.ToLower(event.Action)
+			s.Cache.Set(v)
+		}
+	case "start", "unpause", "restart", "health_status":
+		// Refresh metadata on lifecycle/health changes.
+		if inspect, err := s.Docker.Inspect(ctx, event.ID); err == nil {
+			s.Cache.Set(dockercollector.Metadata{ID: inspect.ID, Name: inspect.Name, Image: inspect.Image, Created: inspect.Created, State: inspect.State, Health: inspect.Health, Labels: inspect.Labels, Networks: inspect.Networks, Mounts: inspect.Mounts})
+		}
+	}
+}
+
 func (s *Sampler) CollectionDuration() time.Duration {
 	if s == nil {
 		return 0
@@ -151,71 +184,192 @@ func (s *Sampler) CollectionDuration() time.Duration {
 	return time.Duration(s.LastDurationNanos.Load())
 }
 
-func (s *Sampler) collectHost(now time.Time) (metrics.HostObservation, string, error) {
+func (s *Sampler) collectHost(now time.Time) (metrics.HostObservation, []metrics.FilesystemObservation, string, error) {
 	read := func(name string) ([]byte, error) { return os.ReadFile(filepath.Join(s.HostProc, name)) }
 	statRaw, err := read("stat")
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	stats, err := hostcollector.ParseProcStat(string(statRaw))
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	memRaw, err := read("meminfo")
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	memory, err := hostcollector.ParseMeminfo(string(memRaw))
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	loadRaw, err := read("loadavg")
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
-	load, err := hostcollector.ParseLoadavg(string(loadRaw))
+	load, err := hostcollector.ParseLoadavgFull(string(loadRaw))
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	uptimeRaw, err := read("uptime")
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	uptime, err := hostcollector.ParseUptime(string(uptimeRaw))
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	networkRaw, err := read("net/dev")
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	networks, err := hostcollector.ParseNetDev(string(networkRaw))
 	if err != nil {
-		return metrics.HostObservation{}, "", err
+		return metrics.HostObservation{}, nil, "", err
 	}
 	network := hostcollector.AggregateNetwork(networks)
-	var cpu *float64
+
+	diskRaw, err := read("diskstats")
+	var disk hostcollector.DiskCounters
+	if err == nil {
+		disks, _ := hostcollector.ParseDiskstats(string(diskRaw))
+		for _, d := range disks {
+			disk.Reads += d.Reads
+			disk.ReadSectors += d.ReadSectors
+			disk.Writes += d.Writes
+			disk.WriteSectors += d.WriteSectors
+		}
+	}
+
+	var cpu, cpuUser, cpuSystem, cpuIOWait, cpuSteal *float64
 	if s.haveCPU {
-		cpu = hostcollector.CPUDelta(s.previousCPU, stats["cpu"]).Busy
+		usage := hostcollector.CPUDelta(s.previousCPU, stats["cpu"])
+		cpu, cpuUser, cpuSystem, cpuIOWait, cpuSteal = usage.Busy, usage.User, usage.System, usage.IOWait, usage.Steal
 	}
 	s.previousCPU, s.haveCPU = stats["cpu"], true
-	var rx, tx *float64
+
+	var rx, tx, rxPackets, txPackets *float64
+	var rxErrors, txErrors, rxDrops, txDrops *int64
 	if !s.previousNetworkAt.IsZero() {
 		elapsed := now.Sub(s.previousNetworkAt).Seconds()
-		rx, tx = hostcollector.Rate(network.RXBytes, s.previousNetwork.RXBytes, elapsed), hostcollector.Rate(network.TXBytes, s.previousNetwork.TXBytes, elapsed)
+		rx = hostcollector.Rate(network.RXBytes, s.previousNetwork.RXBytes, elapsed)
+		tx = hostcollector.Rate(network.TXBytes, s.previousNetwork.TXBytes, elapsed)
+		rxPackets = hostcollector.Rate(network.RXPackets, s.previousNetwork.RXPackets, elapsed)
+		txPackets = hostcollector.Rate(network.TXPackets, s.previousNetwork.TXPackets, elapsed)
+		rxErrors = deltaInt64(network.RXErrors, s.previousNetwork.RXErrors)
+		txErrors = deltaInt64(network.TXErrors, s.previousNetwork.TXErrors)
+		rxDrops = deltaInt64(network.RXDrops, s.previousNetwork.RXDrops)
+		txDrops = deltaInt64(network.TXDrops, s.previousNetwork.TXDrops)
 	}
 	s.previousNetwork, s.previousNetworkAt = network, now
-	used, total := int64(memory.Used), int64(memory.Total)
-	memoryPercent := float64(memory.Used) * 100 / float64(memory.Total)
-	observation := metrics.HostObservation{At: now, CPUPercent: cpu, MemoryUsedBytes: &used, MemoryTotalBytes: &total, MemoryPercent: &memoryPercent, Load1: &load, NetworkRXBPS: rx, NetworkTXBPS: tx, UptimeSeconds: &uptime}
-	var fs unix.Statfs_t
-	if unix.Statfs(filepath.Join(s.HostProc, "1/root"), &fs) == nil {
-		diskTotal := int64(fs.Blocks) * int64(fs.Bsize)
-		diskUsed := diskTotal - int64(fs.Bavail)*int64(fs.Bsize)
-		observation.DiskTotalBytes, observation.DiskUsedBytes = &diskTotal, &diskUsed
+
+	var diskReadBPS, diskWriteBPS, diskReadIOPS, diskWriteIOPS *float64
+	if !s.previousDiskAt.IsZero() {
+		elapsed := now.Sub(s.previousDiskAt).Seconds()
+		diskReadBPS = hostcollector.Rate(hostcollector.SectorToBytes(disk.ReadSectors), hostcollector.SectorToBytes(s.previousDisk.ReadSectors), elapsed)
+		diskWriteBPS = hostcollector.Rate(hostcollector.SectorToBytes(disk.WriteSectors), hostcollector.SectorToBytes(s.previousDisk.WriteSectors), elapsed)
+		diskReadIOPS = hostcollector.Rate(disk.Reads, s.previousDisk.Reads, elapsed)
+		diskWriteIOPS = hostcollector.Rate(disk.Writes, s.previousDisk.Writes, elapsed)
 	}
+	s.previousDisk, s.previousDiskAt = disk, now
+
+	used, total := int64(memory.Used), int64(memory.Total)
+	available := int64(memory.Available)
+	cached := int64(memory.Cached)
+	buffers := int64(memory.Buffers)
+	var memoryPercent *float64
+	if memory.Total > 0 {
+		v := float64(memory.Used) * 100 / float64(memory.Total)
+		memoryPercent = &v
+	}
+	swapUsed := int64(memory.SwapTotal - memory.SwapFree)
+	swapTotal := int64(memory.SwapTotal)
+	var swapPercent *float64
+	if memory.SwapTotal > 0 {
+		v := float64(memory.SwapTotal-memory.SwapFree) * 100 / float64(memory.SwapTotal)
+		swapPercent = &v
+	}
+	load1, load5, load15 := load.One, load.Five, load.Fifteen
+
+	observation := metrics.HostObservation{
+		At: now, CPUPercent: cpu, CPUUserPercent: cpuUser, CPUSystemPercent: cpuSystem, CPUIOWaitPercent: cpuIOWait, CPUStealPercent: cpuSteal,
+		MemoryUsedBytes: &used, MemoryTotalBytes: &total, MemoryAvailableBytes: &available, MemoryPercent: memoryPercent,
+		MemoryCachedBytes: &cached, MemoryBuffersBytes: &buffers, SwapUsedBytes: &swapUsed, SwapTotalBytes: &swapTotal, SwapPercent: swapPercent,
+		Load1: &load1, Load5: &load5, Load15: &load15,
+		NetworkRXBPS: rx, NetworkTXBPS: tx, NetworkRXPacketsPS: rxPackets, NetworkTXPacketsPS: txPackets,
+		NetworkRXErrorsDelta: rxErrors, NetworkTXErrorsDelta: txErrors, NetworkRXDropsDelta: rxDrops, NetworkTXDropsDelta: txDrops,
+		DiskReadBPS: diskReadBPS, DiskWriteBPS: diskWriteBPS, DiskReadIOPS: diskReadIOPS, DiskWriteIOPS: diskWriteIOPS,
+		UptimeSeconds: &uptime,
+	}
+
+	fsystems, fsErr := s.collectFilesystems(now)
+	if fsErr == nil && len(fsystems) > 0 {
+		var totalBytes, usedBytes int64
+		for _, fs := range fsystems {
+			if fs.TotalBytes != nil {
+				totalBytes += *fs.TotalBytes
+			}
+			if fs.UsedBytes != nil {
+				usedBytes += *fs.UsedBytes
+			}
+		}
+		observation.DiskTotalBytes, observation.DiskUsedBytes = &totalBytes, &usedBytes
+	}
+
 	bootRaw, _ := read("sys/kernel/random/boot_id")
-	return observation, strings.TrimSpace(string(bootRaw)), nil
+	return observation, fsystems, strings.TrimSpace(string(bootRaw)), nil
+}
+
+func deltaInt64(current, previous uint64) *int64 {
+	if current < previous {
+		return nil
+	}
+	v := int64(current - previous)
+	return &v
+}
+
+func (s *Sampler) collectFilesystems(now time.Time) ([]metrics.FilesystemObservation, error) {
+	mountsRaw, err := os.ReadFile(filepath.Join(s.HostProc, "self/mountinfo"))
+	if err != nil {
+		mountsRaw, err = os.ReadFile(filepath.Join(s.HostProc, "mounts"))
+		if err != nil {
+			return nil, err
+		}
+	}
+	mounts := hostcollector.ParseMounts(string(mountsRaw), s.DataDir)
+	out := make([]metrics.FilesystemObservation, 0, len(mounts))
+	seen := map[string]bool{}
+	for _, m := range mounts {
+		key := m.Source + "|" + m.Target
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		var fs unix.Statfs_t
+		if unix.Statfs(m.Target, &fs) != nil {
+			continue
+		}
+		total := int64(fs.Blocks) * int64(fs.Bsize)
+		available := int64(fs.Bavail) * int64(fs.Bsize)
+		free := int64(fs.Bfree) * int64(fs.Bsize)
+		used := total - free
+		var usedPct *float64
+		if total > 0 {
+			v := float64(used) * 100 / float64(total)
+			usedPct = &v
+		}
+		var totalInodes, usedInodes *int64
+		if fs.Files > 0 {
+			ti := int64(fs.Files)
+			ui := int64(fs.Files - fs.Ffree)
+			totalInodes, usedInodes = &ti, &ui
+		}
+		out = append(out, metrics.FilesystemObservation{
+			At: now, MountKey: key, MountPoint: m.Target, FSType: m.FSType,
+			TotalBytes: &total, UsedBytes: &used, AvailableBytes: &available, UsedPercent: usedPct,
+			InodesTotal: totalInodes, InodesUsed: usedInodes,
+		})
+	}
+	return out, nil
 }
 
 type resourceGroup struct {
@@ -241,16 +395,9 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 		s.previousStats = map[string]dockerSample{}
 	}
 	for _, container := range containers {
-		inspect, inspectErr := s.Docker.Inspect(ctx, container.ID)
+		inspect, inspectErr := s.inspect(ctx, container.ID)
 		if inspectErr != nil {
 			return nil, inspectErr
-		}
-		if inspect.State != "running" {
-			continue
-		}
-		stats, statsErr := s.Docker.Stats(ctx, container.ID)
-		if statsErr != nil {
-			return nil, statsErr
 		}
 		identity := resources.Resolve(inspect.Labels, inspect.Name, "")
 		group := groups[identity.StableKey]
@@ -267,26 +414,33 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 			}
 			groups[identity.StableKey] = group
 		}
-		status := metrics.StatusHealthy
-		if inspect.Health == "unhealthy" {
-			status = metrics.StatusDown
-		} else if inspect.Health == "starting" {
-			status = metrics.StatusUnknown
-		}
+		status := containerStatus(inspect.State, inspect.Health)
 		group.status = append(group.status, status)
-		group.components = append(group.components, metrics.ResourceComponent{ID: metrics.ContainerID(container.ID), Name: inspect.Name, Status: status})
+		component := metrics.ResourceComponent{ID: metrics.ContainerID(container.ID), Name: inspect.Name, Status: status}
+		if inspect.State != "running" {
+			group.components = append(group.components, component)
+			continue
+		}
+		stats, statsErr := s.Docker.Stats(ctx, container.ID)
+		if statsErr != nil {
+			return nil, statsErr
+		}
 		memory := dockercollector.NormalizeMemory(dockercollector.MemoryStats{Usage: stats.Memory.Usage, Limit: stats.Memory.Limit, InactiveFile: stats.Memory.InactiveFile, PIDs: stats.PIDs}, uint64Value(hostTotal))
+		component.MemoryBytes = int64PtrFromFloat64Bytes(memory.WorkingSet)
+		component.PIDs = stats.PIDs
 		if memory.WorkingSet != nil {
 			group.memory += *memory.WorkingSet
 			group.memoryOK = true
 		}
 		if previous, ok := s.previousStats[container.ID]; ok {
 			cpu := dockercollector.NormalizeCPU(dockercollector.CPUStats{Total: previous.value.CPU.TotalUsage, System: previous.value.CPU.SystemUsage, Online: previous.value.CPU.OnlineCPUs}, dockercollector.CPUStats{Total: stats.CPU.TotalUsage, System: stats.CPU.SystemUsage, Online: stats.CPU.OnlineCPUs}, stats.CPU.OnlineCPUs)
+			component.CPUHostPercent = cpu.HostPercent
 			if cpu.HostPercent != nil {
 				group.cpu += *cpu.HostPercent
 				group.cpuOK = true
 			}
 			io := dockercollector.NormalizeIO(dockercollector.IOCounters{RX: previous.value.IO.RX, TX: previous.value.IO.TX, Read: previous.value.IO.Read, Write: previous.value.IO.Write}, dockercollector.IOCounters{RX: stats.IO.RX, TX: stats.IO.TX, Read: stats.IO.Read, Write: stats.IO.Write}, now.Sub(previous.at).Seconds())
+			component.RXBPS, component.TXBPS, component.BlockReadBPS, component.BlockWriteBPS = io.RX, io.TX, io.Read, io.Write
 			if io.RX != nil {
 				group.rx += *io.RX
 				group.rxOK = true
@@ -304,6 +458,7 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 				group.writeOK = true
 			}
 		}
+		group.components = append(group.components, component)
 		s.previousStats[container.ID] = dockerSample{value: stats, at: now}
 	}
 	result := make([]metrics.ResourceSnapshot, 0, len(groups))
@@ -313,6 +468,40 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Name < result[j].Name })
 	return result, nil
+}
+
+func (s *Sampler) inspect(ctx context.Context, id string) (dockerapi.Inspect, error) {
+	if s.Cache != nil {
+		if v, ok := s.Cache.Get(id); ok {
+			return dockerapi.Inspect{ID: v.ID, Name: v.Name, Image: v.Image, Created: v.Created, State: v.State, Health: v.Health, Labels: v.Labels, Networks: v.Networks, Mounts: v.Mounts}, nil
+		}
+	}
+	inspect, err := s.Docker.Inspect(ctx, id)
+	if err != nil {
+		return dockerapi.Inspect{}, err
+	}
+	if s.Cache != nil {
+		s.Cache.Set(dockercollector.Metadata{ID: inspect.ID, Name: inspect.Name, Image: inspect.Image, Created: inspect.Created, State: inspect.State, Health: inspect.Health, Labels: inspect.Labels, Networks: inspect.Networks, Mounts: inspect.Mounts})
+	}
+	return inspect, nil
+}
+
+func containerStatus(state, health string) metrics.ResourceStatus {
+	switch state {
+	case "running":
+		if health == "unhealthy" {
+			return metrics.StatusDown
+		}
+		if health == "starting" {
+			return metrics.StatusUnknown
+		}
+		return metrics.StatusHealthy
+	case "paused":
+		return metrics.StatusPaused
+	case "exited", "dead":
+		return metrics.StatusDown
+	}
+	return metrics.StatusUnknown
 }
 
 func health(name string, failures int, err error, now time.Time) metrics.CollectorHealth {
@@ -362,4 +551,11 @@ func uint64Value(value *int64) uint64 {
 		return 0
 	}
 	return uint64(*value)
+}
+func int64PtrFromFloat64Bytes(v *float64) *int64 {
+	if v == nil {
+		return nil
+	}
+	n := int64(*v)
+	return &n
 }

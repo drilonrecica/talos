@@ -8,6 +8,7 @@ import (
 )
 
 type Memory struct{ Total, Available, Used, SwapTotal, SwapFree, Cached, Buffers uint64 }
+type Load struct{ One, Five, Fifteen float64 }
 
 func ParseMeminfo(input string) (Memory, error) {
 	vals := map[string]uint64{}
@@ -33,11 +34,29 @@ func ParseMeminfo(input string) (Memory, error) {
 	return m, nil
 }
 func ParseLoadavg(input string) (float64, error) {
+	l, err := ParseLoadavgFull(input)
+	return l.One, err
+}
+func ParseLoadavgFull(input string) (Load, error) {
 	f := strings.Fields(input)
-	if len(f) == 0 {
-		return 0, fmt.Errorf("missing load")
+	if len(f) < 3 {
+		return Load{}, fmt.Errorf("missing load")
 	}
-	return strconv.ParseFloat(f[0], 64)
+	var l Load
+	var err error
+	l.One, err = strconv.ParseFloat(f[0], 64)
+	if err != nil {
+		return Load{}, err
+	}
+	l.Five, err = strconv.ParseFloat(f[1], 64)
+	if err != nil {
+		return Load{}, err
+	}
+	l.Fifteen, err = strconv.ParseFloat(f[2], 64)
+	if err != nil {
+		return Load{}, err
+	}
+	return l, nil
 }
 func ParseUptime(input string) (float64, error) {
 	f := strings.Fields(input)

@@ -46,11 +46,13 @@ func TestSamplerCollectsMergedHostAndResourceState(t *testing.T) {
 	write("loadavg", "0.25 0.20 0.10 1/10 1\n")
 	write("uptime", "100.0 50.0\n")
 	write("net/dev", "eth0: 10 1 0 0 0 0 0 0 20 2 0 0 0 0 0 0\n")
+	write("diskstats", "   8       0 sda 10 0 20 0 5 0 40 0 0 0 0 0 0 0 0\n")
+	write("self/mountinfo", "1 1 8:1 / / rw,relatime - ext4 /dev/sda1 rw\n")
 	write("sys/kernel/random/boot_id", "boot-one\n")
 	docker := &fakeDocker{stats: dockerapi.Stats{CPU: dockerapi.CPUStats{TotalUsage: 100, SystemUsage: 1000, OnlineCPUs: 2}, Memory: dockerapi.MemoryStats{Usage: 100, Limit: 1000}}}
 	sampler := &Sampler{HostProc: root, Docker: docker}
 	now := time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC)
-	host, boot, err := sampler.collectHost(now)
+	host, _, boot, err := sampler.collectHost(now)
 	if err != nil || boot != "boot-one" || host.MemoryUsedBytes == nil {
 		t.Fatalf("host=%+v boot=%q err=%v", host, boot, err)
 	}
