@@ -90,7 +90,7 @@
   }
 </script>
 
-<section class="card" aria-labelledby="history-delete-title">
+<section class="history-deletion" aria-labelledby="history-delete-title">
   <h2 id="history-delete-title">Data history</h2>
   <p>
     History deletion is irreversible. Monitoring configuration and user access

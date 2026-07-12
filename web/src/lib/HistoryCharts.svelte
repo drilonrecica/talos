@@ -17,6 +17,7 @@
     type ChartAnnotation,
     type OperationalEvent,
   } from './annotations';
+  import ConsoleSection from './ui/ConsoleSection.svelte';
 
   let {
     scope,
@@ -118,8 +119,18 @@
 </script>
 
 <section class="history" aria-labelledby="history-title">
-  <h2 id="history-title">Historical telemetry</h2>
-  <div class="range-controls" role="group" aria-label="Historical range">
+  <ConsoleSection
+    code="HISTORY"
+    title="Historical telemetry"
+    id="history-title"
+    detail={data?.resolution ? `resolution ${data.resolution}` : ''}
+  />
+  <div
+    class="control-rail range-controls"
+    role="group"
+    aria-label="Historical range"
+  >
+    <span>RANGE</span>
     {#each ['1h', '6h', '24h', '7d', '30d'] as item}<button
         type="button"
         aria-pressed={range === item}
@@ -148,9 +159,11 @@
   {#if error}<p role="alert">
       {error} <button type="button" onclick={load}>Retry</button>
     </p>{/if}
-  {#if data}<p class="resolution">
-      Resolution: {data.resolution}. Gaps are shown as broken lines.
-    </p>
+  {#if data}<div class="history-status-rail">
+      <span>Resolution: {data.resolution}.</span><span
+        >GAPS {data.gaps.length}</span
+      ><span>ANNOTATIONS {annotations.length}</span>
+    </div>
     {#if annotations.length}<details class="chart-annotations">
         <summary
           >{annotations.length} event annotation{annotations.length === 1
@@ -186,17 +199,23 @@
             </li>{/each}
         </ul>
       </details>{/if}
-    {#each data.series as series (series.metric)}<article class="card">
-        <h3>{labels[series.metric]}</h3>
-        <TimeSeries
-          label={labels[series.metric]}
-          points={chartPoints(series, data.gaps)}
-          gaps={data.gaps}
-          {markers}
-        />
-        <dl>
-          <dt>Current</dt>
-          <dd>{display(series.metric, series.points.at(-1)?.avg ?? null)}</dd>
+    {#each data.series as series (series.metric)}<article class="metric-band">
+        <header>
+          <span>METRIC</span>
+          <h3>{labels[series.metric]}</h3>
+          <strong
+            >{display(series.metric, series.points.at(-1)?.avg ?? null)}</strong
+          >
+        </header>
+        <div class="metric-plot">
+          <TimeSeries
+            label={labels[series.metric]}
+            points={chartPoints(series, data.gaps)}
+            gaps={data.gaps}
+            {markers}
+          />
+        </div>
+        <dl class="metric-stats">
           <dt>Minimum</dt>
           <dd>
             {display(

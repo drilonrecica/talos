@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Badge from './ui/Badge.svelte';
   import { formatBytes, formatNumber } from './i18n';
+  import ConsoleSection from './ui/ConsoleSection.svelte';
+  import ConsoleState from './ui/ConsoleState.svelte';
   type Metric = {
     id: string;
     label: string;
@@ -49,37 +50,36 @@
   });
 </script>
 
-<section aria-labelledby="monitor-health-title">
-  <h1 id="monitor-health-title">Monitor health</h1>
-  <p>
-    These measurements show Binnacle’s own resource cost and whether history
-    work is keeping up. Unavailable values are not treated as zero.
+<section class="console-page" aria-labelledby="monitor-health-title">
+  <ConsoleSection
+    code="SELF"
+    title="Monitor health"
+    id="monitor-health-title"
+    detail={at ? `updated ${new Date(at).toLocaleTimeString()}` : ''}
+  />
+  <p class="console-caption">
+    Binnacle resource cost and history pipeline state. Unavailable values are
+    not treated as zero.
   </p>
-  {#if error}<p role="alert">{error}</p>{/if}
-  {#if at}<p>
-      Updated <time datetime={at}>{new Date(at).toLocaleString()}</time>.
-    </p>{/if}
-  <div class="monitor-grid" aria-live="polite">
-    {#each metrics as metric (metric.id)}
-      <article class="card">
-        <h2>{metric.label}</h2>
-        <p class="monitor-value">{display(metric)}</p>
-        <Badge
-          state={metric.status === 'normal'
-            ? 'healthy'
-            : metric.status === 'critical'
-              ? 'down'
-              : metric.status === 'warning'
-                ? 'degraded'
-                : 'unknown'}>{metric.status}</Badge
-        >
-        <p>{metric.help}</p>
-        {#if metric.id === 'database' || metric.id === 'wal' || metric.id === 'queue'}<p
-          >
-            <a href="/settings">Review storage settings and recovery guidance</a
-            >
-          </p>{/if}
-      </article>
-    {/each}
+  {#if error}<p class="console-notice" role="alert">{error}</p>{/if}
+  <div class="table-scroll" aria-live="polite">
+    <table class="console-table health-table">
+      <thead
+        ><tr
+          ><th>State</th><th>Metric</th><th>Reading</th><th>Interpretation</th
+          ></tr
+        ></thead
+      ><tbody
+        >{#each [...metrics].sort( (a, b) => a.status.localeCompare(b.status) ) as metric (metric.id)}<tr
+            ><td><ConsoleState state={metric.status} /></td><th scope="row"
+              >{metric.label}</th
+            ><td class="monitor-value">{display(metric)}</td><td
+              >{metric.help}{#if ['database', 'wal', 'queue'].includes(metric.id)}
+                <a href="/settings#retention">Review storage settings</a
+                >{/if}</td
+            ></tr
+          >{/each}</tbody
+      >
+    </table>
   </div>
 </section>

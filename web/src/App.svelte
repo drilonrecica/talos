@@ -151,6 +151,10 @@
     {#if route === 'setup'}<Setup onclaimed={setupClaimed} />
     {:else}<Login onauthenticated={authenticated} />{/if}
   </main>
+{:else if route === 'onboarding'}
+  <main id="content" class="public-shell onboarding-shell">
+    <Onboarding oncomplete={onboardingComplete} />
+  </main>
 {:else}
   <div class="console-shell">
     <header class="console-header">
@@ -187,20 +191,7 @@
 
     <main id="content" class:watch-main={route === 'watch'}>
       <ConnectionNotice {live} />
-      {#if route !== 'watch' && route !== 'onboarding'}
-        <div class="page-heading">
-          <span>VIEW</span>
-          <h1>
-            {route[0].toUpperCase() + route.slice(1)}
-          </h1>
-        </div>
-      {/if}
-      {#if route === 'onboarding'}<Onboarding oncomplete={onboardingComplete} />
-      {:else if route === 'watch'}<Watch
-          {live}
-          {inspectID}
-          oninspect={inspect}
-        />
+      {#if route === 'watch'}<Watch {live} {inspectID} oninspect={inspect} />
       {:else if route === 'resources' && resourceID}<ResourceDetail
           {live}
           id={resourceID}

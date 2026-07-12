@@ -33,36 +33,43 @@
   }
 </script>
 
-<section class="auth-card" aria-labelledby="login-title">
-  <div class="auth-brand" aria-hidden="true">
-    <img src="/brand/binnacle-wordmark.png" alt="" />
-  </div>
-  <h1 id="login-title">Sign in to Binnacle</h1>
-  <p>Use the local administrator account for this server.</p>
-  {#if error}<p bind:this={errorElement} tabindex="-1" role="alert">
-      {error}
-    </p>{/if}
-  <form onsubmit={submit} aria-busy={busy}>
-    <label for="username">Username</label>
-    <input
-      bind:this={usernameElement}
-      id="username"
-      name="username"
-      autocomplete="username"
-      required
-      bind:value={username}
-    />
-    <label for="password">Password</label>
-    <input
-      id="password"
-      name="password"
-      type="password"
-      autocomplete="current-password"
-      required
-      bind:value={password}
-    />
-    <button type="submit" disabled={busy}
-      >{busy ? 'Signing in…' : 'Sign in'}</button
+<section class="access-gate" aria-labelledby="login-title">
+  <div class="access-brand" aria-hidden="true">
+    <img src="/brand/binnacle-mark-dark.png" alt="" /><span
+      >BINNACLE / ACCESS</span
+    ><strong>LOCAL ADMINISTRATOR GATE</strong><small
+      >SELF-HOSTED · READ-ONLY MONITOR</small
     >
-  </form>
+  </div>
+  <div class="access-form">
+    <span class="eyebrow">AUTHENTICATION / 01</span>
+    <h1 id="login-title">Sign in to Binnacle</h1>
+    <p>Use the local administrator account for this server.</p>
+    {#if error}<p bind:this={errorElement} tabindex="-1" role="alert">
+        {error}
+      </p>{/if}
+    <form onsubmit={submit} aria-busy={busy}>
+      <label for="username">Username</label>
+      <input
+        bind:this={usernameElement}
+        id="username"
+        name="username"
+        autocomplete="username"
+        required
+        bind:value={username}
+      />
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+        bind:value={password}
+      />
+      <button type="submit" disabled={busy}
+        >{busy ? 'Signing in…' : 'Sign in'}</button
+      >
+    </form>
+  </div>
 </section>

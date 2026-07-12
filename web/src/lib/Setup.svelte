@@ -46,63 +46,70 @@
   }
 </script>
 
-<section class="auth-card" aria-labelledby="setup-title">
-  <div class="auth-brand" aria-hidden="true">
-    <img src="/brand/binnacle-wordmark.png" alt="" />
+<section class="access-gate" aria-labelledby="setup-title">
+  <div class="access-brand" aria-hidden="true">
+    <img src="/brand/binnacle-mark-dark.png" alt="" /><span
+      >BINNACLE / COMMISSION</span
+    ><strong>ONE-TIME SERVER CLAIM</strong><small
+      >LOCAL CREDENTIALS · NO CLOUD ACCOUNT</small
+    >
   </div>
-  <h1 id="setup-title">Set up Binnacle</h1>
-  <p>Enter the one-time token configured for this installation.</p>
-  {#if error}<p bind:this={alert} tabindex="-1" role="alert">{error}</p>{/if}
-  {#if !verified}
-    <form
-      onsubmit={(event) => {
-        event.preventDefault();
-        void verify();
-      }}
-    >
-      <label for="setup-token">Setup token</label>
-      <input
-        id="setup-token"
-        type="password"
-        autocomplete="one-time-code"
-        required
-        bind:value={token}
-      />
-      <button disabled={busy}>Verify token</button>
-    </form>
-  {:else}
-    <form
-      onsubmit={(event) => {
-        event.preventDefault();
-        void claim();
-      }}
-    >
-      <label for="setup-username">Administrator username</label>
-      <input
-        id="setup-username"
-        autocomplete="username"
-        required
-        bind:value={username}
-      />
-      <label for="setup-password">Password</label>
-      <input
-        id="setup-password"
-        type="password"
-        minlength="12"
-        maxlength="128"
-        autocomplete="new-password"
-        required
-        bind:value={password}
-      />
-      <label for="setup-confirmation">Confirm password</label>
-      <input
-        id="setup-confirmation"
-        type="password"
-        autocomplete="new-password"
-        required
-        bind:value={confirmation}
-      />
-      <button disabled={busy}>Create administrator</button>
-    </form>
-  {/if}
+  <div class="access-form">
+    <span class="eyebrow">INSTALLATION / 01</span>
+    <h1 id="setup-title">Set up Binnacle</h1>
+    <p>Enter the one-time token configured for this installation.</p>
+    {#if error}<p bind:this={alert} tabindex="-1" role="alert">{error}</p>{/if}
+    {#if !verified}
+      <form
+        onsubmit={(event) => {
+          event.preventDefault();
+          void verify();
+        }}
+      >
+        <label for="setup-token">Setup token</label>
+        <input
+          id="setup-token"
+          type="password"
+          autocomplete="one-time-code"
+          required
+          bind:value={token}
+        />
+        <button disabled={busy}>Verify token</button>
+      </form>
+    {:else}
+      <form
+        onsubmit={(event) => {
+          event.preventDefault();
+          void claim();
+        }}
+      >
+        <label for="setup-username">Administrator username</label>
+        <input
+          id="setup-username"
+          autocomplete="username"
+          required
+          bind:value={username}
+        />
+        <label for="setup-password">Password</label>
+        <input
+          id="setup-password"
+          type="password"
+          minlength="12"
+          maxlength="128"
+          autocomplete="new-password"
+          required
+          bind:value={password}
+        />
+        <label for="setup-confirmation">Confirm password</label>
+        <input
+          id="setup-confirmation"
+          type="password"
+          autocomplete="new-password"
+          required
+          bind:value={confirmation}
+        />
+        <button disabled={busy}>Create administrator</button>
+      </form>
+    {/if}
+  </div>
 </section>

@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { LiveStore } from './live.svelte';
-  import Badge from './ui/Badge.svelte';
   import { formatBytes, formatNumber } from './i18n';
+  import ConsoleSection from './ui/ConsoleSection.svelte';
+  import ConsoleState from './ui/ConsoleState.svelte';
   import HistoryCharts from './HistoryCharts.svelte';
   import HistoryDeletion from './HistoryDeletion.svelte';
   let { live, id }: { live: LiveStore; id: string } = $props();
@@ -34,46 +35,109 @@
 </script>
 
 {#if current}
-  <section class="card">
-    <h2>{current.name}</h2>
-    <Badge state={current.status}>{current.status}</Badge>
-    <p>
-      {current.category}{current.project
-        ? ` · ${current.project}`
-        : ''}{current.environment ? ` / ${current.environment}` : ''}
-    </p>
-    <p>CPU: {formatNumber(current.cpuHostPct)}% of host</p>
-    <p>Memory: {formatBytes(current.memoryBytes)}</p>
-    {#if current.components?.length}<details>
-        <summary>{current.components.length} components</summary>
-        <ul>
-          {#each current.components as component (component.id)}<li>
-              {component.name} — {component.status}
-            </li>{/each}
-        </ul>
-      </details>{/if}
-    <details>
-      <summary>Technical details</summary><code>{current.id}</code>
+  <section
+    class="console-page resource-detail"
+    aria-labelledby="resource-title"
+  >
+    <header class="identity-strip">
+      <div>
+        <span>RESOURCE</span>
+        <h1 id="resource-title">{current.name}</h1>
+      </div>
+      <ConsoleState state={current.status} />
+    </header>
+    <dl class="instrument-sheet resource-instruments">
+      <div>
+        <dt>CPU / HOST</dt>
+        <dd>{formatNumber(current.cpuHostPct)}%</dd>
+      </div>
+      <div>
+        <dt>MEMORY</dt>
+        <dd>{formatBytes(current.memoryBytes)}</dd>
+      </div>
+      <div>
+        <dt>CONTEXT</dt>
+        <dd>
+          {current.project ?? current.category ?? 'service'}{current.environment
+            ? `/${current.environment}`
+            : ''}
+        </dd>
+      </div>
+      <div>
+        <dt>COMPONENTS</dt>
+        <dd>{current.components?.length ?? 0}</dd>
+      </div>
+    </dl>
+    <section aria-labelledby="components-title">
+      <ConsoleSection
+        code="UNITS"
+        title="Component roster"
+        id="components-title"
+        detail={`${current.components?.length ?? 0} components`}
+      />
+      {#if current.components?.length}<table class="console-table">
+          <thead
+            ><tr><th>State</th><th>Component</th><th>Identity</th></tr></thead
+          ><tbody
+            >{#each current.components as component (component.id)}<tr
+                ><td><ConsoleState state={component.status} /></td><th
+                  scope="row">{component.name}</th
+                ><td><code>{component.id}</code></td></tr
+              >{/each}</tbody
+          >
+        </table>{:else}<p class="console-empty">
+          No component detail is available.
+        </p>{/if}
+    </section>
+    <details class="technical-disclosure">
+      <summary>Technical metadata</summary>
+      <dl>
+        <dt>Resource identity</dt>
+        <dd><code>{current.id}</code></dd>
+        <dt>Category</dt>
+        <dd>{current.category ?? '—'}</dd>
+      </dl>
     </details>
   </section>
 {:else if archived}
-  <section class="card archived-detail">
-    <h2>{archived.name}</h2>
-    <Badge state="archived">archived</Badge>
-    <p>
+  <section
+    class="console-page archived-detail"
+    aria-labelledby="resource-title"
+  >
+    <header class="identity-strip">
+      <div>
+        <span>ARCHIVE</span>
+        <h1 id="resource-title">{archived.name}</h1>
+      </div>
+      <ConsoleState state="unknown" label="archived" />
+    </header>
+    <p class="console-notice">
       This workload is no longer active. Historical telemetry remains available
       until explicitly purged.
     </p>
-    <p>
-      {archived.category}{archived.project
-        ? ` · ${archived.project}`
-        : ''}{archived.environment ? ` / ${archived.environment}` : ''}
-    </p>
-    {#if archived.archivedAt}<p>
-        Archived {new Date(archived.archivedAt).toLocaleString()}
-      </p>{/if}
+    <dl class="instrument-sheet">
+      <div>
+        <dt>CONTEXT</dt>
+        <dd>
+          {archived.project ?? archived.category}{archived.environment
+            ? `/${archived.environment}`
+            : ''}
+        </dd>
+      </div>
+      <div>
+        <dt>ARCHIVED</dt>
+        <dd>
+          {archived.archivedAt
+            ? new Date(archived.archivedAt).toLocaleString()
+            : '—'}
+        </dd>
+      </div>
+    </dl>
   </section>
-{:else if error}<p role="alert">{error}</p>{:else}<p role="status">
+{:else if error}<p class="console-notice" role="alert">{error}</p>{:else}<p
+    class="console-empty"
+    role="status"
+  >
     Loading resource…
   </p>{/if}
 

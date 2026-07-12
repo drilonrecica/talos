@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ConsoleSection from './ui/ConsoleSection.svelte';
   interface Preview {
     id: string;
     createdAt: string;
@@ -33,20 +34,29 @@
   }
 </script>
 
-<section aria-labelledby="diagnostics-bundle-title">
-  <h1 id="diagnostics-bundle-title">Diagnostics bundle</h1>
-  <p>
+<section class="console-page" aria-labelledby="diagnostics-bundle-title">
+  <ConsoleSection
+    code="EXPORT"
+    title="Diagnostics bundle"
+    id="diagnostics-bundle-title"
+    detail={preview ? `preview ${preview.id}` : 'no preview'}
+  />
+  <p class="console-caption">
     Generate a sanitized preview first. Passwords, tokens, environment
     variables, application logs, domains, IP addresses, and database contents
     are excluded.
   </p>
   {#if error}<p role="alert">{error}</p>{/if}
-  <button type="button" disabled={busy} onclick={generate}
-    >{busy ? 'Generating…' : 'Generate preview'}</button
-  >
+  <div class="control-rail">
+    <span>GENERATE</span><button
+      type="button"
+      disabled={busy}
+      onclick={generate}>{busy ? 'Generating…' : 'Generate preview'}</button
+    >
+  </div>
   {#if preview}
     <h2>Exact included fields</h2>
-    <dl>
+    <dl class="diagnostic-ledger">
       {#each Object.entries(preview.fields) as [name, value] (name)}
         <dt>{name}</dt>
         <dd><pre>{JSON.stringify(value, null, 2)}</pre></dd>

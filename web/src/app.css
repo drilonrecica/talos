@@ -1170,3 +1170,506 @@ meter[data-unavailable='true'] {
     font-size: 0.62rem;
   }
 }
+
+/* Shared Watch Console presentation for operational and administrative views. */
+.console-page,
+.history {
+  max-width: 100rem;
+  margin: 0 auto var(--space-6);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.console-section > div {
+  min-width: 0;
+}
+.control-rail,
+.history-status-rail {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+.control-rail > span,
+.history-status-rail span {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+.control-rail a,
+.control-rail button {
+  padding: 0.45rem 0.75rem;
+  text-decoration: none;
+}
+.control-rail a[aria-current='page'],
+.control-rail button[aria-pressed='true'] {
+  border-color: var(--brand);
+  color: var(--brand-text);
+  background: var(--surface-active);
+}
+.control-rail label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.console-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+}
+.console-table caption {
+  padding: 0.55rem var(--space-3);
+  color: var(--brand-text);
+  text-align: left;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.console-table th,
+.console-table td {
+  min-height: var(--row-height);
+  padding: 0.65rem var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.console-table thead th {
+  color: var(--muted);
+  background: var(--bg);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.console-table tbody th {
+  font-weight: 600;
+}
+.console-table tbody tr:hover {
+  background: var(--surface-active);
+}
+.console-table a {
+  text-decoration: none;
+}
+.console-table a:hover {
+  color: var(--brand-text);
+  text-decoration: underline;
+}
+.console-table code {
+  overflow-wrap: anywhere;
+}
+.console-empty,
+.console-notice,
+.console-caption {
+  margin: 0;
+  padding: var(--space-4) var(--content-pad);
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.console-notice {
+  color: var(--warn-text);
+  border-left: 3px solid var(--warn);
+}
+
+.instrument-sheet {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+.instrument-sheet > div {
+  min-width: 0;
+  min-height: 6rem;
+  padding: var(--space-4);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.instrument-sheet dt {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+.instrument-sheet dd {
+  margin: 0.4rem 0 0;
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.instrument-sheet small,
+.instrument-sheet .instrument-note {
+  color: var(--muted);
+}
+.instrument-sheet .instrument-note {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+.instrument-sheet .technical-value {
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
+.identity-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--content-pad);
+  border-bottom: 1px solid var(--border-strong);
+}
+.identity-strip span:first-child,
+.eyebrow {
+  color: var(--brand-text);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+}
+.identity-strip h1 {
+  margin: 0.2rem 0 0;
+  font-size: 1.5rem;
+}
+.technical-disclosure {
+  padding: var(--space-4) var(--content-pad);
+}
+.technical-disclosure dl {
+  display: grid;
+  grid-template-columns: 12rem 1fr;
+}
+.technical-disclosure code {
+  overflow-wrap: anywhere;
+}
+
+.history {
+  overflow: hidden;
+}
+.history > form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.history-status-rail {
+  justify-content: flex-end;
+}
+.metric-band {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) minmax(18rem, 1fr) minmax(
+      8rem,
+      11rem
+    );
+  min-width: 0;
+  border-top: 1px solid var(--border-strong);
+}
+.metric-band > header {
+  padding: var(--space-4);
+  border-right: 1px solid var(--border);
+}
+.metric-band > header span {
+  color: var(--brand-text);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+.metric-band h3 {
+  margin: 0.4rem 0 1.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+.metric-band > header strong {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+}
+.metric-plot {
+  min-width: 0;
+  padding: var(--space-3);
+}
+.metric-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: center;
+  margin: 0;
+  border-left: 1px solid var(--border);
+}
+.metric-stats dt,
+.metric-stats dd {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+}
+.metric-stats dt {
+  color: var(--muted);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+.metric-stats dd {
+  text-align: right;
+  font-size: 0.72rem;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 52rem);
+  justify-content: center;
+  gap: var(--space-6);
+}
+.settings-index {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: grid;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+.settings-index span,
+.settings-index a {
+  padding: 0.7rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-decoration: none;
+}
+.settings-index span {
+  color: var(--brand-text);
+  letter-spacing: 0.1em;
+}
+.settings-index a:hover {
+  background: var(--surface-active);
+}
+.settings-ledger {
+  min-width: 0;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+.ledger-section {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border-strong);
+  scroll-margin-top: 1rem;
+}
+.ledger-section h2 {
+  margin: 0 0 var(--space-3);
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+.ledger-section h2 > span {
+  margin-right: var(--space-3);
+  color: var(--brand-text);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+.ledger-section small {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--muted);
+}
+.ledger-section input,
+.ledger-section select {
+  width: 100%;
+}
+.ledger-section dl {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 2fr;
+}
+.ledger-section dd {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  overflow-wrap: anywhere;
+}
+.danger-section {
+  border-left: 3px solid var(--bad);
+}
+.history-deletion {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.diagnostic-ledger {
+  display: grid;
+  grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr);
+  margin: 0;
+}
+.diagnostic-ledger dt,
+.diagnostic-ledger dd {
+  margin: 0;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.diagnostic-ledger pre {
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.public-shell {
+  padding: 0;
+}
+.access-gate {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(22rem, 1.2fr);
+  min-height: 100vh;
+}
+.access-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: clamp(2rem, 7vw, 7rem);
+  border-right: 1px solid var(--border-strong);
+  background: #071019;
+  color: var(--text);
+}
+.access-brand img {
+  width: 4rem;
+  height: 5rem;
+  object-fit: contain;
+}
+.access-brand span,
+.access-brand small {
+  color: var(--brand-text);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+.access-brand strong {
+  max-width: 12ch;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1;
+}
+.access-form {
+  display: grid;
+  align-content: center;
+  gap: var(--space-3);
+  width: min(30rem, calc(100% - 3rem));
+  margin: auto;
+}
+.access-form h1 {
+  margin: 0.25rem 0 0;
+}
+.access-form form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.onboarding-shell {
+  background: var(--bg);
+}
+.onboarding {
+  width: min(60rem, calc(100% - 2rem));
+  padding: var(--space-8) 0;
+}
+.commission-header {
+  padding: var(--space-6);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+.commission-header span,
+.step-number {
+  color: var(--brand-text);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+.commission-step {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  border: 1px solid var(--border-strong);
+  border-top: 0;
+  background: var(--surface);
+}
+.step-number {
+  padding: var(--space-6);
+  border-right: 1px solid var(--border);
+}
+.commission-step > div {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+.commission-step h2 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+.diagnostic-result {
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 899px) {
+  .instrument-sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .metric-band {
+    grid-template-columns: 10rem minmax(20rem, 1fr) 9rem;
+    overflow-x: auto;
+  }
+  .settings-layout {
+    display: block;
+  }
+  .settings-index {
+    position: sticky;
+    z-index: 5;
+    top: 0;
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .settings-ledger {
+    border-top: 0;
+  }
+}
+@media (max-width: 600px) {
+  .access-gate {
+    grid-template-columns: 1fr;
+  }
+  .access-brand {
+    min-height: 15rem;
+    padding: var(--space-8);
+    border-right: 0;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .access-brand strong {
+    font-size: 1.7rem;
+  }
+  .access-form {
+    padding: var(--space-8) 0;
+  }
+  .instrument-sheet {
+    grid-template-columns: 1fr 1fr;
+  }
+  .console-table th,
+  .console-table td {
+    padding: 0.55rem 0.65rem;
+  }
+  .ledger-section {
+    padding: var(--space-4);
+  }
+  .ledger-section dl {
+    display: block;
+  }
+  .diagnostic-ledger {
+    grid-template-columns: 1fr;
+  }
+  .commission-step {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+  }
+  .step-number,
+  .commission-step > div {
+    padding: var(--space-4);
+  }
+}

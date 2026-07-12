@@ -50,59 +50,85 @@
 </script>
 
 <section class="onboarding" aria-labelledby="onboarding-title">
-  <h1 id="onboarding-title">Finish installation</h1>
-  <p>Your metrics stay on this server. Binnacle sends no product telemetry.</p>
-  {#if error}<p role="alert">{error}</p>{/if}
-  <fieldset>
-    <legend>Access exposure</legend>
-    <label
-      ><input type="radio" bind:group={exposure} value="private" /> Private access</label
-    >
-    <label
-      ><input type="radio" bind:group={exposure} value="public" /> Public HTTPS URL</label
-    >
+  <header class="commission-header">
+    <span>COMMISSIONING / SEQUENCE</span>
+    <h1 id="onboarding-title">Finish installation</h1>
     <p>
-      Public access should use HTTPS and an additional access control where
-      practical.
+      Your metrics stay on this server. Binnacle sends no product telemetry.
     </p>
-  </fieldset>
-  <label for="retention">Retention preset</label>
-  <select id="retention" bind:value={retention}>
-    <option value="minimal">Minimal</option>
-    <option value="balanced">Balanced</option>
-    <option value="long-term">Long-term</option>
-  </select>
-  <label
-    ><input type="checkbox" bind:checked={outbound} /> Test outbound HTTPS (optional)</label
-  >
-  <button type="button" disabled={busy} onclick={diagnose}
-    >Run installation diagnostics</button
-  >
+  </header>
+  {#if error}<p role="alert">{error}</p>{/if}
+  <section class="commission-step">
+    <span class="step-number">01</span>
+    <div>
+      <fieldset>
+        <legend>Access exposure</legend>
+        <label
+          ><input type="radio" bind:group={exposure} value="private" /> Private access</label
+        >
+        <label
+          ><input type="radio" bind:group={exposure} value="public" /> Public HTTPS
+          URL</label
+        >
+        <p>
+          Public access should use HTTPS and an additional access control where
+          practical.
+        </p>
+      </fieldset>
+    </div>
+  </section>
+  <section class="commission-step">
+    <span class="step-number">02</span>
+    <div>
+      <h2>Retention</h2>
+      <label for="retention">Retention preset</label>
+      <select id="retention" bind:value={retention}>
+        <option value="minimal">Minimal</option>
+        <option value="balanced">Balanced</option>
+        <option value="long-term">Long-term</option>
+      </select>
+    </div>
+  </section>
+  <section class="commission-step">
+    <span class="step-number">03</span>
+    <div>
+      <h2>Diagnostics</h2>
+      <label
+        ><input type="checkbox" bind:checked={outbound} /> Test outbound HTTPS (optional)</label
+      >
+      <button type="button" disabled={busy} onclick={diagnose}
+        >Run installation diagnostics</button
+      >
+    </div>
+  </section>
   {#if onboarding.diagnostics?.length}
-    <section aria-labelledby="diagnostics-title">
-      <h2 id="diagnostics-title">Diagnostics</h2>
-      {#each onboarding.diagnostics as check (check.id)}
-        <article class="card">
-          <h3>{check.name}</h3>
-          <Badge
-            state={check.status === 'passed'
-              ? 'healthy'
-              : check.status === 'failed'
-                ? 'down'
-                : 'unknown'}>{check.status}</Badge
-          >
-          <p>{check.reason}</p>
-          {#if check.suggestedFix}<p>{check.suggestedFix}</p>{/if}
-          {#if check.technicalDetail}<details>
-              <summary>Technical detail</summary><code
-                >{check.technicalDetail}</code
-              >
-            </details>{/if}
-        </article>
-      {/each}
+    <section class="commission-step" aria-labelledby="diagnostics-title">
+      <span class="step-number">04</span>
+      <div>
+        <h2 id="diagnostics-title">Diagnostics</h2>
+        {#each onboarding.diagnostics as check (check.id)}
+          <article class="diagnostic-result">
+            <h3>{check.name}</h3>
+            <Badge
+              state={check.status === 'passed'
+                ? 'healthy'
+                : check.status === 'failed'
+                  ? 'down'
+                  : 'unknown'}>{check.status}</Badge
+            >
+            <p>{check.reason}</p>
+            {#if check.suggestedFix}<p>{check.suggestedFix}</p>{/if}
+            {#if check.technicalDetail}<details>
+                <summary>Technical detail</summary><code
+                  >{check.technicalDetail}</code
+                >
+              </details>{/if}
+          </article>
+        {/each}
+        <button type="button" disabled={busy} onclick={finish}
+          >Enter dashboard</button
+        >
+      </div>
     </section>
-    <button type="button" disabled={busy} onclick={finish}
-      >Enter dashboard</button
-    >
   {/if}
 </section>
