@@ -168,6 +168,22 @@ func (r *Repository) UpdateRule(ctx context.Context, v Rule) error {
 	}
 	return nil
 }
+func (r *Repository) CreateRule(ctx context.Context, v Rule) error {
+	if v.ID == "" || v.Family == "" || v.Name == "" || v.ScopeType == "global" || v.ScopeID == "" {
+		return errors.New("invalid scoped rule")
+	}
+	if v.Severity != Warning && v.Severity != Critical {
+		return errors.New("invalid severity")
+	}
+	switch v.ScopeType {
+	case "host", "filesystem", "project", "resource", "check":
+	default:
+		return errors.New("invalid scope")
+	}
+	now := time.Now().UTC().Unix()
+	_, err := r.db.ExecContext(ctx, `INSERT INTO alert_rules(id,family,name,built_in,enabled,severity,scope_type,scope_id,threshold,recovery_threshold,trigger_seconds,recovery_seconds,window_seconds,cooldown_seconds,repeat_seconds,suppress_during_deployment,created_at,updated_at)VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, v.ID, v.Family, v.Name, false, v.Enabled, v.Severity, v.ScopeType, v.ScopeID, v.Threshold, v.RecoveryThreshold, int(v.TriggerDuration/time.Second), int(v.RecoveryDuration/time.Second), int(v.Window/time.Second), int(v.Cooldown/time.Second), int(v.Repeat/time.Second), v.SuppressDuringDeployment, now, now)
+	return err
+}
 func (r *Repository) Cleanup(ctx context.Context, now time.Time) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

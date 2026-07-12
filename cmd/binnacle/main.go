@@ -12,12 +12,15 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/drilonrecica/binnacle/internal/alerts"
 	"github.com/drilonrecica/binnacle/internal/api"
 	"github.com/drilonrecica/binnacle/internal/app"
 	"github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/checks"
 	dockercollector "github.com/drilonrecica/binnacle/internal/collector/docker"
 	"github.com/drilonrecica/binnacle/internal/collector/production"
 	"github.com/drilonrecica/binnacle/internal/demo"
@@ -80,6 +83,12 @@ func main() {
 		store.SetRetention(storage.RetentionCutoffs{Raw: updated.Retention.Raw, OneMinute: updated.Retention.OneMinute, FifteenMinute: updated.Retention.FifteenMinute, OneHour: updated.Retention.OneHour})
 	})
 	onboardingService.SetRetentionSettings(settingsService)
+	checkRepository := checks.NewRepository(nil)
+	alertRepository := alerts.NewRepository(nil)
+	allowPrivate, _ := strconv.ParseBool(os.Getenv("BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS"))
+	checkRunner := &checks.Runner{AllowPrivate: allowPrivate}
+	checkScheduler := checks.NewScheduler(checkRepository, checkRunner, config.Checks.MaxConcurrency)
+	alertEvaluator := alerts.NewEvaluator(alertRepository, engine)
 
 	var dockerEngine dockerapi.Client
 	var productionSampler *production.Sampler
@@ -115,6 +124,11 @@ func main() {
 		sessions.SetDB(store.DB())
 		onboardingService.SetDB(store.DB())
 		settingsService.SetDB(store.DB())
+		checkRepository.SetDB(store.DB())
+		alertRepository.SetDB(store.DB())
+		if err := alertRepository.SeedDefaults(ctx); err != nil {
+			return err
+		}
 		if err := settingsService.Initialize(ctx); err != nil {
 			return err
 		}
@@ -134,6 +148,10 @@ func main() {
 		return err
 	}})
 	application.Add(sessions)
+	if !*demoMode && !config.Demo {
+		application.Add(checkScheduler)
+	}
+	application.Add(alertEvaluator)
 
 	apiServer := api.New()
 	proxies, _ := auth.ParseTrustedProxies(config.HTTP.TrustedProxyCIDRs)
@@ -141,9 +159,9 @@ func main() {
 	sessions.SetTrustedProxies(proxies)
 
 	authorizer := sessions
-	apiServer.EnableLive(engine, authorizer, protection)
+	apiServer.EnableLive(engine, authorizer, protection, alertRepository)
 	apiServer.EnableCurrent(engine, authorizer)
-	apiServer.EnableResources(engine, authorizer, store, protection)
+	apiServer.EnableResources(engine, authorizer, store, protection, alertRepository)
 	apiServer.EnableMetrics(store, authorizer, protection)
 	apiServer.EnableEvents(store, authorizer, protection)
 	apiServer.EnableHistoryDeletion(store, authorizer, sessions)
@@ -188,6 +206,8 @@ func main() {
 	apiServer.EnableAuth(credentials, sessions, protection)
 	apiServer.EnableOnboarding(onboardingService, sessions, sessions)
 	apiServer.EnableSettings(settingsService, sessions, sessions)
+	apiServer.EnableChecks(checkRepository, checkScheduler, sessions, sessions, protection)
+	apiServer.EnableAlerts(alertRepository, sessions, sessions, protection)
 	application.Add(app.NewHTTPServer(config.HTTP.ListenAddress, version, application, apiServer.Handler(), webembed.Handler()))
 	if err := application.Run(ctx); err != nil {
 		log.Error("application exited with error", "error", err)

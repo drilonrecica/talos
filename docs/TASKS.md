@@ -984,7 +984,7 @@ Rules for every task:
 
 ### T107 — Expose authenticated checks and alerts APIs
 
-- **Status:** Planned
+- **Status:** Complete
 - **Commit:** `feat(api): add checks and alerts endpoints`
 - **Description:** Add authenticated, CSRF-protected CRUD and list endpoints with bounded bodies, filters, pagination, validation, and safe errors.
 
