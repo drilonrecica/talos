@@ -1,4 +1,114 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const session = {
+  user: { id: 'admin', username: 'admin' },
+  expiresAt: '2026-07-11T13:00:00Z',
+  absoluteExpiresAt: '2026-07-11T14:00:00Z',
+};
+
+async function mockAuthSession(page: Page) {
+  await page.route('**/api/v1/auth/session', (route) =>
+    route.fulfill({ json: session }),
+  );
+}
+
+async function mockOnboarding(page: Page) {
+  await page.route('**/api/v1/onboarding', (route) =>
+    route.fulfill({
+      json: {
+        checklistDismissed: true,
+        completedAt: '2026-07-11T11:00:00Z',
+      },
+    }),
+  );
+}
+
+async function mockSettings(page: Page) {
+  const values: Record<
+    string,
+    { value: string; source: string; applyMode: string }
+  > = {
+    'collection.host_interval': {
+      value: '10s',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'collection.container_interval': {
+      value: '10s',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'persistence.raw_interval': {
+      value: '10s',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'retention.preset': {
+      value: 'balanced',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'retention.raw': { value: '24h', source: 'Default', applyMode: 'live' },
+    'retention.one_minute': {
+      value: '7d',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'retention.fifteen_minute': {
+      value: '30d',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'retention.one_hour': {
+      value: '365d',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'database.target_budget_bytes': {
+      value: '1073741824',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'sessions.idle_timeout': {
+      value: '15m',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'sessions.absolute_lifetime': {
+      value: '24h',
+      source: 'Default',
+      applyMode: 'live',
+    },
+    'http.listen_address': {
+      value: ':8080',
+      source: 'Default',
+      applyMode: 'restart_required',
+    },
+    'docker.socket_path': {
+      value: '/var/run/docker.sock',
+      source: 'Default',
+      applyMode: 'restart_required',
+    },
+    'paths.host_proc': {
+      value: '/host/proc',
+      source: 'Default',
+      applyMode: 'restart_required',
+    },
+    'paths.host_sys': {
+      value: '/host/sys',
+      source: 'Default',
+      applyMode: 'restart_required',
+    },
+    'paths.data_dir': {
+      value: '/var/lib/binnacle',
+      source: 'Default',
+      applyMode: 'restart_required',
+    },
+  };
+  await page.route('**/api/v1/settings', (route) =>
+    route.fulfill({ json: { revision: 1, values } }),
+  );
+}
 
 test('renders the Binnacle application shell', async ({ page }) => {
   await page.goto('/');
@@ -10,9 +120,8 @@ test('renders the Binnacle application shell', async ({ page }) => {
 test('switches every historical range without hiding gaps', async ({
   page,
 }) => {
-  await page.route('**/api/v1/session', (route) =>
-    route.fulfill({ status: 204 }),
-  );
+  await mockAuthSession(page);
+  await mockOnboarding(page);
   await page.route('**/api/v1/live', (route) =>
     route.fulfill({
       status: 200,
@@ -98,9 +207,9 @@ test('switches every historical range without hiding gaps', async ({
 });
 
 test('requires typed confirmation for history deletion', async ({ page }) => {
-  await page.route('**/api/v1/session', (route) =>
-    route.fulfill({ status: 204 }),
-  );
+  await mockAuthSession(page);
+  await mockOnboarding(page);
+  await mockSettings(page);
   await page.route('**/api/v1/live', (route) =>
     route.fulfill({ status: 200, contentType: 'text/event-stream', body: '' }),
   );

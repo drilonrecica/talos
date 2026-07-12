@@ -20,6 +20,87 @@ async function mockBrowserSession(page: Page) {
   );
 }
 
+const snapshot = {
+  seq: 1,
+  ts: '2026-07-11T12:00:00Z',
+  bootIdentity: 'boot',
+  host: {
+    cpuPct: 10,
+    memoryUsedBytes: 1024,
+    memoryTotalBytes: 2048,
+    diskUsedBytes: 100,
+    diskTotalBytes: 200,
+    load1: 0.1,
+    networkRxBps: 2,
+    networkTxBps: 3,
+  },
+  resources: [
+    {
+      id: 'res1',
+      name: 'web-app',
+      status: 'healthy',
+      cpuHostPct: 5,
+      memoryBytes: 512,
+      category: 'applications',
+      components: [{ id: 'c1', name: 'web-app-1', status: 'healthy' }],
+    },
+    {
+      id: 'infra1',
+      name: 'proxy',
+      status: 'healthy',
+      cpuHostPct: 1,
+      memoryBytes: 128,
+      category: 'infrastructure',
+      infrastructure: true,
+    },
+  ],
+  collectors: { host: { state: 'healthy' }, docker: { state: 'healthy' } },
+};
+
+const liveBody = `event: snapshot\nid: 1\ndata: ${JSON.stringify(snapshot)}\n\n`;
+
+async function mockLive(page: Page) {
+  await page.route('**/api/v1/live', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      body: liveBody,
+    }),
+  );
+}
+
+async function mockHistoryApis(page: Page) {
+  await page.route('**/api/v1/metrics?*', (route) =>
+    route.fulfill({
+      json: {
+        scope: 'host',
+        from: '2026-07-11T11:00:00Z',
+        to: '2026-07-11T12:00:00Z',
+        resolution: '10s',
+        series: [
+          {
+            metric: 'cpu',
+            unit: 'percent',
+            points: [
+              {
+                at: '2026-07-11T11:00:00Z',
+                min: 1,
+                avg: 2,
+                max: 3,
+                count: 1,
+              },
+            ],
+          },
+        ],
+        gaps: [],
+      },
+    }),
+  );
+  await page.route('**/api/v1/events?*', (route) =>
+    route.fulfill({ json: [] }),
+  );
+}
+
 async function mockSettings(page: Page) {
   const values: Record<
     string,
@@ -117,6 +198,7 @@ async function viewportWidth(page: Page) {
 
 test('overview renders health summary and navigation', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
   await page.goto('/overview');
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
   await expect(page.getByRole('navigation')).toBeVisible();
@@ -127,6 +209,8 @@ test('overview renders health summary and navigation', async ({ page }) => {
 
 test('server renders telemetry and historical charts', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
+  await mockHistoryApis(page);
   await page.goto('/server');
   await expect(page.getByRole('heading', { name: 'Server' })).toBeVisible();
   await expect(page.getByText('CPU', { exact: true })).toBeVisible();
@@ -137,6 +221,8 @@ test('server renders telemetry and historical charts', async ({ page }) => {
 
 test('resource detail opens from overview', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
+  await mockHistoryApis(page);
   await page.goto('/overview');
   const link = page.locator('.resources-card a').first();
   await expect(link).toBeVisible();
@@ -148,12 +234,15 @@ test('resource detail opens from overview', async ({ page }) => {
 
 test('events page renders', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
+  await mockHistoryApis(page);
   await page.goto('/events');
-  await expect(page.locator('h2', { hasText: 'Events' })).toBeVisible();
+  await expect(page.locator('h2', { hasText: 'Event history' })).toBeVisible();
 });
 
 test('settings page renders all sections', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
   await mockSettings(page);
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'Collection' })).toBeVisible();
@@ -169,6 +258,7 @@ test('theme matches the configured color scheme', async ({
   page,
 }, testInfo) => {
   await mockBrowserSession(page);
+  await mockLive(page);
   await page.goto('/overview');
   const theme = await expectedTheme(page);
   if (testInfo.project.name.includes('dark')) {
@@ -180,6 +270,7 @@ test('theme matches the configured color scheme', async ({
 
 test('mobile layout keeps content inside the viewport', async ({ page }) => {
   await mockBrowserSession(page);
+  await mockLive(page);
   await page.goto('/overview');
   const heading = page.getByRole('heading', { name: 'Overview' });
   const box = await heading.boundingBox();
