@@ -100,10 +100,30 @@ func (e *Evaluator) Evaluate(ctx context.Context) error {
 	if err := e.evaluateEvents(ctx, rules, now); err != nil {
 		return err
 	}
+	if err := e.evaluatePersistence(ctx, rules, now); err != nil {
+		return err
+	}
 	if err := e.correlateDeployments(ctx, now); err != nil {
 		return err
 	}
 	return e.evaluateChecks(ctx, rules, now)
+}
+
+func (e *Evaluator) evaluatePersistence(ctx context.Context, rules []Rule, now time.Time) error {
+	rule := effectiveRule(rules, FamilyPersistence, "server", "persistence")
+	if rule.ID == "" {
+		return nil
+	}
+	var eventType string
+	err := e.Repo.db.QueryRowContext(ctx, `SELECT type FROM events WHERE type IN ('persistence_emergency','persistence_degraded','persistence_resumed') ORDER BY ts DESC,id DESC LIMIT 1`).Scan(&eventType)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	failing := eventType == "persistence_emergency" || eventType == "persistence_degraded"
+	return e.evaluate(ctx, rule, "server", "persistence", 0, failing, eventType == "persistence_resumed", now)
 }
 func (e *Evaluator) evaluateChecks(ctx context.Context, rules []Rule, now time.Time) error {
 	rows, err := e.Repo.db.QueryContext(ctx, `SELECT c.id,c.resource_id,c.required,COALESCE(s.status,'unknown'),COALESCE(s.consecutive_successes,0) FROM health_checks c LEFT JOIN health_check_state s ON s.check_id=c.id WHERE c.enabled=1`)

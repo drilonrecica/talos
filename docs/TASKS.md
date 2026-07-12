@@ -972,7 +972,7 @@ Rules for every task:
 
 ### T105 — Evaluate event and health alert rules
 
-- **Status:** Planned
+- **Status:** Complete
 - **Commit:** `feat(alerts): evaluate event and health rules`
 - **Description:** Add restart, OOM, collector, persistence, and required/optional health-check families.
 
