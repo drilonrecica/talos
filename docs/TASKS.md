@@ -954,7 +954,7 @@ Rules for every task:
 
 ### T102 — Add bounded SSRF-safe HTTP check runner
 
-- **Status:** Planned
+- **Status:** Complete
 - **Commit:** `feat(checks): add secure bounded HTTP runner`
 - **Description:** Validate HTTP/HTTPS targets and redirects at resolution and dial time; cap redirects, response reads, and timeouts; classify sanitized failures.
 
