@@ -44,7 +44,6 @@ Podman, non-Linux hosts, and Docker workload management are out of scope.
 - [Contributing guide](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Governance and ADR process](GOVERNANCE.md)
-- [Code of conduct](CODE_OF_CONDUCT.md)
 - [Project notice](NOTICE)
 
 ## License

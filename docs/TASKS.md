@@ -29,7 +29,7 @@ Rules for every task:
 
 - **Status:** Complete
 - **Commit:** `docs(repo): add alpha governance and contribution policies`
-- **Description:** Add the public repository documents required for an AGPL, founder-led project: contribution process with DCO sign-off and Conventional Commits, code of conduct, security reporting/support policy, governance/ADR process, project notice, and a README that identifies the Binnacle product and its scope.
+- **Description:** Add the public repository documents required for an AGPL, founder-led project: contribution process with DCO sign-off and Conventional Commits, security reporting/support policy, governance/ADR process, project notice, and a README that identifies the Binnacle product and its scope.
 - **Implement:** Keep the existing AGPL-3.0 license; state the no-telemetry and permanently read-only product positions; document supported Linux/Docker scope and the public-source obligation for network-served modifications.
 - **Test / verify:** Validate links and SPDX references; manually review that no document promises post-alpha features as alpha behavior.
 - **Done when:** A contributor can report a vulnerability, submit a signed-off PR, understand release ownership, and identify the authoritative specification without external context.

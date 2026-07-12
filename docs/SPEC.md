@@ -245,7 +245,6 @@ Required repository files:
 LICENSE
 NOTICE or equivalent project notice if needed
 CONTRIBUTING.md
-CODE_OF_CONDUCT.md
 SECURITY.md
 GOVERNANCE.md
 ```
@@ -660,7 +659,6 @@ Required monorepo layout:
 ├── pnpm-lock.yaml
 ├── LICENSE
 ├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
 ├── SECURITY.md
 └── GOVERNANCE.md
 ```
