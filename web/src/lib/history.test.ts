@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   chartPoints,
   eventHistoryURL,
+  fetchHistory,
   rangeFor,
   validateRange,
 } from './history';
@@ -44,5 +45,26 @@ describe('history ranges', () => {
     );
     expect(url).toContain('resource_id=res_test');
     expect(url).toContain('from=2026-07-11T11%3A00%3A00.000Z');
+  });
+});
+
+describe('history API errors', () => {
+  it('preserves the safe server error message', async () => {
+    const fetcher = async () =>
+      new Response(
+        JSON.stringify({ error: { message: 'Too many metric queries.' } }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } },
+      );
+    await expect(
+      fetchHistory(
+        'host',
+        undefined,
+        ['cpu'],
+        new Date('2026-01-01T00:00:00Z'),
+        new Date('2026-01-01T01:00:00Z'),
+        undefined,
+        fetcher,
+      ),
+    ).rejects.toThrow('Too many metric queries.');
   });
 });

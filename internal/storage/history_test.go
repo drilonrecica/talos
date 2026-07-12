@@ -111,6 +111,36 @@ func TestHostMetricRollupSourceForBroadenedTelemetry(t *testing.T) {
 	}
 }
 
+func TestRawResourceMetricSources(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
+	if err := m.Open(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer m.Close()
+	base := time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC)
+	if _, err := m.db.ExecContext(ctx, `INSERT INTO resource_samples_10s(
+		ts,resource_id,cpu_host_pct,memory_working_set_bytes,network_rx_bps,
+		network_tx_bps,block_read_bps,block_write_bps,active_instance_count,status
+	) VALUES(?,'res_test',1,2,3,4,5,6,1,'healthy')`, base.UnixMilli()); err != nil {
+		t.Fatal(err)
+	}
+	metrics := []Metric{MetricCPU, MetricMemory, MetricNetworkRX, MetricNetworkTX, MetricBlockRead, MetricBlockWrite}
+	response, err := m.QueryMetrics(ctx, MetricQuery{Scope: "resource", ID: "res_test", Metrics: metrics, From: base.Add(-time.Minute), To: base.Add(time.Minute)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Resolution != ResolutionRaw || len(response.Series) != len(metrics) {
+		t.Fatalf("response=%+v", response)
+	}
+	for index, series := range response.Series {
+		if len(series.Points) != 1 || series.Points[0].Avg == nil || *series.Points[0].Avg != float64(index+1) {
+			t.Fatalf("metric %s points=%+v", series.Metric, series.Points)
+		}
+	}
+}
+
 func TestMetricsResponseJSONContract(t *testing.T) {
 	encoded, err := json.Marshal(MetricsResponse{Scope: "host", From: time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC), To: time.Date(2026, 7, 11, 13, 0, 0, 0, time.UTC), Resolution: ResolutionRaw, Series: []Series{}, Gaps: []Gap{}})
 	if err != nil {

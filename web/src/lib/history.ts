@@ -98,6 +98,15 @@ export async function fetchHistory(
     credentials: 'same-origin',
     signal,
   });
-  if (!response.ok) throw new Error('Historical telemetry is unavailable.');
+  if (!response.ok) {
+    let message = 'Historical telemetry is unavailable.';
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      message = body.error?.message ?? message;
+    } catch {
+      // Preserve the safe fallback for malformed upstream responses.
+    }
+    throw new Error(message);
+  }
   return response.json() as Promise<HistoryResponse>;
 }

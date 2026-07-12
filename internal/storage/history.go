@@ -276,6 +276,14 @@ func metricSource(scope string, metric Metric, res Resolution) (string, string, 
 			table = "host_samples_10s"
 		}
 		column := raw[metric]
+		if scope == "resource" {
+			switch metric {
+			case MetricCPU:
+				column = "cpu_host_pct"
+			case MetricMemory:
+				column = "memory_working_set_bytes"
+			}
+		}
 		return column, column, column, "", table, nil
 	}
 	if prefix == "" {
