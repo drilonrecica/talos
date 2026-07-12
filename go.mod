@@ -1,6 +1,6 @@
 module github.com/drilonrecica/talos
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -19,7 +19,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.7.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect

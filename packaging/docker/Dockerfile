@@ -3,7 +3,7 @@
 # Multi-stage build for the TALOS monitoring service.
 # Supports linux/amd64 and linux/arm64 via buildx.
 
-FROM node:22-bookworm AS web
+FROM node:24-bookworm AS web
 WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY web/package.json web/package.json
@@ -11,7 +11,7 @@ RUN corepack enable && pnpm --dir web install --frozen-lockfile
 COPY web/ web/
 RUN pnpm --dir web build
 
-FROM golang:1.25-bookworm AS build
+FROM golang:1.26-bookworm AS build
 WORKDIR /src
 RUN apt-get update \
  && apt-get install -y --no-install-recommends gcc libc6-dev libsqlite3-dev \
