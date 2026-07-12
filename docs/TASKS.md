@@ -835,6 +835,7 @@ Rules for every task:
 
 ### T089 — Complete WCAG 2.2 AA accessibility pass
 
+- **Status:** Complete
 - **Commit:** `test(web): enforce alpha accessibility smoke coverage`
 - **Description:** Audit and remediate keyboard paths, focus visibility/order, semantic landmarks, forms, dialogs, color contrast, status text, chart summaries, and reduced-motion behavior across alpha pages.
 - **Implement:** Add automated axe Playwright smoke tests and a documented manual screen-reader/keyboard checklist; fix issues in the owning components rather than suppressing rules.
@@ -843,6 +844,7 @@ Rules for every task:
 
 ### T090 — Add visual regression and responsive smoke coverage
 
+- **Status:** Complete
 - **Commit:** `test(web): add deterministic visual and mobile regression suite`
 - **Description:** Use seeded demo mode to establish visual snapshots for dark/light overview, server, resource detail, events, settings, degraded state, and key mobile layouts.
 - **Implement:** Stabilize time/fonts/animation/data before capture; review snapshot changes deliberately; avoid broad screenshots that hide localized defects.
@@ -853,6 +855,7 @@ Rules for every task:
 
 ### T091 — Build hardened production Docker image
 
+- **Status:** Complete
 - **Commit:** `build(container): add hardened multi-stage production image`
 - **Description:** Create a multi-stage Docker build that compiles the frontend and CGO Go binary for supported Linux architectures, runs as non-root where socket access permits, and ships a minimal runtime image.
 - **Implement:** Use read-only root filesystem compatibility, writable `/var/lib/binnacle` only, one HTTP port, no privileged mode/capabilities, no Node runtime, and explicit CGO/SQLite runtime libraries.
@@ -861,6 +864,7 @@ Rules for every task:
 
 ### T092 — Add canonical Docker Compose deployment
 
+- **Status:** Complete
 - **Commit:** `feat(packaging): add Docker Compose installation`
 - **Description:** Add the canonical Compose definition with persistent named volume, read-only host proc/sys/os-release mounts, Docker socket, non-privileged hardening, health endpoint, documented environment variables, and recommended 128 MiB memory guardrail.
 - **Implement:** Use alpha image tag policy, do not falsely mark Docker socket logically read-only, and document direct-socket versus restricted-proxy security tradeoff.
@@ -869,6 +873,7 @@ Rules for every task:
 
 ### T093 — Add Coolify template and template-drift validation
 
+- **Status:** Complete
 - **Commit:** `feat(packaging): add Coolify one-click template`
 - **Description:** Create the official Coolify service template derived from the canonical Compose deployment, including volumes, mounts, secrets/setup guidance, health check, domain exposure, resource limit advice, and socket warning.
 - **Implement:** Add automated comparison/validation so template capability does not drift from canonical Compose; do not depend on undocumented Coolify internals.
@@ -877,6 +882,7 @@ Rules for every task:
 
 ### T094 — Add API security and input-limit hardening
 
+- **Status:** Complete
 - **Commit:** `feat(api): enforce alpha API safety limits`
 - **Description:** Complete endpoint-level authorization, query/body limits, expensive-query rate limits, cache controls, security headers appropriate behind reverse proxies, and safe request logging.
 - **Implement:** Ensure all routes except health/setup bootstrap behavior require appropriate session state; reject over-broad metric/event requests; never reflect sensitive inputs in errors.
@@ -885,6 +891,7 @@ Rules for every task:
 
 ### T095 — Add dependency, license, SBOM, and container scanning gates
 
+- **Status:** Complete
 - **Commit:** `ci: add supply-chain quality gates`
 - **Description:** Extend CI with Go/frontend dependency vulnerability checks, SPDX-compatible license review, SBOM generation, container scanning, and artifact/provenance preparation where feasible.
 - **Implement:** Fail on actionable critical findings according to documented policy; keep generated SBOM/artifact handling deterministic and avoid uploading secrets or development databases.
@@ -893,6 +900,7 @@ Rules for every task:
 
 ### T096 — Add release versioning, tags, and GHCR publishing workflow
 
+- **Status:** Complete
 - **Commit:** `ci(release): publish immutable versioned container artifacts`
 - **Description:** Add semver-prerelease validation, multi-architecture image publication to GHCR, immutable exact tags, and guarded `stable`/`beta`/`edge` channel behavior.
 - **Implement:** Ensure `stable` cannot target alpha/beta, automatic redeployment remains out of scope, and release jobs run only from protected intended refs/tags.
@@ -901,6 +909,7 @@ Rules for every task:
 
 ### T097 — Document install, upgrade, uninstall, and recovery procedures
 
+- **Status:** Complete
 - **Commit:** `docs(operations): add alpha installation and recovery guides`
 - **Description:** Document Coolify and Compose install, secure setup token/bootstrap secret, host mounts, Docker socket risk/proxy option, configuration, update channels, migrations, uninstall, persistent-volume consequences, consistent SQLite copy, and corruption/disk-full recovery.
 - **Implement:** State no built-in backups and no self-update; include supported-platform boundaries and calm operational status/recovery language.
@@ -909,6 +918,7 @@ Rules for every task:
 
 ### T098 — Add performance benchmark harness and reports
 
+- **Status:** Complete
 - **Commit:** `perf: add reproducible alpha benchmark suite`
 - **Description:** Build reproducible benchmark scenarios for 10/30/50/100 containers that measure RSS, average/p95 CPU, Docker API rate, SQLite write latency, database growth, SSE bandwidth/client, collection duration, and allocations where practical.
 - **Implement:** Use deterministic demo/fake Docker fixtures for repeatability plus documented real-host validation; do not claim targets without measured environment/method/version data.
@@ -917,6 +927,7 @@ Rules for every task:
 
 ### T099 — Validate collector metrics against reference semantics
 
+- **Status:** Complete
 - **Commit:** `test(collectors): add reference metric validation suite`
 - **Description:** Add integration/manual qualification procedures comparing host metrics to Linux interfaces/tools, Docker metrics to `docker stats` semantics, filesystem values to statfs/df semantics, and rates to known counters.
 - **Implement:** Document legitimate semantic differences, especially memory working set and CPU conventions; keep validation read-only and fixture-backed where possible.
@@ -925,11 +936,75 @@ Rules for every task:
 
 ### T100 — Add alpha release checklist and final gate automation
 
+- **Status:** Complete
 - **Commit:** `docs(release): add alpha.1 qualification checklist`
 - **Description:** Add a release checklist and CI/manual gate record covering security, migrations, Coolify/Compose fresh installs, upgrade test after a prior alpha, redeploy identity, overlap aggregation, retention, persistence failure, benchmarks, SSE, accessibility, themes, mobile, docs, license, and security policy.
 - **Implement:** Mark gates with objective evidence links/commands; permit only documented minor visual defects; explicitly reject publication when critical security or normal-operation data-loss defects remain.
 - **Test / verify:** Run `make check`, build/image checks, end-to-end demo/host smoke suite, and complete the release record using actual outputs.
 - **Done when:** `v0.1.0-alpha.1` has a defensible, repeatable go/no-go process.
+
+## Phase 10 — v0.2 checks and alerts
+
+### T101 — Define checks and alerts persistence model
+
+- **Status:** Planned
+- **Commit:** `feat(alerts): add checks and alerts data model`
+- **Description:** Record the architecture decision; add forward-only migrations, domain types, repositories, and the idempotent built-in default-rule catalog.
+- **Test / verify:** Exercise fresh and upgraded databases, constraints, default seeding, and repository behavior.
+
+### T102 — Add bounded SSRF-safe HTTP check runner
+
+- **Status:** Planned
+- **Commit:** `feat(checks): add secure bounded HTTP runner`
+- **Description:** Validate HTTP/HTTPS targets and redirects at resolution and dial time; cap redirects, response reads, and timeouts; classify sanitized failures.
+
+### T103 — Schedule checks and persist current results
+
+- **Status:** Planned
+- **Commit:** `feat(checks): schedule bounded health checks`
+- **Description:** Add a bounded queue and worker pool, pause inactive-resource checks, persist current state, and support manual execution.
+
+### T104 — Evaluate metric and filesystem alert rules
+
+- **Status:** Planned
+- **Commit:** `feat(alerts): evaluate metric alert state`
+- **Description:** Persist healthy, pending, firing, and recovering phases with deterministic deduplication and restart-safe durations.
+
+### T105 — Evaluate event and health alert rules
+
+- **Status:** Planned
+- **Commit:** `feat(alerts): evaluate event and health rules`
+- **Description:** Add restart, OOM, collector, persistence, and required/optional health-check families.
+
+### T106 — Add silences, grace, cooldown, and repeat handling
+
+- **Status:** Planned
+- **Commit:** `feat(alerts): add suppression and lifecycle policy`
+- **Description:** Correlate deployments, persist grace periods and timed silences, and apply recovery cooldown and bounded repeats.
+
+### T107 — Expose authenticated checks and alerts APIs
+
+- **Status:** Planned
+- **Commit:** `feat(api): add checks and alerts endpoints`
+- **Description:** Add authenticated, CSRF-protected CRUD and list endpoints with bounded bodies, filters, pagination, validation, and safe errors.
+
+### T108 — Apply effective resource health overlays
+
+- **Status:** Planned
+- **Commit:** `feat(resources): apply alert health overlay`
+- **Description:** Preserve runtime signal status and decorate current REST/SSE resource status from check and alert state.
+
+### T109 — Build checks and alerts user interface
+
+- **Status:** Planned
+- **Commit:** `feat(web): add alerts and checks console`
+- **Description:** Add primary Alerts navigation and Active, Rules, Checks, and Silences surfaces plus Watch, resource, and onboarding integration.
+
+### T110 — Qualify the v0.2 release
+
+- **Status:** Planned
+- **Commit:** `test(release): qualify checks and alerts`
+- **Description:** Add deterministic demo fixtures, operations documentation, benchmarks, migration qualification, and release gates for v0.2.
 
 ## Deferred roadmap — not alpha.1 tasks
 
