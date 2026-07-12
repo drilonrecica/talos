@@ -33,16 +33,16 @@ jobs:
       - name: Validate version
         id: version
         run: scripts/validate-version.sh "${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-qemu-action@291b0962fb745b417273906199842ada179583da
-      - uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5b23242
-      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+      - uses: docker/setup-qemu-action@v4.2.0
+      - uses: docker/setup-buildx-action@v4.2.0
+      - uses: docker/login-action@v4.4.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
         id: build
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f63b9e
+        uses: docker/build-push-action@v7.3.0
         with:
           context: .
           file: packaging/docker/Dockerfile
@@ -51,7 +51,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/talos:${{ steps.version.outputs.version }}
             ghcr.io/${{ github.repository_owner }}/talos:${{ steps.version.outputs.channel }}
-      - uses: actions/attest-build-provenance@v1
+      - uses: actions/attest-build-provenance@v4.1.1
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/talos
           subject-digest: ${{ steps.build.outputs.digest }}
