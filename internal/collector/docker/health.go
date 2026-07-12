@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 package docker
 
-import "github.com/drilonrecica/talos/internal/metrics"
+import "github.com/drilonrecica/binnacle/internal/metrics"
 
 type HealthTracker struct {
 	Failures int

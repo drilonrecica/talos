@@ -10,7 +10,7 @@ Use typed SQLite tables, not EAV storage. See [SPEC §23](../docs/SPEC.md#23-sql
 
 ## Consequences
 
-Schema migrations are owned by TALOS.
+Schema migrations are owned by Binnacle.
 
 ## Alternatives
 

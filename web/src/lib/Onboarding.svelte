@@ -51,7 +51,7 @@
 
 <section class="onboarding" aria-labelledby="onboarding-title">
   <h1 id="onboarding-title">Finish installation</h1>
-  <p>Your metrics stay on this server. TALOS sends no product telemetry.</p>
+  <p>Your metrics stay on this server. Binnacle sends no product telemetry.</p>
   {#if error}<p role="alert">{error}</p>{/if}
   <fieldset>
     <legend>Access exposure</legend>

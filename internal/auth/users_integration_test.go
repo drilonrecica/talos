@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func TestSingleAdminCredentialLifecycle(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	db := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	db := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := db.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

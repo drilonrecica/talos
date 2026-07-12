@@ -4,7 +4,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/drilonrecica/talos/internal/onboarding"
+	"github.com/drilonrecica/binnacle/internal/onboarding"
 )
 
 func (s *Server) EnableOnboarding(service *onboarding.Service, authorizer Authorizer, csrf CSRFValidator) {

@@ -3,7 +3,7 @@ import { safeRedirect } from './auth';
 
 describe('safeRedirect', () => {
   it('allows only same-origin application paths', () => {
-    vi.stubGlobal('location', { origin: 'https://talos.test' });
+    vi.stubGlobal('location', { origin: 'https://binnacle.test' });
     expect(safeRedirect('/resources/res_1?range=1h')).toBe(
       '/resources/res_1?range=1h',
     );

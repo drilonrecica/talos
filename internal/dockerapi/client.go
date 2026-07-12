@@ -14,7 +14,7 @@ import (
 	dockerclient "github.com/docker/docker/client"
 )
 
-// Client is deliberately read-only; mutation operations are not part of TALOS's boundary.
+// Client is deliberately read-only; mutation operations are not part of Binnacle's boundary.
 type Client interface {
 	List(context.Context) ([]Container, error)
 	Inspect(context.Context, string) (Inspect, error)

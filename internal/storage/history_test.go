@@ -28,7 +28,7 @@ func TestMetricQueryValidationAndResolution(t *testing.T) {
 func TestGapClassification(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestGapClassification(t *testing.T) {
 	if _, err := m.db.ExecContext(ctx, "INSERT INTO collector_state_events(id,ts,collector_name,new_state) VALUES('collector',?,'docker','down')", ms+61_000); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := m.db.ExecContext(ctx, "INSERT INTO events(id,ts,type,severity,summary,source,created_at) VALUES('persistence',?,'persistence_gap','warning','gap','talos',?)", ms+121_000, ms+121_000); err != nil {
+	if _, err := m.db.ExecContext(ctx, "INSERT INTO events(id,ts,type,severity,summary,source,created_at) VALUES('persistence',?,'persistence_gap','warning','gap','binnacle',?)", ms+121_000, ms+121_000); err != nil {
 		t.Fatal(err)
 	}
 	q := MetricQuery{Scope: "resource", ID: "res_test"}
@@ -72,7 +72,7 @@ func TestNullBucketsBecomeExplicitMergedGaps(t *testing.T) {
 func TestHostMetricRollupSourceForBroadenedTelemetry(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

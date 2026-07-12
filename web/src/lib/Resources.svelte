@@ -46,7 +46,7 @@
   <section>
     <h2>Archived resources</h2>
     <p>
-      Archived resources are historical only. TALOS cannot control or restore
+      Archived resources are historical only. Binnacle cannot control or restore
       workloads.
     </p>
     {#if error}<p role="alert">{error}</p>

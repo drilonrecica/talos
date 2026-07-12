@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/packaging/docker/docker-compose.yml"
-TEMPLATE_FILE="$ROOT_DIR/packaging/coolify/talos.yaml"
+TEMPLATE_FILE="$ROOT_DIR/packaging/coolify/binnacle.yaml"
 
 python3 - "$COMPOSE_FILE" "$TEMPLATE_FILE" <<'PY'
 import sys, yaml
@@ -12,7 +12,7 @@ compose = yaml.safe_load(open(sys.argv[1]))
 template = yaml.safe_load(open(sys.argv[2]))
 
 def service(doc):
-    return doc["services"]["talos"]
+    return doc["services"]["binnacle"]
 
 c, t = service(compose), service(template)
 

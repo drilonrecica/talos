@@ -52,8 +52,8 @@
 <section aria-labelledby="monitor-health-title">
   <h1 id="monitor-health-title">Monitor health</h1>
   <p>
-    These measurements show TALOS’s own resource cost and whether history work
-    is keeping up. Unavailable values are not treated as zero.
+    These measurements show Binnacle’s own resource cost and whether history
+    work is keeping up. Unavailable values are not treated as zero.
   </p>
   {#if error}<p role="alert">{error}</p>{/if}
   {#if at}<p>

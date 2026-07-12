@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	authpkg "github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/storage"
+	authpkg "github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 const maxEventRange = 7 * 24 * time.Hour

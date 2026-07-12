@@ -1,6 +1,6 @@
 # Supply-chain policy
 
-TALOS keeps a narrow dependency set and verifies it in CI.
+Binnacle keeps a narrow dependency set and verifies it in CI.
 
 ## Automated gates
 

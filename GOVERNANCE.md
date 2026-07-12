@@ -1,8 +1,8 @@
-# TALOS Governance
+# Binnacle Governance
 
 ## Maintainer model
 
-TALOS is founder-led and remains in the project owner's personal GitHub
+Binnacle is founder-led and remains in the project owner's personal GitHub
 account. The maintainer sets roadmap priorities, approves releases, and makes
 final decisions on product scope, branding, and architecture.
 
@@ -24,7 +24,7 @@ changes require a lightweight proposal before implementation when they affect:
 - compatibility guarantees or release policy.
 
 The default decision standard is a simple, maintainable solution that preserves
-TALOS's low-overhead, local-first, read-only scope.
+Binnacle's low-overhead, local-first, read-only scope.
 
 ## Architecture decision records
 

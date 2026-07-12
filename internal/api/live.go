@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	authpkg "github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/metrics"
+	authpkg "github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 )
 
 type Authorizer interface{ Authorize(*http.Request) bool }

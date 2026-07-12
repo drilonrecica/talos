@@ -39,11 +39,11 @@ func BootstrapAdmin(ctx context.Context, credentials *Credentials, setup *SetupS
 	if count > 0 {
 		return false, nil
 	}
-	username, err := EnvironmentSecret("TALOS_ADMIN_USERNAME")
+	username, err := EnvironmentSecret("BINNACLE_ADMIN_USERNAME")
 	if err != nil {
 		return false, err
 	}
-	password, err := EnvironmentSecret("TALOS_ADMIN_PASSWORD")
+	password, err := EnvironmentSecret("BINNACLE_ADMIN_PASSWORD")
 	if err != nil {
 		return false, err
 	}
@@ -51,7 +51,7 @@ func BootstrapAdmin(ctx context.Context, credentials *Credentials, setup *SetupS
 		return false, nil
 	}
 	if username == "" || password == "" {
-		return false, errors.New("TALOS_ADMIN_USERNAME and TALOS_ADMIN_PASSWORD must be configured together")
+		return false, errors.New("BINNACLE_ADMIN_USERNAME and BINNACLE_ADMIN_PASSWORD must be configured together")
 	}
 	if _, err = credentials.CreateAdmin(ctx, username, password); err != nil {
 		return false, err

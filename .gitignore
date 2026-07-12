@@ -1,7 +1,7 @@
 # Go build outputs and local toolchain state
 /bin/
 /dist/
-/talos
+/binnacle
 *.exe
 *.exe~
 *.dll
@@ -42,10 +42,10 @@ go.work.sum
 /data/
 /runtime/
 /tmp/
-/talos-data/
-talos.db
-talos.db-wal
-talos.db-shm
+/binnacle-data/
+binnacle.db
+binnacle.db-wal
+binnacle.db-shm
 *.db
 *.db-wal
 *.db-shm

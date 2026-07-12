@@ -11,14 +11,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func TestLoginRotationAndLogoutControls(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	server := New()
 	server.EnableAuth(credentials, sessions, protection)
 	login := func(previous *http.Cookie) (*http.Cookie, *http.Cookie) {
-		request := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/login", bytes.NewBufferString(`{"username":"admin","password":"correct horse battery staple"}`))
+		request := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/login", bytes.NewBufferString(`{"username":"admin","password":"correct horse battery staple"}`))
 		request.RemoteAddr = "192.0.2.10:1234"
 		request.Header.Set("Content-Type", "application/json")
 		if previous != nil {
@@ -72,7 +72,7 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	if _, err = sessions.Authenticate(ctx, second.Value); err != nil {
 		t.Fatal(err)
 	}
-	current := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/auth/session", nil)
+	current := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/auth/session", nil)
 	current.AddCookie(second)
 	currentResponse := httptest.NewRecorder()
 	server.Handler().ServeHTTP(currentResponse, current)
@@ -88,16 +88,16 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	if err = json.Unmarshal(currentResponse.Body.Bytes(), &currentBody); err != nil || currentBody.User.Username != "admin" || currentBody.ExpiresAt == "" {
 		t.Fatalf("current session body=%s err=%v", currentResponse.Body.String(), err)
 	}
-	missing := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/logout", nil)
-	missing.Header.Set("Origin", "http://talos.test")
+	missing := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/logout", nil)
+	missing.Header.Set("Origin", "http://binnacle.test")
 	missing.AddCookie(second)
 	denied := httptest.NewRecorder()
 	server.Handler().ServeHTTP(denied, missing)
 	if denied.Code != http.StatusForbidden {
 		t.Fatalf("missing CSRF status=%d", denied.Code)
 	}
-	invalid := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/logout", nil)
-	invalid.Header.Set("Origin", "http://talos.test")
+	invalid := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/logout", nil)
+	invalid.Header.Set("Origin", "http://binnacle.test")
 	invalid.Header.Set("X-CSRF-Token", "invalid")
 	invalid.AddCookie(second)
 	invalid.AddCookie(&http.Cookie{Name: auth.CSRFCookieName, Value: "invalid"})
@@ -106,8 +106,8 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	if denied.Code != http.StatusForbidden {
 		t.Fatalf("invalid CSRF status=%d", denied.Code)
 	}
-	logout := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/logout", nil)
-	logout.Header.Set("Origin", "http://talos.test")
+	logout := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/logout", nil)
+	logout.Header.Set("Origin", "http://binnacle.test")
 	logout.Header.Set("X-CSRF-Token", secondCSRF.Value)
 	logout.AddCookie(second)
 	logout.AddCookie(secondCSRF)
@@ -136,8 +136,8 @@ func TestLoginRotationAndLogoutControls(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	all := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/logout-all", nil)
-	all.Header.Set("Origin", "http://talos.test")
+	all := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/logout-all", nil)
+	all.Header.Set("Origin", "http://binnacle.test")
 	all.Header.Set("X-CSRF-Token", csrf)
 	all.AddCookie(&http.Cookie{Name: auth.SessionCookieName, Value: one})
 	all.AddCookie(&http.Cookie{Name: auth.CSRFCookieName, Value: csrf})

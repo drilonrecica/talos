@@ -1,4 +1,4 @@
-module github.com/drilonrecica/talos
+module github.com/drilonrecica/binnacle
 
 go 1.26
 

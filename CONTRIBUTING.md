@@ -1,6 +1,6 @@
-# Contributing to TALOS
+# Contributing to Binnacle
 
-TALOS is a founder-led AGPL-3.0-only project. Contributions are welcome when
+Binnacle is a founder-led AGPL-3.0-only project. Contributions are welcome when
 they fit the product specification and keep the monitor lightweight, local
 first, and permanently read-only with respect to monitored workloads.
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	authpkg "github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/storage"
+	authpkg "github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func (s *Server) EnableMetrics(store *storage.Manager, authz Authorizer, protection *authpkg.Protection) {

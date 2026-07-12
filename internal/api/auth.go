@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/auth"
 )
 
 func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessions, protection *auth.Protection) {

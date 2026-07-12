@@ -1,6 +1,6 @@
 # Upgrade
 
-TALOS does not self-update. Upgrades are performed by replacing the container image.
+Binnacle does not self-update. Upgrades are performed by replacing the container image.
 
 ## Update channels
 
@@ -14,7 +14,7 @@ Container tags follow semantic versioning:
 Pick a channel in your Compose file or Coolify service settings:
 
 ```yaml
-image: ghcr.io/drilonrecica/talos:stable
+image: ghcr.io/drilonrecica/binnacle:stable
 ```
 
 ## Upgrade process
@@ -22,7 +22,7 @@ image: ghcr.io/drilonrecica/talos:stable
 1. Back up the SQLite database:
 
    ```bash
-   docker cp talos:/var/lib/talos/talos.db ./talos-backup.db
+   docker cp binnacle:/var/lib/binnacle/binnacle.db ./binnacle-backup.db
    ```
 
 2. Update the image tag and redeploy:
@@ -40,7 +40,7 @@ image: ghcr.io/drilonrecica/talos:stable
 
 ## Migrations
 
-TALOS runs forward-only SQLite migrations automatically at startup. Before migrating, it checks database integrity and available disk space. A failed migration is logged and the process stops; it does not delete or recreate the database.
+Binnacle runs forward-only SQLite migrations automatically at startup. Before migrating, it checks database integrity and available disk space. A failed migration is logged and the process stops; it does not delete or recreate the database.
 
 Downgrades are not supported. If you need to revert, restore from a backup taken before the upgrade.
 

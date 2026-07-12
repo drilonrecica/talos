@@ -3,7 +3,7 @@ package demo
 
 import (
 	"context"
-	"github.com/drilonrecica/talos/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 	"time"
 )
 

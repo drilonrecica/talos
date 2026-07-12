@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 )
 
 // SetRetention updates the automatic retention policy at runtime.

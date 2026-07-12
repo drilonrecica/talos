@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-test('renders the TALOS application shell', async ({ page }) => {
+test('renders the Binnacle application shell', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page).toHaveTitle('TALOS');
-  await expect(page.getByRole('heading', { name: 'TALOS' })).toBeVisible();
+  await expect(page).toHaveTitle('Binnacle');
+  await expect(page.getByRole('heading', { name: 'Binnacle' })).toBeVisible();
 });
 
 test('switches every historical range without hiding gaps', async ({

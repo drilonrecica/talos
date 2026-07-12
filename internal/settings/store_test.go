@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func TestSettingsPatchPrecedenceValidationAuditAndConflict(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

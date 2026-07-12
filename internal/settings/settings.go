@@ -83,7 +83,7 @@ type Sessions struct {
 
 func Defaults() Config {
 	return Config{
-		Paths: Paths{DataDir: "/var/lib/talos", HostProc: "/proc", HostSys: "/sys"}, HTTP: HTTP{ListenAddress: ":8080"},
+		Paths: Paths{DataDir: "/var/lib/binnacle", HostProc: "/proc", HostSys: "/sys"}, HTTP: HTTP{ListenAddress: ":8080"},
 		Collection: Collection{HostInterval: 2 * time.Second, ContainerInterval: 2 * time.Second, MinimumInterval: time.Second}, Live: Live{SSEInterval: 2 * time.Second}, Persistence: Persistence{RawInterval: 10 * time.Second, QueueBatchLimit: 60},
 		Retention: Retention{Preset: "balanced", Raw: 48 * time.Hour, OneMinute: 30 * 24 * time.Hour, FifteenMinute: 365 * 24 * time.Hour, OneHour: 0}, Database: Database{TargetBudgetBytes: 1073741824, WarningRatio: .80, CriticalRatio: .95, EmergencyPauseRatio: .98}, Charts: Charts{MaxPointsPerSeries: 1000}, Docker: Docker{SocketPath: "/var/run/docker.sock", MaxConcurrency: 4}, Checks: Checks{MaxConcurrency: 8}, Logs: Logs{MaxResponseBytes: 1048576, MaxLines: 5000}, Sessions: Sessions{IdleTimeout: 12 * time.Hour, AbsoluteLifetime: 720 * time.Hour},
 	}
@@ -105,7 +105,7 @@ func (c *Config) Normalize() {
 		c.Paths.RuntimeDir = filepath.Join(c.Paths.DataDir, "runtime")
 	}
 	if c.Paths.DatabasePath == "" {
-		c.Paths.DatabasePath = filepath.Join(c.Paths.DataDir, "talos.db")
+		c.Paths.DatabasePath = filepath.Join(c.Paths.DataDir, "binnacle.db")
 	}
 }
 func (c Config) Validate() error {

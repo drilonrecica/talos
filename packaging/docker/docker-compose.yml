@@ -1,27 +1,27 @@
-# Canonical Docker Compose deployment for TALOS.
+# Canonical Docker Compose deployment for Binnacle.
 # Provide a secure setup token before first start:
-#   export TALOS_SETUP_TOKEN="$(openssl rand -hex 32)"
+#   export BINNACLE_SETUP_TOKEN="$(openssl rand -hex 32)"
 # Then run: docker compose -f packaging/docker/docker-compose.yml up -d
 
 services:
-  talos:
-    image: ghcr.io/drilonrecica/talos:stable
-    container_name: talos
+  binnacle:
+    image: ghcr.io/drilonrecica/binnacle:stable
+    container_name: binnacle
     restart: unless-stopped
     read_only: true
     privileged: false
-    user: "talos:${DOCKER_GID:?DOCKER_GID is required; run export DOCKER_GID=$(getent group docker | cut -d: -f3)}"
+    user: "binnacle:${DOCKER_GID:?DOCKER_GID is required; run export DOCKER_GID=$(getent group docker | cut -d: -f3)}"
     security_opt:
       - no-new-privileges:true
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      TALOS_DATA_DIR: /var/lib/talos
-      TALOS_HOST_PROC: /host/proc
-      TALOS_HOST_SYS: /host/sys
-      TALOS_SETUP_TOKEN: ${TALOS_SETUP_TOKEN:?TALOS_SETUP_TOKEN is required for the first installation}
+      BINNACLE_DATA_DIR: /var/lib/binnacle
+      BINNACLE_HOST_PROC: /host/proc
+      BINNACLE_HOST_SYS: /host/sys
+      BINNACLE_SETUP_TOKEN: ${BINNACLE_SETUP_TOKEN:?BINNACLE_SETUP_TOKEN is required for the first installation}
     volumes:
-      - talos-data:/var/lib/talos
+      - binnacle-data:/var/lib/binnacle
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
@@ -33,11 +33,11 @@ services:
         reservations:
           memory: 64M
     healthcheck:
-      test: ["CMD", "/usr/local/bin/talos", "--healthcheck"]
+      test: ["CMD", "/usr/local/bin/binnacle", "--healthcheck"]
       interval: 30s
       timeout: 5s
       start_period: 5s
       retries: 3
 
 volumes:
-  talos-data:
+  binnacle-data:

@@ -101,7 +101,7 @@
   }
 </script>
 
-<svelte:head><title>TALOS</title></svelte:head>
+<svelte:head><title>Binnacle</title></svelte:head>
 <a class="skip" href="#content">{t('shell.skip')}</a>
 {#if loading}
   <main aria-busy="true"><p>{t('shell.access')}</p></main>
@@ -119,7 +119,7 @@
           e.preventDefault();
           history.pushState({}, '', '/overview');
           route = 'overview';
-        }}>TALOS</a
+        }}>Binnacle</a
       ><span>{t('shell.live')}</span>
       <label
         >Theme <select

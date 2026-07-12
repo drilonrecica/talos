@@ -3,7 +3,7 @@ package docker
 
 import (
 	"context"
-	"github.com/drilonrecica/talos/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
 	"sync"
 )
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 package resources
 
-import "github.com/drilonrecica/talos/internal/metrics"
+import "github.com/drilonrecica/binnacle/internal/metrics"
 
 func RollupStatus(states []metrics.ResourceStatus) metrics.ResourceStatus {
 	best := metrics.StatusHealthy

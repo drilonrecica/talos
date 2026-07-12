@@ -2,7 +2,7 @@
 
 ## Context
 
-TALOS needs a small, single-process Linux service.
+Binnacle needs a small, single-process Linux service.
 
 ## Decision
 

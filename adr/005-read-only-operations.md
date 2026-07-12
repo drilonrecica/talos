@@ -6,7 +6,7 @@ Monitoring credentials are high-risk.
 
 ## Decision
 
-TALOS observes; it does not mutate workloads. See [SPEC §6](../docs/SPEC.md#6-product-principles).
+Binnacle observes; it does not mutate workloads. See [SPEC §6](../docs/SPEC.md#6-product-principles).
 
 ## Consequences
 

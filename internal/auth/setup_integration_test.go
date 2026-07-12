@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func setupDatabase(t *testing.T) (*storage.Manager, *SetupService) {
 	t.Helper()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(context.Background()); err != nil {
 		t.Fatal(err)
 	}

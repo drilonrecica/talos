@@ -34,7 +34,7 @@ func NewSetupService(db *sql.DB) *SetupService {
 // source is intended for Docker secrets and takes precedence only when the
 // direct value is absent; configuring both is rejected to avoid ambiguity.
 func SetupTokenFromEnvironment() (string, error) {
-	return EnvironmentSecret("TALOS_SETUP_TOKEN")
+	return EnvironmentSecret("BINNACLE_SETUP_TOKEN")
 }
 func (s *SetupService) SetDB(db *sql.DB) { s.db = db }
 
@@ -78,7 +78,7 @@ func (s *SetupService) Initialize(ctx context.Context, listenAddress, configured
 	token := strings.TrimSpace(configuredToken)
 	if token == "" {
 		if public {
-			return "", fmt.Errorf("public setup requires TALOS_SETUP_TOKEN")
+			return "", fmt.Errorf("public setup requires BINNACLE_SETUP_TOKEN")
 		}
 		var e error
 		token, e = randomSetupToken()

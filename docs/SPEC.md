@@ -1,9 +1,9 @@
-# TALOS — Product and Technical Specification
+# Binnacle — Product and Technical Specification
 
-> **Status:** Authoritative implementation specification for the TALOS codename project  
+> **Status:** Authoritative implementation specification for Binnacle
 > **Audience:** Human maintainers, contributors, and autonomous/agentic coding systems  
 > **License decision:** AGPL-3.0-only  
-> **Codename:** TALOS (temporary; permanent product name to be chosen before the first stable release)  
+> **Product name:** Binnacle
 > **Primary deployment:** Coolify-managed Docker service  
 > **Primary implementation stack:** Go backend + Svelte 5 (runes) + TypeScript frontend + SQLite  
 > **Primary product principle:** Extremely low resource consumption without sacrificing a polished, useful monitoring experience
@@ -12,7 +12,7 @@
 
 ## 0. Document Purpose and Normative Language
 
-This document is the complete product, architecture, engineering, user-experience, security, open-source, and release specification for TALOS. It is intended to be sufficient for a new engineer or an AI implementation agent that has no access to the conversations that produced these decisions.
+This document is the complete product, architecture, engineering, user-experience, security, open-source, and release specification for Binnacle. It is intended to be sufficient for a new engineer or an AI implementation agent that has no access to the conversations that produced these decisions.
 
 Implementers MUST treat this document as the source of truth unless the project owner explicitly amends it through a recorded architecture or product decision.
 
@@ -30,7 +30,7 @@ When a lower-level implementation detail is not yet fixed, this document specifi
 
 ## 1. Executive Summary
 
-TALOS is a fully open-source, self-hosted monitoring product for Linux servers running Docker workloads, with first-class awareness of Coolify-managed applications and services.
+Binnacle is a fully open-source, self-hosted monitoring product for Linux servers running Docker workloads, with first-class awareness of Coolify-managed applications and services.
 
 The core product promise is:
 
@@ -42,9 +42,9 @@ The product should give a developer running one or more applications on a VPS an
 2. Are the applications and services healthy?
 3. What changed, and what needs attention?
 
-TALOS is intentionally not a general-purpose enterprise observability platform. It does not require Prometheus, Grafana, Loki, Elasticsearch, InfluxDB, Redis, PostgreSQL, Kubernetes, or any remote SaaS dependency. Its core runtime is one Go process, one SQLite database, and one embedded Svelte 5 frontend.
+Binnacle is intentionally not a general-purpose enterprise observability platform. It does not require Prometheus, Grafana, Loki, Elasticsearch, InfluxDB, Redis, PostgreSQL, Kubernetes, or any remote SaaS dependency. Its core runtime is one Go process, one SQLite database, and one embedded Svelte 5 frontend.
 
-TALOS is designed to be:
+Binnacle is designed to be:
 
 - extremely lightweight;
 - simple to install through Coolify;
@@ -58,7 +58,7 @@ TALOS is designed to be:
 - reliable under partial failure;
 - transparent about its own overhead.
 
-The initial product serves one monitored server per TALOS instance. The code architecture must preserve a clean path to a future central dashboard with lightweight agents, but multi-server federation is not part of the first alpha.
+The initial product serves one monitored server per Binnacle instance. The code architecture must preserve a clean path to a future central dashboard with lightweight agents, but multi-server federation is not part of the first alpha.
 
 ---
 
@@ -66,7 +66,7 @@ The initial product serves one monitored server per TALOS instance. The code arc
 
 ### 2.1 Primary product goal
 
-TALOS will become:
+Binnacle will become:
 
 > **The fastest, simplest, most visually distinctive self-hosted monitoring dashboard for Docker and Coolify servers.**
 
@@ -94,7 +94,7 @@ Explicitly not the primary audience:
 
 ### 2.3 Product philosophy
 
-TALOS follows **smart defaults with optional advanced settings**.
+Binnacle follows **smart defaults with optional advanced settings**.
 
 The intended path is:
 
@@ -120,7 +120,7 @@ Advanced users may override sampling, retention, alerts, integration credentials
 
 ### 2.4 Coolify-first, not Coolify-only
 
-TALOS is Coolify-first. This means it should understand and present:
+Binnacle is Coolify-first. This means it should understand and present:
 
 - projects;
 - environments;
@@ -131,14 +131,14 @@ TALOS is Coolify-first. This means it should understand and present:
 - deployments and container replacement patterns;
 - domains and metadata when optional Coolify API enrichment is configured.
 
-However, TALOS MUST also function on a plain Docker host. Unmanaged Docker containers must remain visible and useful.
+However, Binnacle MUST also function on a plain Docker host. Unmanaged Docker containers must remain visible and useful.
 
 ### 2.5 Long-term architecture direction
 
 The roadmap direction is:
 
 ```text
-Phase 1: one TALOS instance monitors one server
+Phase 1: one Binnacle instance monitors one server
 Phase 2: lightweight agents report to a central self-hosted dashboard
 Phase 3: optional hosted/cloud coordination may be considered
 ```
@@ -173,13 +173,13 @@ These non-goals are essential to maintaining low resource usage, security, simpl
 
 ---
 
-## 4. Competitive Context: TALOS vs. Glances
+## 4. Competitive Context: Binnacle vs. Glances
 
-TALOS is influenced by the immediacy and operational usefulness of Glances, but it is not intended to clone Glances.
+Binnacle is influenced by the immediacy and operational usefulness of Glances, but it is not intended to clone Glances.
 
-### 4.1 Areas where TALOS should be stronger
+### 4.1 Areas where Binnacle should be stronger
 
-TALOS is intended to provide capabilities that Glances does not natively prioritize in the same integrated way:
+Binnacle is intended to provide capabilities that Glances does not natively prioritize in the same integrated way:
 
 - built-in historical metrics stored locally in SQLite;
 - automatic rollups and tiered retention;
@@ -192,14 +192,14 @@ TALOS is intended to provide capabilities that Glances does not natively priorit
 - service-first overview rather than raw process/container-first presentation;
 - resource-level correlation between charts, lifecycle events, deployment events, health transitions, and on-demand logs;
 - a permanently read-only operations philosophy;
-- built-in self-observation showing TALOS CPU, memory, write latency, queue depth, database size, dropped samples, and collector duration;
+- built-in self-observation showing Binnacle CPU, memory, write latency, queue depth, database size, dropped samples, and collector duration;
 - synthetic demo mode for frontend development, demos, documentation, and tests;
 - Coolify one-click installation as a first-class distribution path;
 - explicit local-first/no-telemetry trust positioning.
 
 ### 4.2 Areas where Glances remains stronger
 
-TALOS should not attempt to match Glances in every area. Glances has major advantages that TALOS intentionally does not target initially:
+Binnacle should not attempt to match Glances in every area. Glances has major advantages that Binnacle intentionally does not target initially:
 
 - mature terminal/TUI experience;
 - broad operating system support;
@@ -210,7 +210,7 @@ TALOS should not attempt to match Glances in every area. Glances has major advan
 - convenient SSH-oriented usage;
 - broader host-level plugin coverage.
 
-TALOS must win through focus, not breadth.
+Binnacle must win through focus, not breadth.
 
 ---
 
@@ -219,15 +219,15 @@ TALOS must win through focus, not breadth.
 Every implementation decision should be checked against these principles, in this order:
 
 1. **Minimal overhead** — monitoring must not become a meaningful part of server load.
-2. **Read-only safety** — TALOS observes; it does not operate workloads.
+2. **Read-only safety** — Binnacle observes; it does not operate workloads.
 3. **Useful defaults** — default installation should immediately provide value.
 4. **Local-first privacy** — metrics remain on the server by default.
 5. **Graceful degradation** — partial failures must not collapse the whole product.
 6. **Coolify awareness** — present logical applications and services, not only containers.
 7. **Operational clarity** — the UI should answer what is wrong and what changed.
 8. **Progressive disclosure** — simple overview first, dense technical detail on demand.
-9. **Transparent performance** — TALOS must measure and expose its own resource cost.
-10. **Scope discipline** — reject features that turn TALOS into a generic observability suite.
+9. **Transparent performance** — Binnacle must measure and expose its own resource cost.
+10. **Scope discipline** — reject features that turn Binnacle into a generic observability suite.
 
 ---
 
@@ -285,9 +285,7 @@ chore
 
 ### 6.3 Trademark and identity
 
-The open-source software license and the project name/logo are separate concerns. The permanent product name and visual identity should be protected by an explicit trademark/name-use policy when the permanent name is selected.
-
-TALOS is a temporary codename and may appear publicly during alpha development, but it must be clearly described as temporary.
+The open-source software license and the Binnacle name/logo are separate concerns. The product name and visual identity should be protected by an explicit trademark/name-use policy before the first stable release.
 
 ---
 
@@ -358,31 +356,31 @@ The standard deployment needs read access to host telemetry and Docker metadata:
 /host/proc       ← bind mount of host /proc, read-only
 /host/sys        ← bind mount of host /sys, read-only
 /var/run/docker.sock ← Docker API socket
-persistent data volume mounted at /var/lib/talos
+persistent data volume mounted at /var/lib/binnacle
 ```
 
 Example conceptual Compose structure:
 
 ```yaml
 services:
-  talos:
-    image: ghcr.io/drilonrecica/talos:stable
+  binnacle:
+    image: ghcr.io/drilonrecica/binnacle:stable
     restart: unless-stopped
     read_only: true
     privileged: false
     volumes:
-      - talos-data:/var/lib/talos
+      - binnacle-data:/var/lib/binnacle
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      TALOS_HOST_PROC: /host/proc
-      TALOS_HOST_SYS: /host/sys
-      TALOS_DATA_DIR: /var/lib/talos
+      BINNACLE_HOST_PROC: /host/proc
+      BINNACLE_HOST_SYS: /host/sys
+      BINNACLE_DATA_DIR: /var/lib/binnacle
 
 volumes:
-  talos-data:
+  binnacle-data:
 ```
 
 The actual production template must be tested on supported Coolify and Docker setups.
@@ -395,9 +393,9 @@ Important invariant:
 
 Therefore:
 
-- TALOS code MUST contain no Docker mutation code paths;
-- TALOS MUST NOT expose arbitrary Docker API paths;
-- TALOS MUST NOT accept user-supplied Docker API method/path combinations;
+- Binnacle code MUST contain no Docker mutation code paths;
+- Binnacle MUST NOT expose arbitrary Docker API paths;
+- Binnacle MUST NOT accept user-supplied Docker API method/path combinations;
 - Docker client wrappers should expose only read methods to the rest of the codebase;
 - the recommended hardened deployment SHOULD use a restricted socket proxy with an allowlist of read endpoints;
 - the direct socket path is allowed as the simple first-release default.
@@ -409,16 +407,16 @@ The Coolify template defaults to a named persistent volume.
 Default data directory:
 
 ```text
-/var/lib/talos
+/var/lib/binnacle
 ```
 
 Expected contents:
 
 ```text
-/var/lib/talos/
-├── talos.db
-├── talos.db-wal
-├── talos.db-shm
+/var/lib/binnacle/
+├── binnacle.db
+├── binnacle.db-wal
+├── binnacle.db-shm
 └── runtime/        # ephemeral runtime artifacts if needed
 ```
 
@@ -445,7 +443,7 @@ Rules:
 - `edge` tracks development builds and is not recommended for production;
 - exact semantic version tags are immutable.
 
-Automatic redeployment is disabled by default. TALOS may detect and display an available update, but v1 MUST NOT mutate its own Coolify resource or replace its own container.
+Automatic redeployment is disabled by default. Binnacle may detect and display an available update, but v1 MUST NOT mutate its own Coolify resource or replace its own container.
 
 ---
 
@@ -483,7 +481,7 @@ Production must ship no Node.js runtime. The compiled frontend is embedded into 
 
 ### 9.3 UI implementation style
 
-Use a custom TALOS design system.
+Use a custom Binnacle design system.
 
 Use lightweight headless accessibility primitives only for behavior-heavy components such as:
 
@@ -494,11 +492,11 @@ Use lightweight headless accessibility primitives only for behavior-heavy compon
 - tabs;
 - comboboxes.
 
-Do not adopt a full visual component framework that makes TALOS look generic or adds excessive bundle weight.
+Do not adopt a full visual component framework that makes Binnacle look generic or adds excessive bundle weight.
 
 ### 9.4 Chart implementation
 
-Use a lightweight chart primitive/foundation, with TALOS-owned presentation for:
+Use a lightweight chart primitive/foundation, with Binnacle-owned presentation for:
 
 - chart frames;
 - axis styling;
@@ -525,7 +523,7 @@ Do not add pie charts, 3D charts, decorative gauges, or continuously animated da
 
 ### 10.1 One binary, internally modular
 
-TALOS ships as one binary and one container/process, but internally consists of independent components:
+Binnacle ships as one binary and one container/process, but internally consists of independent components:
 
 ```text
 Host Collector
@@ -619,7 +617,7 @@ Required monorepo layout:
 ```text
 /
 ├── cmd/
-│   └── talos/
+│   └── binnacle/
 │       └── main.go
 ├── internal/
 │   ├── app/
@@ -741,14 +739,14 @@ Use one human-readable configuration format. TOML is recommended.
 Default discovery order:
 
 ```text
-/etc/talos/talos.toml
-/var/lib/talos/talos.toml   # optional container-friendly path
+/etc/binnacle/binnacle.toml
+/var/lib/binnacle/binnacle.toml   # optional container-friendly path
 ```
 
 An explicit environment variable may set an alternate path:
 
 ```text
-TALOS_CONFIG_FILE
+BINNACLE_CONFIG_FILE
 ```
 
 ### 13.3 Core default settings
@@ -933,7 +931,7 @@ Post-alpha:
 
 ### 15.3 Deployment security recommendation
 
-TALOS may be exposed through a normal HTTPS domain, but documentation should recommend stronger access controls such as:
+Binnacle may be exposed through a normal HTTPS domain, but documentation should recommend stronger access controls such as:
 
 - Tailscale;
 - WireGuard;
@@ -1011,7 +1009,7 @@ The UI should show which outbound features are enabled.
 
 ### 17.1 Collection strategy
 
-Host metrics should be read directly from Linux kernel interfaces. TALOS MUST NOT shell out to `top`, `free`, `df`, `iostat`, `docker stats`, or similar commands on every collection cycle.
+Host metrics should be read directly from Linux kernel interfaces. Binnacle MUST NOT shell out to `top`, `free`, `df`, `iostat`, `docker stats`, or similar commands on every collection cycle.
 
 Primary sources:
 
@@ -1095,7 +1093,7 @@ used_bytes = MemTotal - MemAvailable
 used_pct = used_bytes / MemTotal * 100
 ```
 
-TALOS should treat `MemAvailable` as the main available-memory signal rather than `MemFree`.
+Binnacle should treat `MemAvailable` as the main available-memory signal rather than `MemFree`.
 
 Cache/buffer details may be shown for diagnostics but should not confuse the primary “used” metric.
 
@@ -1119,7 +1117,7 @@ This normalized value is diagnostic, not a replacement for raw load.
 
 Read `/proc/uptime` for uptime seconds.
 
-TALOS should derive or record a boot identity to detect host reboot boundaries. A new boot must create an event and break historical continuity where counters reset.
+Binnacle should derive or record a boot identity to detect host reboot boundaries. A new boot must create an event and break historical continuity where counters reset.
 
 ### 17.6 Network metrics
 
@@ -1187,7 +1185,7 @@ Required:
 
 Use filesystem stat calls against host-visible mount paths. Exclude pseudo-filesystems by default from overview, including common entries such as proc, sysfs, tmpfs where not operationally relevant, cgroup mounts, and overlay internals. Provide a detailed view for advanced inspection.
 
-The root filesystem and persistent TALOS volume filesystem must always be visible.
+The root filesystem and persistent Binnacle volume filesystem must always be visible.
 
 ### 17.9 Host process data
 
@@ -1207,7 +1205,7 @@ When implemented:
 
 ### 18.1 Docker API usage
 
-TALOS should use Docker Engine API operations for:
+Binnacle should use Docker Engine API operations for:
 
 - list containers;
 - inspect containers;
@@ -1216,7 +1214,7 @@ TALOS should use Docker Engine API operations for:
 - read bounded logs on demand post-alpha;
 - read version/system metadata needed for diagnostics.
 
-TALOS MUST NOT use Docker mutation endpoints.
+Binnacle MUST NOT use Docker mutation endpoints.
 
 ### 18.2 Event-driven metadata cache
 
@@ -1396,7 +1394,7 @@ Deduplicate equivalent signals into one user-visible OOM event with related raw 
 
 ### 19.1 Core identity model
 
-TALOS distinguishes:
+Binnacle distinguishes:
 
 1. **Logical resource** — stable application/service identity across deployments.
 2. **Container instance** — one concrete Docker container, ephemeral and replaceable.
@@ -2150,7 +2148,7 @@ Priority when constrained:
 4. preserve recent raw samples;
 5. sacrifice oldest queued raw persistence first.
 
-TALOS must never silently delete still-in-retention data merely to satisfy the soft target. Emergency behavior must be documented and surfaced in the UI.
+Binnacle must never silently delete still-in-retention data merely to satisfy the soft target. Emergency behavior must be documented and surfaced in the UI.
 
 ---
 
@@ -3029,7 +3027,7 @@ Logs are post-alpha.
 
 ### 34.1 Philosophy
 
-TALOS provides on-demand, read-only Docker log access. It does not become a persistent log indexing platform.
+Binnacle provides on-demand, read-only Docker log access. It does not become a persistent log indexing platform.
 
 ### 34.2 Retrieval options
 
@@ -3114,7 +3112,7 @@ Support custom regex rules.
 
 Redaction is not a security guarantee and must be labeled as best-effort.
 
-TALOS must not persist application logs in SQLite by default.
+Binnacle must not persist application logs in SQLite by default.
 
 ---
 
@@ -3133,7 +3131,7 @@ Generate diagnostics
 
 Default included:
 
-- TALOS version and commit;
+- Binnacle version and commit;
 - OS and architecture;
 - database schema version;
 - collector health;
@@ -3179,7 +3177,7 @@ Export:
 
 ### SQLite
 
-Document direct access to the persistent database volume. Because SQLite may be in WAL mode, documentation must explain how to create a consistent copy rather than copying only `talos.db` while live.
+Document direct access to the persistent database volume. Because SQLite may be in WAL mode, documentation must explain how to create a consistent copy rather than copying only `binnacle.db` while live.
 
 ### Prometheus-compatible endpoint
 
@@ -3191,9 +3189,9 @@ Expose stable, bounded-cardinality metrics:
 - resource CPU/memory;
 - health-check status;
 - collector health;
-- TALOS self-metrics.
+- Binnacle self-metrics.
 
-Prometheus compatibility is an interoperability feature only. TALOS internal storage and data model must not be redesigned around Prometheus labels.
+Prometheus compatibility is an interoperability feature only. Binnacle internal storage and data model must not be redesigned around Prometheus labels.
 
 ---
 
@@ -3201,10 +3199,10 @@ Prometheus compatibility is an interoperability feature only. TALOS internal sto
 
 ### 37.1 Requirement
 
-TALOS must provide synthetic demo mode:
+Binnacle must provide synthetic demo mode:
 
 ```text
-talos --demo
+binnacle --demo
 ```
 
 ### 37.2 Demo behavior
@@ -3238,14 +3236,14 @@ Support a seed or scenario selection so tests can reproduce demo states.
 Example:
 
 ```text
-talos --demo --demo-seed 42
+binnacle --demo --demo-seed 42
 ```
 
 ---
 
 ## 38. Self-Observation
 
-TALOS must measure itself from v1.
+Binnacle must measure itself from v1.
 
 Expose under:
 
@@ -3255,8 +3253,8 @@ Settings → System → Monitor health
 
 Required metrics:
 
-- TALOS CPU usage;
-- TALOS RSS/working memory;
+- Binnacle CPU usage;
+- Binnacle RSS/working memory;
 - Go heap metrics where useful;
 - goroutine count;
 - SQLite database file size;
@@ -3347,7 +3345,7 @@ Alpha release must validate metrics against Linux and Docker reference outputs d
 
 ## 40. Resource Safeguards
 
-TALOS must protect the host from TALOS itself.
+Binnacle must protect the host from Binnacle itself.
 
 Required safeguards:
 
@@ -3526,7 +3524,7 @@ Run most CI quality gates locally.
 
 #### `make build`
 
-Build production frontend, embed assets, and produce TALOS binary/image artifacts.
+Build production frontend, embed assets, and produce Binnacle binary/image artifacts.
 
 ### 44.2 Package manager
 
@@ -3848,24 +3846,22 @@ Avoid unsupported superiority claims.
 
 ## 49. Branding and Naming
 
-### 49.1 Codename
+### 49.1 Product name
 
-Temporary codename: **TALOS**.
-
-During early development:
+The permanent product name is **Binnacle**.
 
 ```text
-Repository: talos
-Binary: talos
-Container: ghcr.io/drilonrecica/talos
-UI: TALOS
+Repository: binnacle
+Binary: binnacle
+Container: ghcr.io/drilonrecica/binnacle
+UI: Binnacle
 ```
 
-README must state that TALOS is a project codename and the permanent name is pending.
+README and user-facing interfaces must use `Binnacle`; technical identifiers use `binnacle`, and environment variables use the `BINNACLE_` prefix.
 
-### 49.2 Permanent naming direction
+### 49.2 Naming rationale
 
-The permanent name should be:
+The Binnacle name is:
 
 - technical but ownable;
 - signal/clarity oriented;
@@ -3874,17 +3870,6 @@ The permanent name should be:
 - ideally 5–9 letters;
 - not locked to Docker, VPS, host, or server;
 - suitable as a CLI binary and repository name.
-
-Naming process:
-
-1. generate 20–30 candidates;
-2. remove pronunciation/spelling/meaning problems;
-3. check GitHub/project/package conflicts;
-4. check domain options;
-5. check obvious trademark conflicts;
-6. reduce to 3–5 finalists;
-7. optionally collect community feedback;
-8. project owner makes final decision.
 
 ### 49.3 Visual mark
 
@@ -4500,13 +4485,13 @@ It owns automatic tier selection and point limits.
 
 ### Scenario A — Fresh Coolify install
 
-1. User adds TALOS service template in Coolify.
+1. User adds Binnacle service template in Coolify.
 2. User assigns a domain and deploys.
-3. User opens TALOS.
+3. User opens Binnacle.
 4. Setup token is required.
 5. User creates admin credentials.
-6. TALOS verifies `/proc`, `/sys`, Docker socket, and storage.
-7. TALOS detects Compose/Coolify resources.
+6. Binnacle verifies `/proc`, `/sys`, Docker socket, and storage.
+7. Binnacle detects Compose/Coolify resources.
 8. User accepts Balanced retention preset.
 9. Dashboard opens with live host and resource metrics.
 
@@ -4518,7 +4503,7 @@ Success means no terminal commands are required for the normal Coolify path.
 2. Host metrics continue.
 3. Docker collector becomes Degraded, then Down if sustained.
 4. Resource data freshness visibly ages and becomes Unknown.
-5. TALOS does not show stale resource values as current.
+5. Binnacle does not show stale resource values as current.
 6. When Docker returns, collector recovers and event is recorded.
 
 ### Scenario C — SQLite disk full
@@ -4625,7 +4610,7 @@ The following decisions are binding unless explicitly amended:
 14. Tiered retention with configurable presets and advanced overrides.
 15. Default Balanced retention: 48h raw, 30d 1m, 1y 15m, 1h indefinite.
 16. Default live collection every 2s; persistence every 10s.
-17. Settings configurable in TALOS UI, with declarative config support.
+17. Settings configurable in Binnacle UI, with declarative config support.
 18. Config precedence: defaults < file < env < UI overrides for eligible settings.
 19. Docker metadata cached and event-driven.
 20. Host and every Docker container/resource monitored.
@@ -4651,8 +4636,8 @@ The following decisions are binding unless explicitly amended:
 40. Lightweight founder-led governance with DCO and RFC/ADR for major changes.
 41. AGPL-3.0-only.
 42. Repository remains on owner's personal GitHub account.
-43. Temporary codename TALOS.
-44. Public permanent name chosen later through curated shortlist and owner decision.
+43. Permanent product name Binnacle.
+44. Repository, binary, container image, and technical namespace use `binnacle`.
 45. No backups in v1.
 46. Named persistent volume default in Coolify.
 47. Release channels stable/beta/edge with immutable exact versions.
@@ -4680,13 +4665,13 @@ The following decisions are binding unless explicitly amended:
 ## 59. Glossary
 
 **Host**  
-The Linux VPS on which TALOS runs and which it monitors.
+The Linux VPS on which Binnacle runs and which it monitors.
 
 **Container instance**  
 One concrete Docker container ID. Ephemeral across redeployments.
 
 **Logical resource**  
-A stable TALOS representation of a Coolify application, service, Compose service group, or unmanaged container grouping.
+A stable Binnacle representation of a Coolify application, service, Compose service group, or unmanaged container grouping.
 
 **Component**  
 A container or service member inside a multi-container logical resource.
@@ -4710,7 +4695,7 @@ Classification of a detected rollout as Confirmed, Likely, or Container replacem
 State where live monitoring works but SQLite history writes are failing or dropping queued batches.
 
 **Read-only**  
-TALOS may observe and configure itself, but may not mutate monitored Docker workloads or host operational state.
+Binnacle may observe and configure itself, but may not mutate monitored Docker workloads or host operational state.
 
 ---
 
@@ -5037,7 +5022,7 @@ The following work packages are deliberately small enough to be assigned to sepa
 
 ## Appendix B — Implementation Guardrails for AI Coding Agents
 
-An agent implementing TALOS MUST follow these guardrails:
+An agent implementing Binnacle MUST follow these guardrails:
 
 1. Do not introduce an external database.
 2. Do not introduce Redis.
@@ -5045,7 +5030,7 @@ An agent implementing TALOS MUST follow these guardrails:
 4. Do not introduce Grafana.
 5. Do not introduce a Node runtime in production.
 6. Do not add Docker control operations.
-7. Do not expose the raw Docker socket through TALOS HTTP APIs.
+7. Do not expose the raw Docker socket through Binnacle HTTP APIs.
 8. Do not poll static Docker metadata every sample cycle.
 9. Do not query SQLite to serve current live values.
 10. Do not create unbounded channels, queues, caches, or goroutine fan-out.
@@ -5148,7 +5133,7 @@ The official Coolify template should:
 
 - use `stable` image tag by default after stable release exists;
 - use appropriate prerelease tag during alpha documentation;
-- persist `/var/lib/talos` in a named volume;
+- persist `/var/lib/binnacle` in a named volume;
 - mount host `/proc` read-only;
 - mount host `/sys` read-only;
 - mount Docker socket;
@@ -5190,7 +5175,7 @@ Live metrics are still available, but some historical samples may be missing.
 
 ```text
 Database volume is almost full.
-TALOS is cleaning expired data. Raw history may pause if usage reaches the emergency threshold.
+Binnacle is cleaning expired data. Raw history may pause if usage reaches the emergency threshold.
 ```
 
 ```text

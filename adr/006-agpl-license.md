@@ -6,7 +6,7 @@ Network-served modifications must remain available to users.
 
 ## Decision
 
-License TALOS AGPL-3.0-only. See [SPEC §2](../docs/SPEC.md#2-open-source-and-product-position).
+License Binnacle AGPL-3.0-only. See [SPEC §2](../docs/SPEC.md#2-open-source-and-product-position).
 
 ## Consequences
 

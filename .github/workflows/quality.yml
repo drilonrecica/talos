@@ -43,9 +43,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-      - run: docker build -f packaging/docker/Dockerfile -t talos:ci .
-      - run: docker run --rm --entrypoint /usr/local/bin/talos talos:ci --help || test $$? -eq 1
+      - run: docker build -f packaging/docker/Dockerfile -t binnacle:ci .
+      - run: docker run --rm --entrypoint /usr/local/bin/binnacle binnacle:ci --help || test $$? -eq 1
       - run: |
           export DOCKER_GID=$(getent group docker | cut -d: -f3)
-          TALOS_SETUP_TOKEN=dummy docker compose -f packaging/docker/docker-compose.yml config
+          BINNACLE_SETUP_TOKEN=dummy docker compose -f packaging/docker/docker-compose.yml config
       - run: scripts/validate-coolify-template.sh

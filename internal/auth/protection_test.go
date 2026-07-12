@@ -28,14 +28,14 @@ func TestLimiterRecoversAfterRefill(t *testing.T) {
 func TestProtectionPoliciesAreBounded(t *testing.T) {
 	p := NewProtection(8, TrustedProxies{})
 	for i := 0; i < 100; i++ {
-		r := httptest.NewRequest("GET", "http://talos.test/api/v1/metrics", nil)
+		r := httptest.NewRequest("GET", "http://binnacle.test/api/v1/metrics", nil)
 		r.RemoteAddr = fmt.Sprintf("198.18.%d.1:1234", i)
 		_, _ = p.AllowMetrics(r)
 	}
 	if p.limiter.order.Len() > 8 {
 		t.Fatalf("entries=%d", p.limiter.order.Len())
 	}
-	r := httptest.NewRequest("POST", "http://talos.test/api/v1/diagnostics", nil)
+	r := httptest.NewRequest("POST", "http://binnacle.test/api/v1/diagnostics", nil)
 	r.RemoteAddr = "192.0.2.10:1234"
 	for i := 0; i < 3; i++ {
 		if ok, _ := p.AllowDiagnostics(r, "usr"); !ok {
@@ -48,9 +48,9 @@ func TestProtectionPoliciesAreBounded(t *testing.T) {
 }
 
 func TestSameOriginRejectsSpoofing(t *testing.T) {
-	r := httptest.NewRequest("POST", "https://talos.test/api/v1/auth/logout", nil)
-	r.Host = "talos.test"
-	r.Header.Set("Origin", "https://talos.test")
+	r := httptest.NewRequest("POST", "https://binnacle.test/api/v1/auth/logout", nil)
+	r.Host = "binnacle.test"
+	r.Header.Set("Origin", "https://binnacle.test")
 	if !SameOrigin(r, TrustedProxies{}) {
 		t.Fatal("same origin rejected")
 	}
@@ -68,7 +68,7 @@ func TestLoginAndSetupLimitsRecover(t *testing.T) {
 	now := time.Unix(0, 0)
 	p := NewProtection(32, TrustedProxies{})
 	p.limiter.now = func() time.Time { return now }
-	r := httptest.NewRequest("POST", "http://talos.test/api/v1/setup/verify", nil)
+	r := httptest.NewRequest("POST", "http://binnacle.test/api/v1/setup/verify", nil)
 	r.RemoteAddr = "192.0.2.10:1234"
 	for i := 0; i < 5; i++ {
 		if ok, _ := p.AllowSetup(r); !ok {
@@ -97,7 +97,7 @@ func TestTrustedProxyStripsSpoofedForwardingEntries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := httptest.NewRequest("GET", "http://talos.test", nil)
+	r := httptest.NewRequest("GET", "http://binnacle.test", nil)
 	r.RemoteAddr = "10.0.0.1:1234"
 	r.Header.Set("X-Forwarded-For", "203.0.113.9, 198.51.100.25, 10.0.0.2")
 	if got := proxies.ClientPrefix(r); got != "198.51.100.0/24" {

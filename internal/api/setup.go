@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/drilonrecica/talos/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/auth"
 )
 
 // EnableSetup intentionally exposes only the one-time claim flow. It is

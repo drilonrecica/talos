@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 type CSRFValidator interface{ ValidCSRF(*http.Request) bool }

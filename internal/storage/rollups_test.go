@@ -12,7 +12,7 @@ import (
 func TestRollupsPreserveTypedStatistics(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestRollupsPreserveTypedStatistics(t *testing.T) {
 func TestRollupsIncludeBroadenedHostTelemetry(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

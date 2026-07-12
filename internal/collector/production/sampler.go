@@ -14,14 +14,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	dockercollector "github.com/drilonrecica/talos/internal/collector/docker"
-	hostcollector "github.com/drilonrecica/talos/internal/collector/host"
-	"github.com/drilonrecica/talos/internal/coolify"
-	"github.com/drilonrecica/talos/internal/dockerapi"
-	"github.com/drilonrecica/talos/internal/events"
-	"github.com/drilonrecica/talos/internal/metrics"
-	"github.com/drilonrecica/talos/internal/resources"
-	"github.com/drilonrecica/talos/internal/storage"
+	dockercollector "github.com/drilonrecica/binnacle/internal/collector/docker"
+	hostcollector "github.com/drilonrecica/binnacle/internal/collector/host"
+	"github.com/drilonrecica/binnacle/internal/coolify"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/events"
+	"github.com/drilonrecica/binnacle/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/resources"
+	"github.com/drilonrecica/binnacle/internal/storage"
 	"golang.org/x/sys/unix"
 )
 
@@ -146,7 +146,7 @@ func (s *Sampler) collect(ctx context.Context, pending []metrics.Event) {
 		collectors["docker"] = health("docker", 0, nil, now)
 		s.lastResources = append([]metrics.ResourceSnapshot(nil), resourceValues...)
 		if s.Store != nil {
-			_ = s.Store.UpsertHost(ctx, "host", storage.HostIdentity("", "talos-local-host"), "Server")
+			_ = s.Store.UpsertHost(ctx, "host", storage.HostIdentity("", "binnacle-local-host"), "Server")
 			ids := make([]string, 0, len(resourceValues))
 			for _, resource := range resourceValues {
 				ids = append(ids, string(resource.ID))
@@ -522,7 +522,7 @@ func resourceID(stable string) metrics.ResourceID {
 	return metrics.ResourceID("res_" + hex.EncodeToString(sum[:8]))
 }
 func category(labels map[string]string, identity resources.Identity) string {
-	if value := strings.ToLower(labels["talos.category"]); resources.ValidCategory(value) {
+	if value := strings.ToLower(labels["binnacle.category"]); resources.ValidCategory(value) {
 		return value
 	}
 	if labels["coolify.type"] == "infrastructure" {

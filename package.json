@@ -1,5 +1,5 @@
 {
-  "name": "talos",
+  "name": "binnacle",
   "private": true,
   "packageManager": "pnpm@11.12.0",
   "engines": {

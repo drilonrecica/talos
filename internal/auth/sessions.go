@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const SessionCookieName = "talos_session"
+const SessionCookieName = "binnacle_session"
 
 var ErrSessionInvalid = errors.New("session is invalid")
 

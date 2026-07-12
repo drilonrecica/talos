@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/drilonrecica/talos/internal/settings"
+	"github.com/drilonrecica/binnacle/internal/settings"
 )
 
 func (s *Server) EnableSettings(service *settings.Service, authorizer Authorizer, csrf CSRFValidator) {

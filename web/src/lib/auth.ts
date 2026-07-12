@@ -56,7 +56,7 @@ export async function currentSession(): Promise<SessionInfo | null> {
 }
 
 export function csrfToken(): string {
-  const prefix = 'talos_csrf=';
+  const prefix = 'binnacle_csrf=';
   return (
     document.cookie
       .split(';')

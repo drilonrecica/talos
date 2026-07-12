@@ -47,7 +47,7 @@
 </script>
 
 <section class="auth-card" aria-labelledby="setup-title">
-  <h1 id="setup-title">Set up TALOS</h1>
+  <h1 id="setup-title">Set up Binnacle</h1>
   <p>Enter the one-time token configured for this installation.</p>
   {#if error}<p bind:this={alert} tabindex="-1" role="alert">{error}</p>{/if}
   {#if !verified}

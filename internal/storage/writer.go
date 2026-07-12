@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 )
 
 const hostID = "host"
@@ -141,7 +141,7 @@ func eventSeverity(eventType string) string {
 
 func eventSource(eventType string) string {
 	if eventType == "host_reboot" || eventType == "collector_down" || eventType == "collector_degraded" || eventType == "persistence_degraded" || eventType == "persistence_gap" {
-		return "talos"
+		return "binnacle"
 	}
 	return "docker"
 }

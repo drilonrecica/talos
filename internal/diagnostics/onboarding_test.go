@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drilonrecica/talos/internal/dockerapi"
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 type fakeDocker struct{ fail bool }
@@ -29,7 +29,7 @@ func (f fakeDocker) Inspect(context.Context, string) (dockerapi.Inspect, error) 
 func TestOnboardingDiagnosticsRemainIndependent(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	db := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	db := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := db.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

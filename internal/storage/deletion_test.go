@@ -26,7 +26,7 @@ func TestDeletionJobJSONProgressContract(t *testing.T) {
 func TestScopedDeletionPreservesConfigurationAndSupportsRetry(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +94,7 @@ func TestScopedDeletionPreservesConfigurationAndSupportsRetry(t *testing.T) {
 func TestResourceDeletionAndArchivedPurgeBoundaries(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +184,7 @@ func TestResourceDeletionAndArchivedPurgeBoundaries(t *testing.T) {
 func TestDeletionJobsConflict(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -202,7 +202,7 @@ func TestDeletionJobsConflict(t *testing.T) {
 func TestDeletionJobsRecoverAfterRestart(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

@@ -2,6 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 describe('frontend workspace', () => {
   it('keeps the alpha product name available to the application', () => {
-    expect('TALOS').toBe('TALOS');
+    expect('Binnacle').toBe('Binnacle');
   });
 });

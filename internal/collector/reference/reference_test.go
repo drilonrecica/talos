@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	dockercollector "github.com/drilonrecica/talos/internal/collector/docker"
-	hostcollector "github.com/drilonrecica/talos/internal/collector/host"
+	dockercollector "github.com/drilonrecica/binnacle/internal/collector/docker"
+	hostcollector "github.com/drilonrecica/binnacle/internal/collector/host"
 	"golang.org/x/sys/unix"
 )
 

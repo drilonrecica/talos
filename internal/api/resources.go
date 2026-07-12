@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	authpkg "github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/metrics"
-	"github.com/drilonrecica/talos/internal/storage"
+	authpkg "github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func (s *Server) EnableResources(engine *metrics.Engine, auth Authorizer, store *storage.Manager, protection *authpkg.Protection) {

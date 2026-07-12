@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Multi-stage build for the TALOS monitoring service.
+# Multi-stage build for the Binnacle monitoring service.
 # Supports linux/amd64 and linux/arm64 via buildx.
 
 FROM node:24-bookworm AS web
@@ -20,22 +20,22 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=web /src/internal/webembed/dist internal/webembed/dist
-RUN CGO_ENABLED=1 go build -ldflags='-s -w' -o /talos ./cmd/talos
+RUN CGO_ENABLED=1 go build -ldflags='-s -w' -o /binnacle ./cmd/binnacle
 
 FROM debian:bookworm-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 \
  && rm -rf /var/lib/apt/lists/* \
- && useradd --system --home-dir /var/lib/talos --create-home talos
+ && useradd --system --home-dir /var/lib/binnacle --create-home binnacle
 
-COPY --from=build /talos /usr/local/bin/talos
+COPY --from=build /binnacle /usr/local/bin/binnacle
 
-USER talos
-WORKDIR /var/lib/talos
-VOLUME /var/lib/talos
+USER binnacle
+WORKDIR /var/lib/binnacle
+VOLUME /var/lib/binnacle
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD ["/usr/local/bin/talos", "--healthcheck"]
+  CMD ["/usr/local/bin/binnacle", "--healthcheck"]
 
-ENTRYPOINT ["/usr/local/bin/talos"]
+ENTRYPOINT ["/usr/local/bin/binnacle"]

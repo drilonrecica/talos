@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/drilonrecica/talos/internal/auth"
-	"github.com/drilonrecica/talos/internal/diagnostics"
+	"github.com/drilonrecica/binnacle/internal/auth"
+	"github.com/drilonrecica/binnacle/internal/diagnostics"
 )
 
 func (s *Server) EnableDiagnostics(service *diagnostics.BundleService, authorizer Authorizer, protection *auth.Protection) {
@@ -63,7 +63,7 @@ func (s *Server) EnableDiagnostics(service *diagnostics.BundleService, authorize
 			return
 		}
 		w.Header().Set("Content-Type", "application/gzip")
-		w.Header().Set("Content-Disposition", `attachment; filename="talos-diagnostics.tar.gz"`)
+		w.Header().Set("Content-Disposition", `attachment; filename="binnacle-diagnostics.tar.gz"`)
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(http.StatusOK)

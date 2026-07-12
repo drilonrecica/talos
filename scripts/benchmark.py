@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Reproducible alpha benchmark harness for TALOS.
+"""Reproducible alpha benchmark harness for Binnacle.
 
-Runs the talos binary in deterministic demo mode for a configurable number of
+Runs the binnacle binary in deterministic demo mode for a configurable number of
 synthetic containers, samples process and application metrics, and emits a JSON
 report. Designed for short validation runs locally; the same harness can be used
 for longer reference runs on release hardware.
@@ -224,8 +224,8 @@ def summarize(samples: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="TALOS reproducible benchmark harness")
-    parser.add_argument("--binary", default="bin/talos", help="path to talos binary")
+    parser = argparse.ArgumentParser(description="Binnacle reproducible benchmark harness")
+    parser.add_argument("--binary", default="bin/binnacle", help="path to binnacle binary")
     parser.add_argument("--containers", type=int, default=30, help="number of synthetic containers")
     parser.add_argument("--duration", type=int, default=60, help="benchmark duration in seconds")
     parser.add_argument("--warmup", type=int, default=5, help="warmup seconds before sampling")
@@ -236,20 +236,20 @@ def main() -> int:
 
     binary = Path(args.binary).resolve()
     if not args.no_build:
-        subprocess.run(["go", "build", "-o", str(binary), "./cmd/talos"], check=True)
+        subprocess.run(["go", "build", "-o", str(binary), "./cmd/binnacle"], check=True)
     if not binary.exists():
         print(f"binary not found: {binary}", file=sys.stderr)
         return 1
 
     port = find_port()
     base_url = f"http://127.0.0.1:{port}"
-    data_dir = Path(tempfile.mkdtemp(prefix="talos-benchmark-"))
+    data_dir = Path(tempfile.mkdtemp(prefix="binnacle-benchmark-"))
     env = os.environ.copy()
-    env["TALOS_LISTEN_ADDRESS"] = f"127.0.0.1:{port}"
-    env["TALOS_DATA_DIR"] = str(data_dir)
-    env["TALOS_RUNTIME_DIR"] = str(data_dir / "run")
-    env["TALOS_DATABASE_PATH"] = str(data_dir / "talos.db")
-    env["TALOS_SETUP_TOKEN"] = "talos-benchmark-token-32chars-long"
+    env["BINNACLE_LISTEN_ADDRESS"] = f"127.0.0.1:{port}"
+    env["BINNACLE_DATA_DIR"] = str(data_dir)
+    env["BINNACLE_RUNTIME_DIR"] = str(data_dir / "run")
+    env["BINNACLE_DATABASE_PATH"] = str(data_dir / "binnacle.db")
+    env["BINNACLE_SETUP_TOKEN"] = "binnacle-benchmark-token-32chars-long"
 
     cmd = [
         str(binary),
@@ -263,7 +263,7 @@ def main() -> int:
     process = subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     try:
         wait_for_server(base_url, timeout=30.0)
-        authenticate(base_url, env["TALOS_SETUP_TOKEN"])
+        authenticate(base_url, env["BINNACLE_SETUP_TOKEN"])
         if args.warmup:
             time.sleep(args.warmup)
 
@@ -290,7 +290,7 @@ def main() -> int:
             "data_dir": str(data_dir),
         }
 
-        db_path = data_dir / "talos.db"
+        db_path = data_dir / "binnacle.db"
         if db_path.exists():
             report["database_size_bytes"] = db_path.stat().st_size
 

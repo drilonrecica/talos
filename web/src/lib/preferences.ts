@@ -1,8 +1,8 @@
 export type Theme = 'system' | 'dark' | 'light';
 export type Density = 'comfortable' | 'compact';
 
-const themeKey = 'talos.theme';
-const densityKey = 'talos.density';
+const themeKey = 'binnacle.theme';
+const densityKey = 'binnacle.density';
 
 export function resolveTheme(
   theme: Theme,

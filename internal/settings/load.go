@@ -37,10 +37,10 @@ func (NoopOverrideProvider) Overrides() (map[string]string, error) { return nil,
 
 // Discover returns the selected optional configuration file.
 func Discover(getenv func(string) string, exists func(string) bool) string {
-	if p := getenv("TALOS_CONFIG_FILE"); p != "" {
+	if p := getenv("BINNACLE_CONFIG_FILE"); p != "" {
 		return p
 	}
-	for _, p := range []string{"/etc/talos/talos.toml", "/var/lib/talos/talos.toml"} {
+	for _, p := range []string{"/etc/binnacle/binnacle.toml", "/var/lib/binnacle/binnacle.toml"} {
 		if exists(p) {
 			return p
 		}
@@ -150,7 +150,7 @@ func readTOML(path string) (map[string]string, error) {
 }
 
 var environment = map[string]string{
-	"TALOS_DATA_DIR": "paths.data_dir", "TALOS_DATABASE_PATH": "paths.database_path", "TALOS_RUNTIME_DIR": "paths.runtime_dir", "TALOS_HOST_PROC": "paths.host_proc", "TALOS_HOST_SYS": "paths.host_sys", "TALOS_MASTER_KEY": "paths.master_key", "TALOS_LISTEN_ADDRESS": "http.listen_address", "TALOS_TRUSTED_PROXY_CIDRS": "http.trusted_proxy_cidrs", "TALOS_HOST_INTERVAL": "collection.host_interval", "TALOS_CONTAINER_INTERVAL": "collection.container_interval", "TALOS_MINIMUM_INTERVAL": "collection.minimum_interval", "TALOS_SSE_INTERVAL": "live.sse_interval", "TALOS_RAW_INTERVAL": "persistence.raw_interval", "TALOS_QUEUE_BATCH_LIMIT": "persistence.queue_batch_limit", "TALOS_RETENTION_PRESET": "retention.preset", "TALOS_RETENTION_RAW": "retention.raw", "TALOS_RETENTION_ONE_MINUTE": "retention.one_minute", "TALOS_RETENTION_FIFTEEN_MINUTE": "retention.fifteen_minute", "TALOS_RETENTION_ONE_HOUR": "retention.one_hour", "TALOS_DATABASE_TARGET_BUDGET_BYTES": "database.target_budget_bytes", "TALOS_DATABASE_WARNING_RATIO": "database.warning_ratio", "TALOS_DATABASE_CRITICAL_RATIO": "database.critical_ratio", "TALOS_DATABASE_EMERGENCY_PAUSE_RATIO": "database.emergency_pause_ratio", "TALOS_CHARTS_MAX_POINTS": "charts.max_points_per_series", "TALOS_DOCKER_SOCKET": "docker.socket_path", "TALOS_DOCKER_MAX_CONCURRENCY": "docker.max_concurrency", "TALOS_CHECKS_MAX_CONCURRENCY": "checks.max_concurrency", "TALOS_LOGS_MAX_RESPONSE_BYTES": "logs.max_response_bytes", "TALOS_LOGS_MAX_LINES": "logs.max_lines", "TALOS_SESSION_IDLE_TIMEOUT": "sessions.idle_timeout", "TALOS_SESSION_ABSOLUTE_LIFETIME": "sessions.absolute_lifetime", "TALOS_DEMO": "demo"}
+	"BINNACLE_DATA_DIR": "paths.data_dir", "BINNACLE_DATABASE_PATH": "paths.database_path", "BINNACLE_RUNTIME_DIR": "paths.runtime_dir", "BINNACLE_HOST_PROC": "paths.host_proc", "BINNACLE_HOST_SYS": "paths.host_sys", "BINNACLE_MASTER_KEY": "paths.master_key", "BINNACLE_LISTEN_ADDRESS": "http.listen_address", "BINNACLE_TRUSTED_PROXY_CIDRS": "http.trusted_proxy_cidrs", "BINNACLE_HOST_INTERVAL": "collection.host_interval", "BINNACLE_CONTAINER_INTERVAL": "collection.container_interval", "BINNACLE_MINIMUM_INTERVAL": "collection.minimum_interval", "BINNACLE_SSE_INTERVAL": "live.sse_interval", "BINNACLE_RAW_INTERVAL": "persistence.raw_interval", "BINNACLE_QUEUE_BATCH_LIMIT": "persistence.queue_batch_limit", "BINNACLE_RETENTION_PRESET": "retention.preset", "BINNACLE_RETENTION_RAW": "retention.raw", "BINNACLE_RETENTION_ONE_MINUTE": "retention.one_minute", "BINNACLE_RETENTION_FIFTEEN_MINUTE": "retention.fifteen_minute", "BINNACLE_RETENTION_ONE_HOUR": "retention.one_hour", "BINNACLE_DATABASE_TARGET_BUDGET_BYTES": "database.target_budget_bytes", "BINNACLE_DATABASE_WARNING_RATIO": "database.warning_ratio", "BINNACLE_DATABASE_CRITICAL_RATIO": "database.critical_ratio", "BINNACLE_DATABASE_EMERGENCY_PAUSE_RATIO": "database.emergency_pause_ratio", "BINNACLE_CHARTS_MAX_POINTS": "charts.max_points_per_series", "BINNACLE_DOCKER_SOCKET": "docker.socket_path", "BINNACLE_DOCKER_MAX_CONCURRENCY": "docker.max_concurrency", "BINNACLE_CHECKS_MAX_CONCURRENCY": "checks.max_concurrency", "BINNACLE_LOGS_MAX_RESPONSE_BYTES": "logs.max_response_bytes", "BINNACLE_LOGS_MAX_LINES": "logs.max_lines", "BINNACLE_SESSION_IDLE_TIMEOUT": "sessions.idle_timeout", "BINNACLE_SESSION_ABSOLUTE_LIFETIME": "sessions.absolute_lifetime", "BINNACLE_DEMO": "demo"}
 var supported = func() map[string]bool {
 	m := map[string]bool{}
 	for _, k := range environment {

@@ -11,7 +11,7 @@ import (
 func TestArchivedResourcesRemainDiscoverableAndCanReactivate(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

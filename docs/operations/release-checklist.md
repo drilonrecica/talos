@@ -32,8 +32,8 @@ table and captured benchmark output.
 | E2E accessibility | `pnpm --dir web test:e2e a11y.spec.ts` |
 | E2E visual regression | `pnpm --dir web test:e2e:visual` |
 | Supply-chain scan | `make vuln` (requires network and `govulncheck`) |
-| Real-host validation | Run `talos` against Docker and compare metrics to `docker stats` / `/proc` |
-| Coolify fresh install | Deploy `packaging/coolify/talos.yaml` to a Coolify instance |
+| Real-host validation | Run `binnacle` against Docker and compare metrics to `docker stats` / `/proc` |
+| Coolify fresh install | Deploy `packaging/coolify/binnacle.yaml` to a Coolify instance |
 | Compose fresh install | `docker compose -f packaging/docker/docker-compose.yml up` |
 | Upgrade test | Install previous build, persist data, upgrade to candidate |
 | Retention / persistence failure | Fill queue, verify drops are bounded and data recovers |
@@ -52,5 +52,5 @@ Attach the following to the release record:
 1. `release-record/build.log`
 2. `release-record/v0.1.0-alpha.1-<short-sha>.md`
 3. `benchmark-report.json`
-4. Container image digest (`docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/drilonrecica/talos:local`)
+4. Container image digest (`docker inspect --format='{{index .RepoDigests 0}}' ghcr.io/drilonrecica/binnacle:local`)
 5. E2E and visual regression reports when run

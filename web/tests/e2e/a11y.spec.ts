@@ -189,7 +189,7 @@ async function mockSettings(page: Page) {
       applyMode: 'restart_required',
     },
     'paths.data_dir': {
-      value: '/var/lib/talos',
+      value: '/var/lib/binnacle',
       source: 'Default',
       applyMode: 'restart_required',
     },

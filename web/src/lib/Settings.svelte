@@ -120,8 +120,8 @@
           save('database.target_budget_bytes', event.currentTarget.value)}
       />
       <p>
-        At warning and critical levels TALOS reports pressure and cleans expired
-        data; it does not silently remove in-retention history.
+        At warning and critical levels Binnacle reports pressure and cleans
+        expired data; it does not silently remove in-retention history.
       </p>
     </section>
 

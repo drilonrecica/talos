@@ -13,7 +13,7 @@ import (
 func TestEventsForResourceUseStableJSONFields(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	m := New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := m.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

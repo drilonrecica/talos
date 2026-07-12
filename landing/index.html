@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="TALOS is an AGPL-3.0-only, self-hosted monitoring dashboard for Linux servers running Docker workloads."
+      content="Binnacle is an AGPL-3.0-only, self-hosted monitoring dashboard for Linux servers running Docker workloads."
     />
-    <title>TALOS — Lightweight Docker server monitoring</title>
+    <title>Binnacle — Lightweight Docker server monitoring</title>
     <link rel="stylesheet" href="assets/style.css" />
-    <link rel="icon" href="assets/talos.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/binnacle.svg" type="image/svg+xml" />
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="TALOS home">
-        <img src="assets/talos.svg" alt="" width="40" height="40" />
-        <span>TALOS</span>
+      <a class="brand" href="/" aria-label="Binnacle home">
+        <img src="assets/binnacle.svg" alt="" width="40" height="40" />
+        <span>Binnacle</span>
       </a>
       <nav aria-label="Primary">
         <a href="#features">Features</a>
         <a href="#quickstart">Quick start</a>
-        <a href="https://github.com/drilonrecica/talos">GitHub</a>
+        <a href="https://github.com/drilonrecica/binnacle">GitHub</a>
       </nav>
     </header>
 
@@ -29,7 +29,7 @@
         <div class="hero-content">
           <h1>Lightweight, Coolify-aware monitoring for Docker servers.</h1>
           <p>
-            TALOS is a self-hosted, read-only monitoring dashboard for Linux
+            Binnacle is a self-hosted, read-only monitoring dashboard for Linux
             servers running Docker workloads. Host metrics, logical service
             grouping, local SQLite history, and live updates — without a
             separate observability stack.
@@ -37,12 +37,12 @@
           <div class="hero-actions">
             <a
               class="button button-primary"
-              href="https://github.com/drilonrecica/talos"
+              href="https://github.com/drilonrecica/binnacle"
               >View on GitHub</a
             >
             <a
               class="button"
-              href="https://github.com/drilonrecica/talos/blob/master/docs/SPEC.md"
+              href="https://github.com/drilonrecica/binnacle/blob/master/docs/SPEC.md"
               >Read the spec</a
             >
           </div>
@@ -67,7 +67,7 @@
       </section>
 
       <section id="features" class="features">
-        <h2>Why TALOS?</h2>
+        <h2>Why Binnacle?</h2>
         <div class="feature-grid">
           <article>
             <h3>Local-first</h3>
@@ -93,7 +93,7 @@
           <article>
             <h3>Read-only by design</h3>
             <p>
-              TALOS never restarts, stops, deletes, or execs into containers.
+              Binnacle never restarts, stops, deletes, or execs into containers.
               It only observes.
             </p>
           </article>
@@ -120,16 +120,16 @@
           The supported path is Docker Compose. Set a setup token and the host
           Docker group ID, then start the service:
         </p>
-        <pre><code>export TALOS_SETUP_TOKEN=$(openssl rand -hex 32)
+        <pre><code>export BINNACLE_SETUP_TOKEN=$(openssl rand -hex 32)
 export DOCKER_GID=$(getent group docker | cut -d: -f3)
-docker compose -f https://raw.githubusercontent.com/drilonrecica/talos/master/packaging/docker/docker-compose.yml up</code></pre>
+docker compose -f https://raw.githubusercontent.com/drilonrecica/binnacle/master/packaging/docker/docker-compose.yml up</code></pre>
         <p>
           Then open <code>http://localhost:8080</code>, complete setup, and sign
           in.
         </p>
         <a
           class="button button-primary"
-          href="https://github.com/drilonrecica/talos/blob/master/docs/SPEC.md#82-deployment"
+          href="https://github.com/drilonrecica/binnacle/blob/master/docs/SPEC.md#82-deployment"
           >Deployment guide</a
         >
       </section>
@@ -139,25 +139,25 @@ docker compose -f https://raw.githubusercontent.com/drilonrecica/talos/master/pa
         <ul class="doc-list">
           <li>
             <a
-              href="https://github.com/drilonrecica/talos/blob/master/docs/SPEC.md"
+              href="https://github.com/drilonrecica/binnacle/blob/master/docs/SPEC.md"
               >Product &amp; technical specification</a
             >
           </li>
           <li>
             <a
-              href="https://github.com/drilonrecica/talos/blob/master/docs/TASKS.md"
+              href="https://github.com/drilonrecica/binnacle/blob/master/docs/TASKS.md"
               >Implementation backlog</a
             >
           </li>
           <li>
             <a
-              href="https://github.com/drilonrecica/talos/blob/master/CONTRIBUTING.md"
+              href="https://github.com/drilonrecica/binnacle/blob/master/CONTRIBUTING.md"
               >Contributing guide</a
             >
           </li>
           <li>
             <a
-              href="https://github.com/drilonrecica/talos/blob/master/SECURITY.md"
+              href="https://github.com/drilonrecica/binnacle/blob/master/SECURITY.md"
               >Security policy</a
             >
           </li>
@@ -167,8 +167,8 @@ docker compose -f https://raw.githubusercontent.com/drilonrecica/talos/master/pa
 
     <footer class="site-footer">
       <p>
-        TALOS is a temporary codename. Licensed under
-        <a href="https://github.com/drilonrecica/talos/blob/master/LICENSE"
+        Binnacle is licensed under
+        <a href="https://github.com/drilonrecica/binnacle/blob/master/LICENSE"
           >AGPL-3.0-only</a
         >.
       </p>

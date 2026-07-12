@@ -1,4 +1,4 @@
-# Benchmarking TALOS
+# Benchmarking Binnacle
 
 This document describes how to run the reproducible alpha benchmark harness and
 interpret the results.
@@ -18,7 +18,7 @@ python3 scripts/benchmark.py --containers 100 --duration 300 --output report.jso
 
 ## What is measured
 
-The harness starts `talos` in deterministic demo mode (`--demo --demo-seed 1`)
+The harness starts `binnacle` in deterministic demo mode (`--demo --demo-seed 1`)
 with a configurable number of synthetic containers and collects:
 
 | Metric | Source | Purpose |
@@ -48,12 +48,12 @@ release machine with the exact binary version:
 ## Reproducibility
 
 - The harness always uses seed `1`.
-- Each run writes a fresh temporary `TALOS_DATA_DIR`.
+- Each run writes a fresh temporary `BINNACLE_DATA_DIR`.
 - Reports are JSON so they can be diffed across commits.
 
 ## Real-host validation
 
-To benchmark against real Docker and host interfaces, run `talos` in non-demo
+To benchmark against real Docker and host interfaces, run `binnacle` in non-demo
 mode with an isolated data directory and direct the harness at the same
-`TALOS_LISTEN_ADDRESS`. Document the host architecture, Docker version, and
+`BINNACLE_LISTEN_ADDRESS`. Document the host architecture, Docker version, and
 binary version alongside the report.

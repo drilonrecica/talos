@@ -15,14 +15,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drilonrecica/talos/migrations"
+	"github.com/drilonrecica/binnacle/migrations"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/sys/unix"
 )
 
 const MinimumFreeSpace = 64 << 20
 
-// Manager owns TALOS's SQLite connection and acts as an app lifecycle component.
+// Manager owns Binnacle's SQLite connection and acts as an app lifecycle component.
 type Manager struct {
 	Path, RuntimeDir string
 	db               *sql.DB

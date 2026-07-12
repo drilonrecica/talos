@@ -37,11 +37,11 @@ jobs:
       - uses: anchore/sbom-action@v0.24.0
         with:
           format: spdx-json
-          output-file: talos.spdx.json
+          output-file: binnacle.spdx.json
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: sbom
-          path: talos.spdx.json
+          path: binnacle.spdx.json
 
   scan:
     runs-on: ubuntu-24.04
@@ -49,10 +49,10 @@ jobs:
     permissions: { contents: read, security-events: write }
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-      - run: docker build -f packaging/docker/Dockerfile -t talos:scan .
+      - run: docker build -f packaging/docker/Dockerfile -t binnacle:scan .
       - uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: talos:scan
+          image-ref: binnacle:scan
           format: sarif
           output: trivy.sarif
           severity: HIGH,CRITICAL

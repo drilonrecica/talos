@@ -4,7 +4,7 @@ GO ?= go
 GOFMT ?= gofmt
 PNPM ?= pnpm
 DOCKER ?= docker
-TALOS_BIN ?= bin/talos
+BINNACLE_BIN ?= bin/binnacle
 VERSION ?= dev
 GO_SOURCE_FILES := $(shell find cmd internal -type f -name '*.go' -print)
 
@@ -14,43 +14,43 @@ GO_SOURCE_FILES := $(shell find cmd internal -type f -name '*.go' -print)
 
 help: ## Show the supported local development commands.
 
-	@awk 'BEGIN { FS = ":.*##"; printf "TALOS development commands:\n" } /^[a-zA-Z0-9_-]+:.*##/ { printf "  %-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@awk 'BEGIN { FS = ":.*##"; printf "Binnacle development commands:\n" } /^[a-zA-Z0-9_-]+:.*##/ { printf "  %-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 dev: build ## Start the demo development environment (backend + Vite dev server).
 
-	@echo "Starting TALOS demo backend and Vite dev server..."
-	@export TALOS_SETUP_TOKEN=$$(openssl rand -hex 32); \
-	TALOS_LISTEN_ADDRESS=127.0.0.1:8080 TALOS_DATA_DIR=$$(mktemp -d) $(TALOS_BIN) --demo &
-	@TALOS_PID=$$!; trap 'kill $$TALOS_PID 2>/dev/null || true' EXIT; $(PNPM) --dir web dev
+	@echo "Starting Binnacle demo backend and Vite dev server..."
+	@export BINNACLE_SETUP_TOKEN=$$(openssl rand -hex 32); \
+	BINNACLE_LISTEN_ADDRESS=127.0.0.1:8080 BINNACLE_DATA_DIR=$$(mktemp -d) $(BINNACLE_BIN) --demo &
+	@BINNACLE_PID=$$!; trap 'kill $$BINNACLE_PID 2>/dev/null || true' EXIT; $(PNPM) --dir web dev
 
 dev-demo: build ## Run the deterministic demo environment with a fresh temporary database.
 
-	@export TALOS_SETUP_TOKEN=$$(openssl rand -hex 32); \
-	TALOS_LISTEN_ADDRESS=127.0.0.1:8080 TALOS_DATA_DIR=$$(mktemp -d) $(TALOS_BIN) --demo
+	@export BINNACLE_SETUP_TOKEN=$$(openssl rand -hex 32); \
+	BINNACLE_LISTEN_ADDRESS=127.0.0.1:8080 BINNACLE_DATA_DIR=$$(mktemp -d) $(BINNACLE_BIN) --demo
 
 dev-host: build ## Run against local host/Docker interfaces (requires appropriate permissions).
 
 	@echo "Run with host/Docker access. Ensure the current user can read /proc, /sys, and the Docker socket."
-	@export TALOS_SETUP_TOKEN=$$(openssl rand -hex 32); \
-	TALOS_LISTEN_ADDRESS=127.0.0.1:8080 TALOS_DATA_DIR=$$(mktemp -d) $(TALOS_BIN)
+	@export BINNACLE_SETUP_TOKEN=$$(openssl rand -hex 32); \
+	BINNACLE_LISTEN_ADDRESS=127.0.0.1:8080 BINNACLE_DATA_DIR=$$(mktemp -d) $(BINNACLE_BIN)
 
 test: go-test web-test ## Run Go and frontend unit tests.
 
 check: format-check go-vet test web-check ## Run the local CI-quality subset.
 
-build: ## Build the production frontend and CGO-enabled TALOS binary.
+build: ## Build the production frontend and CGO-enabled Binnacle binary.
 
 	$(PNPM) --dir web build
-	mkdir -p $(dir $(TALOS_BIN))
-	CGO_ENABLED=1 $(GO) build -o $(TALOS_BIN) ./cmd/talos
+	mkdir -p $(dir $(BINNACLE_BIN))
+	CGO_ENABLED=1 $(GO) build -o $(BINNACLE_BIN) ./cmd/binnacle
 
 image: build ## Build a local container image for the current platform.
 
-	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:local .
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:local .
 
 image-multi: ## Build a multi-arch container image (requires buildx and a registry push).
 
-	$(DOCKER) buildx build --platform linux/amd64,linux/arm64 -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:$(VERSION) --push .
+	$(DOCKER) buildx build --platform linux/amd64,linux/arm64 -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:$(VERSION) --push .
 
 vuln: ## Run dependency vulnerability scans (requires govulncheck and pnpm).
 
@@ -63,11 +63,11 @@ licenses: ## Check Go dependency licenses (requires go-licenses v2).
 
 sbom: ## Generate an SPDX SBOM for the container image (requires syft).
 
-	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:sbom . && syft ghcr.io/drilonrecica/talos:sbom -o spdx-json=talos.spdx.json
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:sbom . && syft ghcr.io/drilonrecica/binnacle:sbom -o spdx-json=binnacle.spdx.json
 
 scan: ## Scan the container image for vulnerabilities (requires trivy).
 
-	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/talos:scan . && trivy image ghcr.io/drilonrecica/talos:scan
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:scan . && trivy image ghcr.io/drilonrecica/binnacle:scan
 
 format-check: ## Check Go and frontend formatting without modifying source.
 

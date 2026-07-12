@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Command talos starts the TALOS monitoring service.
+// Command binnacle starts the Binnacle monitoring service.
 package main
 
 import (
@@ -15,19 +15,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/api"
-	"github.com/drilonrecica/talos/internal/app"
-	"github.com/drilonrecica/talos/internal/auth"
-	dockercollector "github.com/drilonrecica/talos/internal/collector/docker"
-	"github.com/drilonrecica/talos/internal/collector/production"
-	"github.com/drilonrecica/talos/internal/demo"
-	"github.com/drilonrecica/talos/internal/diagnostics"
-	"github.com/drilonrecica/talos/internal/dockerapi"
-	"github.com/drilonrecica/talos/internal/metrics"
-	"github.com/drilonrecica/talos/internal/onboarding"
-	"github.com/drilonrecica/talos/internal/settings"
-	"github.com/drilonrecica/talos/internal/storage"
-	"github.com/drilonrecica/talos/internal/webembed"
+	"github.com/drilonrecica/binnacle/internal/api"
+	"github.com/drilonrecica/binnacle/internal/app"
+	"github.com/drilonrecica/binnacle/internal/auth"
+	dockercollector "github.com/drilonrecica/binnacle/internal/collector/docker"
+	"github.com/drilonrecica/binnacle/internal/collector/production"
+	"github.com/drilonrecica/binnacle/internal/demo"
+	"github.com/drilonrecica/binnacle/internal/diagnostics"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/onboarding"
+	"github.com/drilonrecica/binnacle/internal/settings"
+	"github.com/drilonrecica/binnacle/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/webembed"
 )
 
 var version = "dev"

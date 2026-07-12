@@ -1,6 +1,6 @@
 # Dependency inventory
 
-This document lists the key frameworks, tools, libraries, and base images used by TALOS, the versions we target, and the policy for keeping them current.
+This document lists the key frameworks, tools, libraries, and base images used by Binnacle, the versions we target, and the policy for keeping them current.
 
 Last updated: 2026-07-12
 

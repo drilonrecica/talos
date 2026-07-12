@@ -84,8 +84,8 @@
     return (
       document.cookie
         .split('; ')
-        .find((item) => item.startsWith('talos_csrf='))
-        ?.slice('talos_csrf='.length) ?? ''
+        .find((item) => item.startsWith('binnacle_csrf='))
+        ?.slice('binnacle_csrf='.length) ?? ''
     );
   }
 </script>

@@ -2,8 +2,8 @@
 package events
 
 import (
-	"github.com/drilonrecica/talos/internal/dockerapi"
-	"github.com/drilonrecica/talos/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 	"strings"
 	"time"
 )

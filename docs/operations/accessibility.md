@@ -1,6 +1,6 @@
 # Accessibility
 
-TALOS targets WCAG 2.2 Level AA. Automated checks run with `@axe-core/playwright` against the login, setup, onboarding, overview, server, resources, resource detail, events, settings, and monitor-health pages.
+Binnacle targets WCAG 2.2 Level AA. Automated checks run with `@axe-core/playwright` against the login, setup, onboarding, overview, server, resources, resource detail, events, settings, and monitor-health pages.
 
 ## Automated coverage
 
@@ -20,7 +20,7 @@ Verify each item in a supported browser with keyboard-only interaction and, wher
 
 - [ ] Skip-to-content link is the first focusable element and moves focus to `#content`.
 - [ ] Each page has exactly one `<main>` landmark.
-- [ ] Page `<title>` is "TALOS" and route-specific context is conveyed by the first heading.
+- [ ] Page `<title>` is "Binnacle" and route-specific context is conveyed by the first heading.
 - [ ] Primary navigation uses `<nav aria-label="Primary navigation">` and marks the current page with `aria-current="page"`.
 
 ### Login and setup

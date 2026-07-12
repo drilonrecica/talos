@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/metrics"
 )
 
 // Persistence schedules immutable current snapshots into a bounded writer

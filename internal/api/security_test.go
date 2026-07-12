@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	authpkg "github.com/drilonrecica/talos/internal/auth"
+	authpkg "github.com/drilonrecica/binnacle/internal/auth"
 )
 
 func newSecurityServer(t *testing.T) *Server {
@@ -26,7 +26,7 @@ func newSecurityServer(t *testing.T) *Server {
 
 func TestSecurityHeaders(t *testing.T) {
 	server := newSecurityServer(t)
-	req := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/session", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/session", nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -46,7 +46,7 @@ func TestSecurityHeaders(t *testing.T) {
 
 func TestHSTSOnTLS(t *testing.T) {
 	server := newSecurityServer(t)
-	req := httptest.NewRequest(http.MethodGet, "https://talos.test/api/v1/session", nil)
+	req := httptest.NewRequest(http.MethodGet, "https://binnacle.test/api/v1/session", nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -60,7 +60,7 @@ func TestUnauthorizedRequestRejected(t *testing.T) {
 	p := authpkg.NewProtection(1024, authpkg.TrustedProxies{})
 	server.EnableLive(nil, DemoAuthorizer(false), p)
 
-	req := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/live", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/live", nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -79,7 +79,7 @@ func TestEventRangeCap(t *testing.T) {
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	from := time.Now().UTC().Add(-10 * 24 * time.Hour).Format(time.RFC3339)
-	req := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/events?from="+from+"&to="+now, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/events?from="+from+"&to="+now, nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -99,7 +99,7 @@ func TestMetricQueryMetricCountLimit(t *testing.T) {
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	from := time.Now().UTC().Add(-time.Hour).Format(time.RFC3339)
-	req := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/metrics?scope=host&metrics=cpu,memory,network_rx,network_tx,block_read,block_write,cpu&from="+from+"&to="+now, nil)
+	req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/metrics?scope=host&metrics=cpu,memory,network_rx,network_tx,block_read,block_write,cpu&from="+from+"&to="+now, nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -112,7 +112,7 @@ func TestRateLimitEvents(t *testing.T) {
 	p := authpkg.NewProtection(1024, authpkg.TrustedProxies{})
 	allowed := 0
 	for i := 0; i < 70; i++ {
-		req := httptest.NewRequest(http.MethodGet, "http://talos.test/", nil)
+		req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/", nil)
 		req.RemoteAddr = "127.0.0.1:1234"
 		ok, _ := p.AllowEvents(req)
 		if ok {
@@ -129,7 +129,7 @@ func TestRequestLogRedactsSecrets(t *testing.T) {
 	var buf bytes.Buffer
 	server.SetLogger(slog.New(slog.NewJSONHandler(&buf, nil)))
 
-	req := httptest.NewRequest(http.MethodGet, "http://talos.test/api/v1/session?token=super-secret&password=hunter2", nil)
+	req := httptest.NewRequest(http.MethodGet, "http://binnacle.test/api/v1/session?token=super-secret&password=hunter2", nil)
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 
@@ -150,7 +150,7 @@ func TestOversizedBodyRejected(t *testing.T) {
 	server.EnableAuth(nil, nil, authpkg.NewProtection(1024, authpkg.TrustedProxies{}))
 
 	body := make([]byte, MaxRequestBodyBytes+1)
-	req := httptest.NewRequest(http.MethodPost, "http://talos.test/api/v1/auth/login", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "http://binnacle.test/api/v1/auth/login", bytes.NewReader(body))
 	rec := httptest.NewRecorder()
 	server.Handler().ServeHTTP(rec, req)
 

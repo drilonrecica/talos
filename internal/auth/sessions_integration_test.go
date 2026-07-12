@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 func TestSessionLifecycleAndHashedPersistence(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestSessionLifecycleAndHashedPersistence(t *testing.T) {
 	now := time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC)
 	sessions := NewSessions(manager.DB(), SessionConfig{IdleTimeout: time.Hour, AbsoluteLifetime: 24 * time.Hour})
 	sessions.now = func() time.Time { return now }
-	r := httptest.NewRequest("POST", "https://talos.test/api/v1/auth/login", nil)
+	r := httptest.NewRequest("POST", "https://binnacle.test/api/v1/auth/login", nil)
 	r.RemoteAddr = "192.0.2.10:1234"
 	r.Header.Set("User-Agent", "test-browser")
 	token, csrf, session, err := sessions.IssueForRequest(ctx, "usr_test", r, TrustedProxies{})
@@ -34,8 +34,8 @@ func TestSessionLifecycleAndHashedPersistence(t *testing.T) {
 	if token == "" || csrf == "" || !session.ExpiresAt.Equal(now.Add(time.Hour)) {
 		t.Fatal("invalid issued session")
 	}
-	mutation := httptest.NewRequest("POST", "https://talos.test/api/v1/auth/logout", nil)
-	mutation.Header.Set("Origin", "https://talos.test")
+	mutation := httptest.NewRequest("POST", "https://binnacle.test/api/v1/auth/logout", nil)
+	mutation.Header.Set("Origin", "https://binnacle.test")
 	mutation.Header.Set("X-CSRF-Token", csrf)
 	mutation.AddCookie(&http.Cookie{Name: SessionCookieName, Value: token})
 	mutation.AddCookie(&http.Cookie{Name: CSRFCookieName, Value: csrf})
@@ -71,7 +71,7 @@ func TestSessionLifecycleAndHashedPersistence(t *testing.T) {
 func TestConcurrentSessionsAndLogoutAll(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func TestSessionCookieFlags(t *testing.T) {
 func TestCurrentSessionRevocation(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	manager := storage.New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	manager := storage.New(filepath.Join(dir, "binnacle.db"), filepath.Join(dir, "run"))
 	if err := manager.Open(ctx); err != nil {
 		t.Fatal(err)
 	}

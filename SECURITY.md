@@ -22,13 +22,13 @@ a fix, but no compatibility promise is made.
 
 ## Security boundaries
 
-TALOS observes Docker and host state. It must not mutate monitored workloads,
+Binnacle observes Docker and host state. It must not mutate monitored workloads,
 proxy arbitrary Docker API calls, or expose shell access. A Docker Unix socket
 is highly privileged even if its filesystem mount is read-only; operators
 should prefer a constrained read-only socket proxy when their deployment model
 allows it.
 
-TALOS sends no telemetry by default. Secrets entered through future settings
+Binnacle sends no telemetry by default. Secrets entered through future settings
 surfaces must be encrypted at rest using an operator-supplied master key and
 must never be returned through an API.
 

@@ -14,8 +14,8 @@ func TestBootstrapAdminIsIdempotentAndDisablesSetup(t *testing.T) {
 	ctx := context.Background()
 	manager, setup := setupDatabase(t)
 	credentials := NewCredentials(manager.DB())
-	t.Setenv("TALOS_ADMIN_USERNAME", "admin")
-	t.Setenv("TALOS_ADMIN_PASSWORD", "correct horse battery staple")
+	t.Setenv("BINNACLE_ADMIN_USERNAME", "admin")
+	t.Setenv("BINNACLE_ADMIN_PASSWORD", "correct horse battery staple")
 	created, err := BootstrapAdmin(ctx, credentials, setup)
 	if err != nil || !created {
 		t.Fatalf("created=%v err=%v", created, err)

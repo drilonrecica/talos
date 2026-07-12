@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
 )
 
 // StatsCollector bounds Docker requests and keeps the newest successful sample.

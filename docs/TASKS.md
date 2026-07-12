@@ -1,4 +1,4 @@
-# TALOS v0.1.0-alpha.1 — Implementation Tasks
+# Binnacle v0.1.0-alpha.1 — Implementation Tasks
 
 ## How to use this backlog
 
@@ -29,7 +29,7 @@ Rules for every task:
 
 - **Status:** Complete
 - **Commit:** `docs(repo): add alpha governance and contribution policies`
-- **Description:** Add the public repository documents required for an AGPL, founder-led project: contribution process with DCO sign-off and Conventional Commits, code of conduct, security reporting/support policy, governance/ADR process, project notice, and a README that identifies TALOS as a temporary codename.
+- **Description:** Add the public repository documents required for an AGPL, founder-led project: contribution process with DCO sign-off and Conventional Commits, code of conduct, security reporting/support policy, governance/ADR process, project notice, and a README that identifies the Binnacle product and its scope.
 - **Implement:** Keep the existing AGPL-3.0 license; state the no-telemetry and permanently read-only product positions; document supported Linux/Docker scope and the public-source obligation for network-served modifications.
 - **Test / verify:** Validate links and SPDX references; manually review that no document promises post-alpha features as alpha behavior.
 - **Done when:** A contributor can report a vulnerability, submit a signed-off PR, understand release ownership, and identify the authoritative specification without external context.
@@ -37,7 +37,7 @@ Rules for every task:
 ### T002 — Create the monorepo skeleton and ignore rules
 
 - **Status:** Complete
-- **Commit:** `chore(repo): create TALOS monorepo layout`
+- **Commit:** `chore(repo): create Binnacle monorepo layout`
 - **Description:** Create the required `cmd`, `internal`, `web`, `migrations`, `packaging`, `scripts`, and `adr` structure with minimal package documentation; replace the generic ignore file with Go, pnpm, Vite, SQLite runtime, coverage, and local-secret exclusions.
 - **Implement:** Establish only acyclic package boundaries described by the specification; add placeholder directories only where Git needs tracked files; never commit generated frontend output, database files, local profiles, or `.env` files.
 - **Test / verify:** Confirm `git status --ignored` classifies expected development artifacts correctly and that no production source relies on an ignored file.
@@ -101,7 +101,7 @@ Rules for every task:
 
 - **Status:** Complete
 - **Commit:** `feat(config): load TOML and environment overrides`
-- **Description:** Load TOML from the documented discovery order or `TALOS_CONFIG_FILE`, map environment variables, and report an effective value plus source for every setting.
+- **Description:** Load TOML from the documented discovery order or `BINNACLE_CONFIG_FILE`, map environment variables, and report an effective value plus source for every setting.
 - **Implement:** Apply precedence `defaults < file < environment < persisted eligible override`; prevent persisted overrides from changing paths, listen address, master key, Docker socket, or host proc/sys mounts. Treat missing optional files as normal and malformed configured files as startup failures with safe diagnostics.
 - **Test / verify:** Test discovery order, override precedence, source labels, unknown-key policy, and redaction of secret values.
 - **Done when:** Settings consumers receive one validated effective configuration and can explain where it came from.
@@ -157,7 +157,7 @@ Rules for every task:
 
 - **Status:** Complete
 - **Commit:** `feat(demo): add seeded synthetic monitoring scenarios`
-- **Description:** Implement `talos --demo` and seedable deterministic host/resource/event scenarios that require neither Docker nor host mounts.
+- **Description:** Implement `binnacle --demo` and seedable deterministic host/resource/event scenarios that require neither Docker nor host mounts.
 - **Implement:** Model normal load, deployment overlap, restart, OOM, collector degradation, archived resource, and recovery states using a controllable clock. Ensure generated data contains no real host identifiers or secrets.
 - **Test / verify:** Assert identical seed/time inputs produce identical snapshots/events and different seeds remain structurally valid.
 - **Done when:** Frontend development, visual tests, and documentation can run independently from a monitored server.
@@ -210,7 +210,7 @@ Rules for every task:
 ### T021 — Establish design tokens, themes, density, and motion policy
 
 - **Status:** Complete
-- **Commit:** `feat(web): add TALOS design tokens and preferences`
+- **Commit:** `feat(web): add Binnacle design tokens and preferences`
 - **Description:** Create project-owned color, typography, spacing, elevation, status, focus, and chart tokens; implement System/Dark/Light theme selection and Comfortable/Compact density preference.
 - **Implement:** Persist display preferences locally or in eligible settings later; honor `prefers-reduced-motion`; use text/icon/color for all status states; keep fonts local/system-only.
 - **Test / verify:** Unit-test preference resolution; browser-test theme persistence, contrast-sensitive status rendering, compact layout, and reduced-motion class behavior.
@@ -295,7 +295,7 @@ Rules for every task:
 - **Status:** Complete
 - **Commit:** `feat(host): collect filesystem and inode capacity`
 - **Description:** Discover host-visible mount points and collect total/used/available bytes and inode usage via statfs-equivalent calls.
-- **Implement:** Filter pseudo/overlay-internal filesystems from overview; always retain root and TALOS data-volume filesystems; expose source, mount, and filesystem type for advanced view.
+- **Implement:** Filter pseudo/overlay-internal filesystems from overview; always retain root and Binnacle data-volume filesystems; expose source, mount, and filesystem type for advanced view.
 - **Test / verify:** Test mount filtering, stat failures, inode-unavailable filesystems, root/data-volume inclusion, and stable mount keys.
 - **Done when:** Disk-capacity monitoring focuses on actionable filesystems without hiding critical storage.
 
@@ -445,7 +445,7 @@ Rules for every task:
 - **Description:** Add fixture-driven Coolify label mapping in the resolver layer, including project/environment/name signals and infrastructure classification, without accessing Coolify internals.
 - **Implement:** Keep undocumented label mappings isolated and versioned by fixtures; fall back cleanly to Compose/derived identity when labels are absent or change.
 - **Test / verify:** Test supported Coolify metadata samples, missing/changed labels, fallback order, and no dependency on Coolify database files.
-- **Done when:** TALOS is Coolify-first while remaining operational when Coolify metadata is incomplete.
+- **Done when:** Binnacle is Coolify-first while remaining operational when Coolify metadata is incomplete.
 
 ### T047 — Implement stable identity fallback and manual category overrides
 
@@ -578,11 +578,11 @@ Rules for every task:
 ### T061 — Implement self-observation instrumentation
 
 - **Status:** Complete
-- **Commit:** `feat(app): collect TALOS self-observation metrics`
-- **Description:** Measure TALOS CPU/RSS, Go heap/goroutines, database/WAL size, write/rollup/retention durations, samples/sec, collector durations, dropped batches, queue depth, SSE clients, and Docker request duration/errors.
+- **Commit:** `feat(app): collect Binnacle self-observation metrics`
+- **Description:** Measure Binnacle CPU/RSS, Go heap/goroutines, database/WAL size, write/rollup/retention durations, samples/sec, collector durations, dropped batches, queue depth, SSE clients, and Docker request duration/errors.
 - **Implement:** Keep collection lightweight and internal; avoid recursively persisting high-rate self-metrics into unbounded storage; make values available to diagnostics and current UI.
 - **Test / verify:** Unit-test counter/gauge updates and filesystem-size failures; integration-test active SSE and queue metrics.
-- **Done when:** TALOS can prove and expose its own operating cost from alpha onward.
+- **Done when:** Binnacle can prove and expose its own operating cost from alpha onward.
 
 ### T062 — Add events history API with validated filtering
 
@@ -818,11 +818,11 @@ Rules for every task:
 ### T087 — Build monitor-health page
 
 - **Status:** Complete
-- **Commit:** `feat(web): expose TALOS self-observation`
-- **Description:** Implement Settings → System → Monitor health with TALOS CPU/RSS/heap/goroutines, DB/WAL sizes, queue depth, dropped batches, write latency, worker durations, collector durations, SSE clients, and Docker API health.
+- **Commit:** `feat(web): expose Binnacle self-observation`
+- **Description:** Implement Settings → System → Monitor health with Binnacle CPU/RSS/heap/goroutines, DB/WAL sizes, queue depth, dropped batches, write latency, worker durations, collector durations, SSE clients, and Docker API health.
 - **Implement:** Explain units and threshold states; show unavailable measurements honestly; link persistence/storage states to relevant settings/recovery guidance.
 - **Test / verify:** Component tests for values/nulls/thresholds; Playwright-test responsive layout, accessible summaries, and live updates.
-- **Done when:** Operators can determine whether TALOS itself is contributing to host load or losing history.
+- **Done when:** Operators can determine whether Binnacle itself is contributing to host load or losing history.
 
 ### T088 — Add frontend error, stale, and offline resilience states
 
@@ -855,7 +855,7 @@ Rules for every task:
 
 - **Commit:** `build(container): add hardened multi-stage production image`
 - **Description:** Create a multi-stage Docker build that compiles the frontend and CGO Go binary for supported Linux architectures, runs as non-root where socket access permits, and ships a minimal runtime image.
-- **Implement:** Use read-only root filesystem compatibility, writable `/var/lib/talos` only, one HTTP port, no privileged mode/capabilities, no Node runtime, and explicit CGO/SQLite runtime libraries.
+- **Implement:** Use read-only root filesystem compatibility, writable `/var/lib/binnacle` only, one HTTP port, no privileged mode/capabilities, no Node runtime, and explicit CGO/SQLite runtime libraries.
 - **Test / verify:** Build/run image, inspect user/files/ports, verify embedded UI, writable data volume, read-only root behavior, and image vulnerability baseline.
 - **Done when:** The production image reflects the resource/security model rather than a development environment.
 
@@ -905,7 +905,7 @@ Rules for every task:
 - **Description:** Document Coolify and Compose install, secure setup token/bootstrap secret, host mounts, Docker socket risk/proxy option, configuration, update channels, migrations, uninstall, persistent-volume consequences, consistent SQLite copy, and corruption/disk-full recovery.
 - **Implement:** State no built-in backups and no self-update; include supported-platform boundaries and calm operational status/recovery language.
 - **Test / verify:** Walk every documented command/configuration in a clean environment and link-check docs.
-- **Done when:** A user can install, update, remove, or recover TALOS without relying on undocumented tribal knowledge.
+- **Done when:** A user can install, update, remove, or recover Binnacle without relying on undocumented tribal knowledge.
 
 ### T098 — Add performance benchmark harness and reports
 

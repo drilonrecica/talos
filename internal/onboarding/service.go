@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/diagnostics"
+	"github.com/drilonrecica/binnacle/internal/diagnostics"
 )
 
 type State struct {

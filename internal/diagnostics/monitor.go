@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/metrics"
-	"github.com/drilonrecica/talos/internal/storage"
+	"github.com/drilonrecica/binnacle/internal/metrics"
+	"github.com/drilonrecica/binnacle/internal/storage"
 )
 
 type MonitorMetric struct {
@@ -66,7 +66,7 @@ func (m *Monitor) Snapshot() MonitorSnapshot {
 		}
 	}
 	values := []MonitorMetric{
-		metric("cpu", "TALOS CPU", cpu, "percent", statusNumber(cpu, 5, 20), "Process CPU over the latest interval."),
+		metric("cpu", "Binnacle CPU", cpu, "percent", statusNumber(cpu, 5, 20), "Process CPU over the latest interval."),
 		metric("rss", "Resident memory", rss, "bytes", available(rss), "Resident working memory reported by Linux."),
 		metric("heap", "Go heap", int64(memory.HeapAlloc), "bytes", "normal", "Currently allocated Go heap."),
 		metric("goroutines", "Goroutines", runtime.NumGoroutine(), "count", "normal", "Active Go goroutines."),

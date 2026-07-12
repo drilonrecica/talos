@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drilonrecica/talos/internal/dockerapi"
+	"github.com/drilonrecica/binnacle/internal/dockerapi"
 )
 
 type CheckStatus string
@@ -76,7 +76,7 @@ func (c OnboardingChecker) hostMetrics() CheckResult {
 	result := base("host_metrics", "Host metrics access", true)
 	for _, name := range []string{"stat", "meminfo"} {
 		if _, err := c.ReadFile(filepath.Join(c.HostProc, name)); err != nil {
-			return failed(result, "TALOS cannot read Linux host metrics.", "Verify the read-only host /proc mount and TALOS_HOST_PROC.", err)
+			return failed(result, "Binnacle cannot read Linux host metrics.", "Verify the read-only host /proc mount and BINNACLE_HOST_PROC.", err)
 		}
 	}
 	result.Status, result.Reason = CheckPassed, "Host CPU and memory interfaces are readable."
@@ -92,7 +92,7 @@ func (c OnboardingChecker) dockerAPI(ctx context.Context) CheckResult {
 	defer cancel()
 	detail, err := c.Docker.Diagnostics(request)
 	if err != nil {
-		return failed(result, "TALOS cannot query the Docker API.", "Verify the Docker socket mount, proxy allowlist, and socket permissions.", err)
+		return failed(result, "Binnacle cannot query the Docker API.", "Verify the Docker socket mount, proxy allowlist, and socket permissions.", err)
 	}
 	result.Status, result.Reason = CheckPassed, fmt.Sprintf("Docker API is reachable; %d containers discovered.", detail.Containers)
 	return result
@@ -143,7 +143,7 @@ func (c OnboardingChecker) metadata(ctx context.Context) CheckResult {
 func (c OnboardingChecker) persistence() CheckResult {
 	result := base("persistent_storage", "Persistent storage", true)
 	if err := c.PersistentProbe(c.DataDir); err != nil {
-		return failed(result, "The TALOS data directory is not writable.", "Verify the persistent volume mount, ownership, and free disk space.", err)
+		return failed(result, "The Binnacle data directory is not writable.", "Verify the persistent volume mount, ownership, and free disk space.", err)
 	}
 	result.Status, result.Reason = CheckPassed, "The persistent data directory is writable."
 	return result
@@ -206,7 +206,7 @@ func persistentProbe(dir string) error {
 	if dir == "" {
 		return errors.New("data directory is empty")
 	}
-	file, err := os.CreateTemp(dir, ".talos-write-probe-")
+	file, err := os.CreateTemp(dir, ".binnacle-write-probe-")
 	if err != nil {
 		return err
 	}

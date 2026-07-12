@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-# Release gate automation for TALOS v0.1.0-alpha.1.
+# Release gate automation for Binnacle v0.1.0-alpha.1.
 # Produces a Markdown release record in RELEASE_RECORD_DIR.
 set -euo pipefail
 
@@ -58,7 +58,7 @@ run_optional() {
   fi
 }
 
-record "# TALOS $VERSION release record"
+record "# Binnacle $VERSION release record"
 record ""
 record "- **Commit:** $COMMIT"
 record "- **Date:** $DATE"
@@ -107,8 +107,8 @@ fi
 # 5. Demo container smoke test.
 if [[ -n "$DOCKER_CMD" ]]; then
   demo_port="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()')"
-  container_name="talos-release-gate-$demo_port"
-  if "$DOCKER_CMD" run -d --name "$container_name" -e TALOS_SETUP_TOKEN=talos-release-gate-token-32chars -p "127.0.0.1:$demo_port:8080" "ghcr.io/drilonrecica/talos:local" --demo --demo-seed 1 >> "$RELEASE_RECORD_DIR/build.log" 2>&1; then
+  container_name="binnacle-release-gate-$demo_port"
+  if "$DOCKER_CMD" run -d --name "$container_name" -e BINNACLE_SETUP_TOKEN=binnacle-release-gate-token-32chars -p "127.0.0.1:$demo_port:8080" "ghcr.io/drilonrecica/binnacle:local" --demo --demo-seed 1 >> "$RELEASE_RECORD_DIR/build.log" 2>&1; then
     for _ in {1..30}; do
       if curl -sf "http://127.0.0.1:$demo_port/healthz" >/dev/null 2>&1; then
         break
@@ -139,10 +139,10 @@ fi
 # 7. End-to-end smoke (accessibility and visual regression).
 if command -v pnpm >/dev/null 2>&1 && [[ -d "$ROOT_DIR/web/tests/e2e" ]]; then
   e2e_data="$(mktemp -d)"
-  export TALOS_DATA_DIR="$e2e_data"
-  export TALOS_RUNTIME_DIR="$e2e_data/runtime"
-  export TALOS_SETUP_TOKEN=talos-e2e-smoke-token-32chars-long
-  "$ROOT_DIR/bin/talos" --demo --demo-seed 1 >> "$RELEASE_RECORD_DIR/build.log" 2>&1 &
+  export BINNACLE_DATA_DIR="$e2e_data"
+  export BINNACLE_RUNTIME_DIR="$e2e_data/runtime"
+  export BINNACLE_SETUP_TOKEN=binnacle-e2e-smoke-token-32chars-long
+  "$ROOT_DIR/bin/binnacle" --demo --demo-seed 1 >> "$RELEASE_RECORD_DIR/build.log" 2>&1 &
   e2e_pid=$!
   for _ in {1..30}; do
     if curl -sf "http://127.0.0.1:8080/healthz" >/dev/null 2>&1; then

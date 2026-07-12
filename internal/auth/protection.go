@@ -196,7 +196,7 @@ func (l *Limiter) Allow(key string, policy BucketPolicy) (bool, time.Duration) {
 	return true, 0
 }
 
-const CSRFCookieName = "talos_csrf"
+const CSRFCookieName = "binnacle_csrf"
 
 func NewCSRFToken() (string, error) {
 	b := make([]byte, 32)
