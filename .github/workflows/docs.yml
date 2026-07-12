@@ -6,4 +6,23 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - run: find docs adr -name '*.md' -print0 | xargs -0 grep -nE '\]\([^)]*\.md[^)]*\)' >/dev/null || true
+      - run: |
+          python3 - <<'PY'
+          import os, re, sys
+          missing = 0
+          for top in ('docs', 'adr'):
+              for root, _, files in os.walk(top):
+                  for name in files:
+                      if not name.endswith('.md'): continue
+                      path = os.path.join(root, name)
+                      with open(path) as f:
+                          for match in re.finditer(r'\]\(([^)]+\.md[^)]*)\)', f.read()):
+                              target = match.group(1).split('#')[0]
+                              if target.startswith(('http://', 'https://', 'mailto:')):
+                                  continue
+                              full = os.path.normpath(os.path.join(os.path.dirname(path), target))
+                              if not os.path.exists(full):
+                                  print(f'{path}: broken link to {target}', file=sys.stderr)
+                                  missing += 1
+          sys.exit(1 if missing else 0)
+          PY
