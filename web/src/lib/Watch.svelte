@@ -2,6 +2,7 @@
   import type { LiveStore, LiveSnapshot } from './live.svelte';
   import { formatBytes, formatNumber, formatRate } from './i18n';
   import PostSetupChecklist from './PostSetupChecklist.svelte';
+  import AlertSummary from './AlertSummary.svelte';
   import {
     formatUptime,
     meterValue,
@@ -98,6 +99,7 @@
     <p>Awaiting current telemetry…</p>
   </section>
 {:else}
+  <AlertSummary />
   <section class="host-band" aria-labelledby="host-band-title">
     <div class="band-heading">
       <span>HOST</span>

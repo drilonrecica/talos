@@ -103,6 +103,7 @@ export function safeRedirect(value: string | null): string {
       '/resources',
       '/server',
       '/events',
+      '/alerts',
       '/settings',
       '/onboarding',
     ];

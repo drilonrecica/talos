@@ -6,6 +6,7 @@
   import ConsoleState from './ui/ConsoleState.svelte';
   import HistoryCharts from './HistoryCharts.svelte';
   import HistoryDeletion from './HistoryDeletion.svelte';
+  import AlertSummary from './AlertSummary.svelte';
   let { live, id }: { live: LiveStore; id: string } = $props();
   let current = $derived(
     live.snapshot?.resources.find((value) => value.id === id),
@@ -68,6 +69,7 @@
         <dd>{current.components?.length ?? 0}</dd>
       </div>
     </dl>
+    <AlertSummary resourceId={id} />
     <section aria-labelledby="components-title">
       <ConsoleSection
         code="UNITS"

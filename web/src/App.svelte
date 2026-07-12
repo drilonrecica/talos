@@ -7,6 +7,7 @@
   import Server from './lib/Server.svelte';
   import Resources from './lib/Resources.svelte';
   import Events from './lib/Events.svelte';
+  import Alerts from './lib/Alerts.svelte';
   import ResourceDetail from './lib/ResourceDetail.svelte';
   import Settings from './lib/Settings.svelte';
   import Login from './lib/Login.svelte';
@@ -25,6 +26,7 @@
     { route: 'resources', label: 'Resources' },
     { route: 'server', label: 'Server' },
     { route: 'events', label: 'Events' },
+    { route: 'alerts', label: 'Alerts' },
     { route: 'settings', label: 'Settings' },
   ] as const;
   const protectedRoutes = new Set([
@@ -199,6 +201,7 @@
       {:else if route === 'resources'}<Resources {live} />
       {:else if route === 'server'}<Server {live} />
       {:else if route === 'events'}<Events {live} />
+      {:else if route === 'alerts'}<Alerts />
       {:else if route === 'settings' && resourceID === 'monitor-health'}<MonitorHealth
         />
       {:else if route === 'settings' && resourceID === 'diagnostics'}<Diagnostics

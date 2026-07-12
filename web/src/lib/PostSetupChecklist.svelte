@@ -30,6 +30,8 @@
       <li>Host monitoring — Done</li>
       <li>Docker monitoring — {docker}</li>
       <li>Compose/Coolify resources — {metadata}</li>
+      <li><a href="/alerts">Create a first health check</a> — Optional</li>
+      <li><a href="/alerts">Review alert thresholds</a> — Recommended</li>
     </ul>
     <button type="button" onclick={dismiss}>Dismiss checklist</button>
   </aside>

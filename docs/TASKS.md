@@ -996,7 +996,7 @@ Rules for every task:
 
 ### T109 — Build checks and alerts user interface
 
-- **Status:** Planned
+- **Status:** Complete
 - **Commit:** `feat(web): add alerts and checks console`
 - **Description:** Add primary Alerts navigation and Active, Rules, Checks, and Silences surfaces plus Watch, resource, and onboarding integration.
 
