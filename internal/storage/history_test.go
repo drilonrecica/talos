@@ -69,6 +69,48 @@ func TestNullBucketsBecomeExplicitMergedGaps(t *testing.T) {
 	}
 }
 
+func TestHostMetricRollupSourceForBroadenedTelemetry(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	m := New(filepath.Join(dir, "talos.db"), filepath.Join(dir, "run"))
+	if err := m.Open(ctx); err != nil {
+		t.Fatal(err)
+	}
+	defer m.Close()
+	base := time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC)
+	for i := range 2 {
+		ts := base.Add(time.Duration(i) * 10 * time.Second).UnixMilli()
+		if _, err := m.db.ExecContext(ctx, `INSERT INTO host_samples_10s(
+			ts,host_id,cpu_busy_pct,cpu_user_pct,cpu_system_pct,cpu_iowait_pct,cpu_steal_pct,
+			load_1,load_5,load_15,memory_used_bytes,swap_used_bytes,
+			disk_read_bps,disk_write_bps,disk_read_iops,disk_write_iops,
+			network_rx_bps,network_tx_bps
+		) VALUES(?,'host',1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)`, ts); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := m.RollupOnce(ctx, base.Add(time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	for _, metric := range []Metric{MetricCPUUser, MetricCPUSystem, MetricCPUIOWait, MetricCPUSteal, MetricLoad1, MetricLoad5, MetricLoad15, MetricSwap, MetricDiskRead, MetricDiskWrite, MetricDiskIOPS} {
+		resp, err := m.QueryMetrics(ctx, MetricQuery{Scope: "host", Metrics: []Metric{metric}, From: base, To: base.Add(3 * time.Hour)})
+		if err != nil {
+			t.Fatalf("%s: %v", metric, err)
+		}
+		if len(resp.Series) != 1 || len(resp.Series[0].Points) == 0 {
+			t.Fatalf("%s: expected one non-empty series, got %+v", metric, resp.Series)
+		}
+		p := resp.Series[0].Points[0]
+		wantAvg := 1.0
+		if metric == MetricDiskIOPS {
+			wantAvg = 2.0
+		}
+		if p.Avg == nil || *p.Avg != wantAvg || p.Count != 2 {
+			t.Fatalf("%s: avg=%v count=%d", metric, p.Avg, p.Count)
+		}
+	}
+}
+
 func TestMetricsResponseJSONContract(t *testing.T) {
 	encoded, err := json.Marshal(MetricsResponse{Scope: "host", From: time.Date(2026, 7, 11, 12, 0, 0, 0, time.UTC), To: time.Date(2026, 7, 11, 13, 0, 0, 0, time.UTC), Resolution: ResolutionRaw, Series: []Series{}, Gaps: []Gap{}})
 	if err != nil {

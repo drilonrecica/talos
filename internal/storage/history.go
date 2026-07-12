@@ -250,10 +250,15 @@ func metricSource(scope string, metric Metric, res Resolution) (string, string, 
 		MetricLoad1: "load_1", MetricLoad5: "load_5", MetricLoad15: "load_15",
 		MetricNetworkRX: "network_rx_bps", MetricNetworkTX: "network_tx_bps",
 		MetricDiskRead: "disk_read_bps", MetricDiskWrite: "disk_write_bps",
+		MetricDiskIOPS:  "disk_read_iops + disk_write_iops",
 		MetricBlockRead: "block_read_bps", MetricBlockWrite: "block_write_bps",
 	}
 	prefix := map[Metric]string{
-		MetricCPU: "cpu", MetricMemory: "memory", MetricNetworkRX: "network_rx", MetricNetworkTX: "network_tx",
+		MetricCPU: "cpu", MetricCPUUser: "cpu_user", MetricCPUSystem: "cpu_system", MetricCPUIOWait: "cpu_iowait", MetricCPUSteal: "cpu_steal",
+		MetricMemory: "memory", MetricSwap: "swap_used",
+		MetricLoad1: "load_1", MetricLoad5: "load_5", MetricLoad15: "load_15",
+		MetricNetworkRX: "network_rx", MetricNetworkTX: "network_tx",
+		MetricDiskRead: "disk_read", MetricDiskWrite: "disk_write", MetricDiskIOPS: "disk_iops",
 		MetricBlockRead: "block_read", MetricBlockWrite: "block_write",
 	}[metric]
 	if raw[metric] == "" {
