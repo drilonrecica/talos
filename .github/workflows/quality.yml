@@ -39,6 +39,7 @@ jobs:
       - run: pnpm --dir web format && pnpm --dir web check && pnpm --dir web lint && pnpm --dir web test:run
       - run: pnpm --dir web exec playwright install --with-deps chromium
       - run: pnpm --dir web test:e2e
+      - run: pnpm --dir web test:landing
   container:
     runs-on: ubuntu-24.04
     steps:

@@ -244,6 +244,9 @@ test('onboarding page has no detectable a11y violations', async ({ page }) => {
   await mockOnboarding(page, false);
   await mockLive(page);
   await page.goto('/onboarding');
+  await expect(
+    page.getByRole('navigation', { name: 'Primary navigation' }),
+  ).toHaveCount(0);
   await scan(page);
 });
 
@@ -308,5 +311,13 @@ test('monitor health page has no detectable a11y violations', async ({
   await mockLive(page);
   await mockMonitorHealth(page);
   await page.goto('/settings/monitor-health');
+  await scan(page);
+});
+
+test('diagnostics page has no detectable a11y violations', async ({ page }) => {
+  await mockAuthSession(page, 'authenticated');
+  await mockOnboarding(page, true);
+  await mockLive(page);
+  await page.goto('/settings/diagnostics');
   await scan(page);
 });

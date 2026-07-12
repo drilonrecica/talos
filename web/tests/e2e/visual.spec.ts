@@ -216,7 +216,7 @@ test('watch renders host instruments and the resource roster', async ({
   expect(box?.width).toBeLessThanOrEqual(await viewportWidth(page));
 });
 
-test('login renders the Binnacle wordmark', async ({ page }) => {
+test('login renders the dark Binnacle access gate', async ({ page }) => {
   await page.route('**/api/v1/auth/session', (route) =>
     route.fulfill({ status: 401 }),
   );
@@ -224,11 +224,9 @@ test('login renders the Binnacle wordmark', async ({ page }) => {
     route.fulfill({ json: { available: false } }),
   );
   await page.goto('/login');
-  const wordmark = page.locator('.auth-brand img');
-  await expect(wordmark).toBeVisible();
-  expect(
-    await wordmark.evaluate((image) => image.naturalWidth),
-  ).toBeGreaterThan(0);
+  const mark = page.locator('.access-brand img');
+  await expect(mark).toBeVisible();
+  expect(await mark.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
 });
 
 test('server renders telemetry and historical charts', async ({ page }) => {
@@ -236,8 +234,10 @@ test('server renders telemetry and historical charts', async ({ page }) => {
   await mockLive(page);
   await mockHistoryApis(page);
   await page.goto('/server');
-  await expect(page.getByRole('heading', { name: 'Server' })).toBeVisible();
-  await expect(page.getByText('CPU', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Instrumentation sheet' }),
+  ).toBeVisible();
+  await expect(page.getByText('CPU / CURRENT', { exact: true })).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Historical telemetry' }),
   ).toBeVisible();
@@ -268,7 +268,9 @@ test('events page renders', async ({ page }) => {
   await mockLive(page);
   await mockHistoryApis(page);
   await page.goto('/events');
-  await expect(page.locator('h2', { hasText: 'Event history' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Event logbook' }),
+  ).toBeVisible();
 });
 
 test('settings page renders all sections', async ({ page }) => {
