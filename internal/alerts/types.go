@@ -3,7 +3,10 @@
 // Package alerts implements Binnacle's deterministic local alert catalog.
 package alerts
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Severity string
 
@@ -78,6 +81,25 @@ type Silence struct {
 	EndsAt    time.Time `json:"endsAt"`
 	CreatedBy string    `json:"createdBy"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+func SilencePresetEnd(now time.Time, preset string, custom time.Time) (time.Time, error) {
+	switch preset {
+	case "30m":
+		return now.Add(30 * time.Minute), nil
+	case "1h":
+		return now.Add(time.Hour), nil
+	case "4h":
+		return now.Add(4 * time.Hour), nil
+	case "tomorrow":
+		next := now.AddDate(0, 0, 1)
+		return time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location()), nil
+	case "custom":
+		if custom.After(now) {
+			return custom, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("invalid silence end")
 }
 
 func ptr(v float64) *float64 { return &v }

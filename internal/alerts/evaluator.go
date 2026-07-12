@@ -305,28 +305,33 @@ func (e *Evaluator) evaluateEvents(ctx context.Context, rules []Rule, now time.T
 }
 
 func (e *Evaluator) correlateDeployments(ctx context.Context, now time.Time) error {
-	rows, err := e.Repo.db.QueryContext(ctx, `SELECT resource_id,MAX(ts) FROM events WHERE type='deployment' AND resource_id IS NOT NULL AND ts>=? GROUP BY resource_id`, now.Add(-10*time.Minute).UnixMilli())
+	rows, err := e.Repo.db.QueryContext(ctx, `SELECT resource_id,MAX(ts),CASE WHEN MAX(CASE WHEN type='deployment' THEN 1 ELSE 0 END)=1 THEN 'confirmed' ELSE 'likely' END FROM events WHERE type IN ('deployment','deployment_likely','container_replacement') AND resource_id IS NOT NULL AND ts>=? GROUP BY resource_id`, now.Add(-10*time.Minute).UnixMilli())
 	if err != nil {
 		return err
 	}
-	deployments := map[string]int64{}
+	type deployment struct {
+		ms         int64
+		confidence string
+	}
+	deployments := map[string]deployment{}
 	for rows.Next() {
 		var resource string
 		var ms int64
-		if err = rows.Scan(&resource, &ms); err != nil {
+		var confidence string
+		if err = rows.Scan(&resource, &ms, &confidence); err != nil {
 			rows.Close()
 			return err
 		}
-		deployments[resource] = ms
+		deployments[resource] = deployment{ms, confidence}
 	}
 	if err = rows.Err(); err != nil {
 		rows.Close()
 		return err
 	}
 	rows.Close()
-	for resource, ms := range deployments {
-		at := time.UnixMilli(ms).UTC()
-		if _, err = e.Repo.db.ExecContext(ctx, `INSERT INTO deployment_grace_periods(resource_id,starts_at,ends_at,confidence)VALUES(?,?,?,'confirmed') ON CONFLICT(resource_id) DO UPDATE SET starts_at=excluded.starts_at,ends_at=excluded.ends_at,confidence=excluded.confidence`, resource, at.Unix(), at.Add(5*time.Minute).Unix()); err != nil {
+	for resource, deployment := range deployments {
+		at := time.UnixMilli(deployment.ms).UTC()
+		if _, err = e.Repo.db.ExecContext(ctx, `INSERT INTO deployment_grace_periods(resource_id,starts_at,ends_at,confidence)VALUES(?,?,?,?) ON CONFLICT(resource_id) DO UPDATE SET starts_at=excluded.starts_at,ends_at=excluded.ends_at,confidence=excluded.confidence`, resource, at.Unix(), at.Add(5*time.Minute).Unix(), deployment.confidence); err != nil {
 			return err
 		}
 	}
@@ -398,7 +403,7 @@ func (e *Evaluator) evaluate(ctx context.Context, rule Rule, targetType, target 
 }
 func suppressedTx(ctx context.Context, tx *sql.Tx, rule Rule, target string, now time.Time) (bool, error) {
 	var n int
-	err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM silences WHERE starts_at<=? AND ends_at>? AND ((scope_type='server') OR (scope_type='resource' AND scope_id=?) OR (scope_type='rule' AND scope_id=?))`, now.Unix(), now.Unix(), target, rule.ID).Scan(&n)
+	err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM silences s WHERE s.starts_at<=? AND s.ends_at>? AND ((s.scope_type='server') OR (s.scope_type='resource' AND s.scope_id=?) OR (s.scope_type='rule' AND s.scope_id=?) OR (s.scope_type='project' AND EXISTS(SELECT 1 FROM resources r WHERE r.id=? AND r.project_name=s.scope_id)))`, now.Unix(), now.Unix(), target, rule.ID, target).Scan(&n)
 	if err != nil {
 		return false, err
 	}

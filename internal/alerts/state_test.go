@@ -61,3 +61,17 @@ func TestEffectiveRulePrefersTargetOverride(t *testing.T) {
 		t.Fatalf("fallback rule=%q", got)
 	}
 }
+
+func TestSilencePresets(t *testing.T) {
+	now := time.Date(2026, 7, 13, 12, 0, 0, 0, time.UTC)
+	for preset, want := range map[string]time.Duration{"30m": 30 * time.Minute, "1h": time.Hour, "4h": 4 * time.Hour} {
+		end, err := SilencePresetEnd(now, preset, time.Time{})
+		if err != nil || end.Sub(now) != want {
+			t.Fatalf("preset %s end=%v err=%v", preset, end, err)
+		}
+	}
+	tomorrow, err := SilencePresetEnd(now, "tomorrow", time.Time{})
+	if err != nil || tomorrow.Hour() != 0 || tomorrow.Day() != 14 {
+		t.Fatalf("tomorrow=%v err=%v", tomorrow, err)
+	}
+}

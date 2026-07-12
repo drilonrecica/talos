@@ -978,7 +978,7 @@ Rules for every task:
 
 ### T106 — Add silences, grace, cooldown, and repeat handling
 
-- **Status:** Planned
+- **Status:** Complete
 - **Commit:** `feat(alerts): add suppression and lifecycle policy`
 - **Description:** Correlate deployments, persist grace periods and timed silences, and apply recovery cooldown and bounded repeats.
 
