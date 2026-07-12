@@ -57,9 +57,9 @@ vuln: ## Run dependency vulnerability scans (requires govulncheck and pnpm).
 	$(GO) run golang.org/x/vuln/cmd/govulncheck@latest ./...
 	$(PNPM) --dir web audit --audit-level moderate
 
-licenses: ## Check Go dependency licenses (requires go-licenses).
+licenses: ## Check Go dependency licenses (requires go-licenses v2).
 
-	go-licenses check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0,ISC,MPL-2.0
+	$(GO) run github.com/google/go-licenses/v2@latest check ./... --allowed_licenses=MIT,BSD-2-Clause,BSD-3-Clause,Apache-2.0,ISC,MPL-2.0,AGPL-3.0
 
 sbom: ## Generate an SPDX SBOM for the container image (requires syft).
 
