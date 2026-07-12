@@ -34,6 +34,9 @@
 </script>
 
 <section class="auth-card" aria-labelledby="login-title">
+  <div class="auth-brand" aria-hidden="true">
+    <img src="/brand/binnacle-wordmark.png" alt="" />
+  </div>
   <h1 id="login-title">Sign in to Binnacle</h1>
   <p>Use the local administrator account for this server.</p>
   {#if error}<p bind:this={errorElement} tabindex="-1" role="alert">

@@ -114,13 +114,20 @@
   <div class="shell">
     <header>
       <a
+        class="app-brand"
         href="/overview"
         onclick={(e) => {
           e.preventDefault();
           history.pushState({}, '', '/overview');
           route = 'overview';
-        }}>Binnacle</a
-      ><span>{t('shell.live')}</span>
+        }}
+      >
+        <span class="brand-mark"
+          ><img src="/brand/binnacle-mark.png" alt="" /></span
+        >
+        <span>Binnacle</span>
+      </a>
+      <span>{t('shell.live')}</span>
       <label
         >Theme <select
           value={theme}

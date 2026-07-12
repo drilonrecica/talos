@@ -57,6 +57,23 @@ a:hover {
   font-size: 1.25rem;
 }
 
+.brand-mark {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.brand-mark img {
+  display: block;
+  width: auto;
+  height: 100%;
+}
+
 .brand:hover {
   text-decoration: none;
 }
@@ -95,6 +112,20 @@ a:hover {
   font-size: clamp(2rem, 5vw, 3.25rem);
   line-height: 1.1;
   margin: 0 0 1rem;
+}
+
+.hero-brand {
+  width: min(24rem, 100%);
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.hero-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .hero-content p {

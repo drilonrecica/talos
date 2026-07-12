@@ -1,5 +1,7 @@
 # Binnacle
 
+![Binnacle logo](assets/brand/binnacle-wordmark-on-light.png)
+
 > Lightweight, Coolify-aware monitoring for Docker servers.
 
 Binnacle is an AGPL-3.0-only, self-hosted monitoring dashboard for Linux servers

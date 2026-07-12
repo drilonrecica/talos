@@ -9,12 +9,20 @@
     />
     <title>Binnacle — Lightweight Docker server monitoring</title>
     <link rel="stylesheet" href="assets/style.css" />
-    <link rel="icon" href="assets/binnacle.svg" type="image/svg+xml" />
+    <link
+      rel="icon"
+      href="assets/favicon-32.png"
+      type="image/png"
+      sizes="32x32"
+    />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="/" aria-label="Binnacle home">
-        <img src="assets/binnacle.svg" alt="" width="40" height="40" />
+        <span class="brand-mark">
+          <img src="assets/brand/binnacle-mark.png" alt="" />
+        </span>
         <span>Binnacle</span>
       </a>
       <nav aria-label="Primary">
@@ -27,6 +35,9 @@
     <main>
       <section class="hero">
         <div class="hero-content">
+          <div class="hero-brand" aria-hidden="true">
+            <img src="assets/brand/binnacle-wordmark.png" alt="" />
+          </div>
           <h1>Lightweight, Coolify-aware monitoring for Docker servers.</h1>
           <p>
             Binnacle is a self-hosted, read-only monitoring dashboard for Linux

@@ -47,6 +47,9 @@
 </script>
 
 <section class="auth-card" aria-labelledby="setup-title">
+  <div class="auth-brand" aria-hidden="true">
+    <img src="/brand/binnacle-wordmark.png" alt="" />
+  </div>
   <h1 id="setup-title">Set up Binnacle</h1>
   <p>Enter the one-time token configured for this installation.</p>
   {#if error}<p bind:this={alert} tabindex="-1" role="alert">{error}</p>{/if}

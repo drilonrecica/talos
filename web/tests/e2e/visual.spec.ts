@@ -202,9 +202,29 @@ test('overview renders health summary and navigation', async ({ page }) => {
   await page.goto('/overview');
   await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
   await expect(page.getByRole('navigation')).toBeVisible();
+  const brandMark = page.locator('.app-brand img');
+  await expect(brandMark).toBeVisible();
+  expect(
+    await brandMark.evaluate((image) => image.naturalWidth),
+  ).toBeGreaterThan(0);
   await expect(page.getByText('Server', { exact: true })).toBeVisible();
   const box = await page.locator('.health-strip').boundingBox();
   expect(box?.width).toBeLessThanOrEqual(await viewportWidth(page));
+});
+
+test('login renders the Binnacle wordmark', async ({ page }) => {
+  await page.route('**/api/v1/auth/session', (route) =>
+    route.fulfill({ status: 401 }),
+  );
+  await page.route('**/api/v1/setup', (route) =>
+    route.fulfill({ json: { available: false } }),
+  );
+  await page.goto('/login');
+  const wordmark = page.locator('.auth-brand img');
+  await expect(wordmark).toBeVisible();
+  expect(
+    await wordmark.evaluate((image) => image.naturalWidth),
+  ).toBeGreaterThan(0);
 });
 
 test('server renders telemetry and historical charts', async ({ page }) => {

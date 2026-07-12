@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [svelte()],
+  publicDir: 'static',
   build: {
     target: 'es2022',
     outDir: '../internal/webembed/dist',
