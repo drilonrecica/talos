@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { LiveStore } from './live.svelte';
   import { formatBytes, formatNumber, formatRate } from './i18n';
   import { formatUptime } from './watch';
@@ -9,6 +10,36 @@
   let s = $derived(live.snapshot);
   const percent = (used?: number | null, total?: number | null) =>
     used == null || total == null || total <= 0 ? null : (used / total) * 100;
+  type Process = {
+    pid: number;
+    command: string;
+    cpuPct: number;
+    rssBytes: number;
+    user: string;
+    state: string;
+    uptimeSeconds: number;
+    containerId?: string;
+  };
+  let processes = $state<Process[]>([]);
+  let processError = $state('');
+  let processLoading = $state(false);
+  async function loadProcesses() {
+    processLoading = true;
+    processError = '';
+    try {
+      const response = await fetch('/api/v1/processes?limit=25');
+      if (!response.ok) throw new Error('Process sample unavailable.');
+      processes = (await response.json()).processes;
+    } catch (error) {
+      processError =
+        error instanceof Error ? error.message : 'Process sample unavailable.';
+    } finally {
+      processLoading = false;
+    }
+  }
+  onMount(() => {
+    void loadProcesses();
+  });
 </script>
 
 <section class="console-page" aria-labelledby="server-title">
@@ -99,3 +130,39 @@
   scope="host"
   metrics={['cpu', 'memory', 'network_rx', 'network_tx']}
 />
+<section class="console-page" aria-labelledby="process-title">
+  <ConsoleSection
+    code="PROC"
+    title="Top host processes"
+    id="process-title"
+    detail="two-sample / on demand"
+  />
+  <div class="control-rail">
+    <button onclick={() => loadProcesses()} disabled={processLoading}
+      >Refresh sample</button
+    >
+  </div>
+  {#if processError}<p role="status">{processError}</p>{/if}
+  <div class="table-scroll">
+    <table class="console-table">
+      <thead
+        ><tr
+          ><th>PID</th><th>Command</th><th>CPU</th><th>RSS</th><th>User</th><th
+            >State</th
+          ><th>Uptime</th><th>Container</th></tr
+        ></thead
+      >
+      <tbody
+        >{#each processes as process (process.pid)}<tr
+            ><td>{process.pid}</td><td class="technical-value"
+              >{process.command}</td
+            ><td>{formatNumber(process.cpuPct)}%</td><td
+              >{formatBytes(process.rssBytes)}</td
+            ><td>{process.user}</td><td>{process.state}</td><td
+              >{formatUptime(process.uptimeSeconds)}</td
+            ><td>{process.containerId?.slice(0, 12) ?? '—'}</td></tr
+          >{/each}</tbody
+      >
+    </table>
+  </div>
+</section>

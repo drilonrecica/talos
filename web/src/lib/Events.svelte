@@ -83,7 +83,11 @@
             ><td><span class="live-mark">LIVE</span></td><td
               ><ConsoleState state="healthy" label="live" /></td
             ><td>{event.type}</td><td>{event.message}</td><td
-              >{event.resourceId ?? 'stream'}</td
+              >{event.resourceId ?? 'stream'}
+              {#if event.resourceId}<a
+                  href={`/logs?resource=${encodeURIComponent(event.resourceId)}&at=${encodeURIComponent(new Date().toISOString())}`}
+                  >view logs ±5m</a
+                >{/if}</td
             ></tr
           >{/each}
       </tbody>
@@ -124,6 +128,11 @@
                   >{/if}
                 {#if event.correlationKey}<span class="meta"
                     >corr {event.correlationKey}</span
+                  >{/if}
+                {#if event.resourceId}<a
+                    class="meta"
+                    href={`/logs?resource=${encodeURIComponent(event.resourceId)}&at=${encodeURIComponent(event.ts)}`}
+                    >view logs ±5m</a
                   >{/if}
               </td>
               <td>{event.source}</td>

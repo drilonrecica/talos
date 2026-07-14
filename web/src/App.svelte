@@ -7,6 +7,7 @@
   import Server from './lib/Server.svelte';
   import Resources from './lib/Resources.svelte';
   import Events from './lib/Events.svelte';
+  import Logs from './lib/Logs.svelte';
   import Alerts from './lib/Alerts.svelte';
   import ResourceDetail from './lib/ResourceDetail.svelte';
   import Settings from './lib/Settings.svelte';
@@ -26,6 +27,7 @@
     { route: 'resources', label: 'Resources' },
     { route: 'server', label: 'Server' },
     { route: 'events', label: 'Events' },
+    { route: 'logs', label: 'Logs' },
     { route: 'alerts', label: 'Alerts' },
     { route: 'settings', label: 'Settings' },
   ] as const;
@@ -201,6 +203,7 @@
       {:else if route === 'resources'}<Resources {live} />
       {:else if route === 'server'}<Server {live} />
       {:else if route === 'events'}<Events {live} />
+      {:else if route === 'logs'}<Logs />
       {:else if route === 'alerts'}<Alerts />
       {:else if route === 'settings' && resourceID === 'monitor-health'}<MonitorHealth
         />
