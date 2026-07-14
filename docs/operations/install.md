@@ -3,7 +3,7 @@
 Binnacle is distributed as a container image. The supported paths are Coolify
 (one-click service), Docker Compose, or GHCR.
 
-> **Development status:** v0.3 is implemented but no v0.3 tag or image has been
+> **Development status:** v0.4 is implemented but no v0.4 tag or image has been
 > published. The `stable` examples below apply to published releases; qualify a
 > source-built `local` image before using unreleased code in production.
 
@@ -11,7 +11,7 @@ Binnacle is distributed as a container image. The supported paths are Coolify
 
 - Linux host (x86_64 or arm64)
 - Docker Engine with a reachable Unix socket
-- Read access to `/proc`, `/sys`, and `/etc/os-release` on the host
+- Read access to `/proc`, `/sys`, `/etc/passwd`, and `/etc/os-release` on the host
 - A persistent volume mounted at `/var/lib/binnacle`
 
 ## Generate a setup token
@@ -31,7 +31,9 @@ Store it in a password manager. After the first administrator is created, the se
 3. Expose the service on your chosen domain. Coolify's proxy routes to container port `8080`.
 4. Open the URL and complete onboarding.
 
-The Coolify template mounts the host `/proc`, `/sys`, `/etc/os-release`, and the Docker socket. It runs `read_only: true` with `no-new-privileges` and a 128 MiB memory limit.
+The Coolify template mounts the host `/proc`, `/sys`, `/etc/passwd`,
+`/etc/os-release`, and the Docker socket. It runs `read_only: true` with
+`no-new-privileges` and a 128 MiB memory limit.
 
 ## Install with Docker Compose
 
@@ -83,6 +85,10 @@ Key variables you may need to set at deployment time:
 - `BINNACLE_DATA_DIR` — defaults to `/var/lib/binnacle`.
 - `BINNACLE_HOST_PROC` — defaults to `/host/proc`.
 - `BINNACLE_HOST_SYS` — defaults to `/host/sys`.
+- `BINNACLE_HOST_PASSWD` — defaults to `/host/etc/passwd` for process username resolution.
+- `BINNACLE_LOGS_MAX_LINES` — bounded log response ceiling; defaults to `5000`.
+- `BINNACLE_LOGS_MAX_RESPONSE_BYTES` — bounded log byte ceiling; defaults to `1048576`.
+- `BINNACLE_LOGS_REDACTION_PATTERNS` — up to 16 additional RE2 patterns separated by `||`.
 - `BINNACLE_DOCKER_SOCKET` — defaults to `/var/run/docker.sock`.
 - `BINNACLE_MASTER_KEY` — raw/base64 32-byte key or 64-character hex key for notification secrets.
 - `BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS` — private webhook/SMTP opt-in; defaults to `false` and requires restart.
