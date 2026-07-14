@@ -33,4 +33,20 @@ describe('production watch prioritization', () => {
     expect(formatUptime(null)).toBe('—');
     expect(formatUptime(93_600)).toBe('1d 2h');
   });
+
+  it('places valid pins first and preserves health ordering for the rest', () => {
+    const values = prioritizedResources(
+      [
+        { id: 'healthy', name: 'Healthy', status: 'healthy' },
+        { id: 'down', name: 'Down', status: 'down' },
+        { id: 'pinned', name: 'Pinned', status: 'healthy' },
+      ],
+      ['missing', 'pinned'],
+    );
+    expect(values.map((value) => value.id)).toEqual([
+      'pinned',
+      'down',
+      'healthy',
+    ]);
+  });
 });

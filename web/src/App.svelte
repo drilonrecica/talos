@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { LiveStore } from './lib/live.svelte';
-  import { applyPreferences, preferences } from './lib/preferences';
+  import {
+    applyPreferences,
+    loadServerPreferences,
+    preferences,
+  } from './lib/preferences';
   import { t } from './lib/i18n';
   import Watch from './lib/Watch.svelte';
   import Server from './lib/Server.svelte';
@@ -86,6 +90,7 @@
 
   readLocation();
   onMount(() => {
+    const startedAtRoot = location.pathname === '/';
     const preference = preferences();
     applyPreferences(preference);
     const onPopState = () => readLocation();
@@ -115,6 +120,13 @@
           ) {
             navigate('/watch', true);
           }
+          void loadServerPreferences()
+            .then((saved) => {
+              if (startedAtRoot) navigate(`/${saved.landingPage}`, true);
+            })
+            .catch(() => {
+              /* The local mirror remains a usable fallback. */
+            });
           void onboardingState().then((onboarding) => {
             if (!onboarding.completedAt && route !== 'onboarding') {
               navigate('/onboarding', true);

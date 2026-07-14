@@ -2,12 +2,8 @@
   import { onMount } from 'svelte';
   import HistoryDeletion from './HistoryDeletion.svelte';
   import AccessIntegrations from './AccessIntegrations.svelte';
-  import {
-    applyPreferences,
-    preferences,
-    type Density,
-    type Theme,
-  } from './preferences';
+  import Personalization from './Personalization.svelte';
+  import APITokens from './APITokens.svelte';
   import {
     aggressiveInterval,
     loadSettings,
@@ -17,10 +13,7 @@
   let snapshot = $state<SettingsSnapshot | null>(null);
   let error = $state('');
   let busy = $state('');
-  let theme = $state<Theme>('system');
-  let density = $state<Density>('comfortable');
   onMount(() => {
-    ({ theme, density } = preferences());
     void loadSettings()
       .then((value) => (snapshot = value))
       .catch((reason) => (error = String(reason)));
@@ -40,11 +33,6 @@
     } finally {
       busy = '';
     }
-  }
-  function appearance(nextTheme: Theme, nextDensity: Density) {
-    theme = nextTheme;
-    density = nextDensity;
-    applyPreferences({ theme, density });
   }
 </script>
 
@@ -176,6 +164,7 @@
           >
         {/each}
         <AccessIntegrations />
+        <APITokens />
       </section>
 
       <section
@@ -184,26 +173,7 @@
         aria-labelledby="appearance-settings"
       >
         <h2 id="appearance-settings"><span>04</span> Appearance</h2>
-        <label for="settings-theme">Theme</label>
-        <select
-          id="settings-theme"
-          bind:value={theme}
-          onchange={() => appearance(theme, density)}
-        >
-          <option value="system">System</option><option value="dark"
-            >Dark</option
-          ><option value="light">Light</option>
-        </select>
-        <label for="settings-density">Density</label>
-        <select
-          id="settings-density"
-          bind:value={density}
-          onchange={() => appearance(theme, density)}
-        >
-          <option value="comfortable">Comfortable</option><option
-            value="compact">Compact</option
-          >
-        </select>
+        <Personalization />
       </section>
 
       <section

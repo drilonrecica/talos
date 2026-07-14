@@ -18,13 +18,14 @@
     type OperationalEvent,
   } from './annotations';
   import ConsoleSection from './ui/ConsoleSection.svelte';
+  import { preferences } from './preferences';
 
   let {
     scope,
     id,
     metrics,
   }: { scope: 'host' | 'resource'; id?: string; metrics: Metric[] } = $props();
-  let range = $state<RangeKey>('24h');
+  let range = $state<RangeKey>(preferences().chartRange);
   let from = $state('');
   let to = $state('');
   let data = $state<HistoryResponse | null>(null);

@@ -30,6 +30,7 @@ import (
 	"github.com/drilonrecica/binnacle/internal/metrics"
 	"github.com/drilonrecica/binnacle/internal/notifications"
 	"github.com/drilonrecica/binnacle/internal/onboarding"
+	"github.com/drilonrecica/binnacle/internal/preferences"
 	"github.com/drilonrecica/binnacle/internal/settings"
 	"github.com/drilonrecica/binnacle/internal/storage"
 	"github.com/drilonrecica/binnacle/internal/webembed"
@@ -85,6 +86,7 @@ func main() {
 	credentials := auth.NewCredentials(nil)
 	sessions := auth.NewSessions(nil, auth.SessionConfig{IdleTimeout: config.Sessions.IdleTimeout, AbsoluteLifetime: config.Sessions.AbsoluteLifetime})
 	tokenRepository := auth.NewAPITokenRepository(nil)
+	preferenceRepository := preferences.NewRepository(nil)
 	checker := diagnostics.OnboardingChecker{HostProc: config.Paths.HostProc, HostSys: config.Paths.HostSys, DataDir: config.Paths.DataDir}
 	onboardingService := onboarding.New(nil, checker)
 	settingsService := settings.NewService(settings.NewStore(nil), config, effectiveSettings, func(updated settings.Config) {
@@ -155,6 +157,7 @@ func main() {
 		credentials.SetDB(store.DB())
 		sessions.SetDB(store.DB())
 		tokenRepository.SetDB(store.DB())
+		preferenceRepository.SetDB(store.DB())
 		onboardingService.SetDB(store.DB())
 		settingsService.SetDB(store.DB())
 		checkRepository.SetDB(store.DB())
@@ -266,6 +269,7 @@ func main() {
 	apiServer.EnableAlerts(alertRepository, sessions, sessions, protection)
 	apiServer.EnableIncidentsNotifications(notificationRepository, notificationWorker, incidentsAuthorizer, sessions, protection)
 	apiServer.EnableAPITokens(tokenRepository, sessions)
+	apiServer.EnablePreferences(preferenceRepository, sessions)
 	apiServer.EnableExports(store, notificationRepository, engine, metricsAuthorizer, eventsAuthorizer, incidentsAuthorizer, resourceAuthorizer, coolifyIntegration)
 	apiServer.EnableCoolify(coolifyIntegration, sessions, sessions)
 	logService, err := diagnostics.NewLogService(dockerLogs, config.Logs.MaxLines, config.Logs.MaxResponseBytes, config.Logs.RedactionPatterns)

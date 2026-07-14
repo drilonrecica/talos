@@ -17,7 +17,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestUpgradeSchema16PreservesExistingMonitoringData(t *testing.T) {
+func TestUpgradeSchema17Through21PreservesExistingData(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "binnacle.db")
@@ -38,7 +38,7 @@ func TestUpgradeSchema16PreservesExistingMonitoringData(t *testing.T) {
 		if _, err = fmt.Sscanf(filepath.Base(entry), "%03d_", &version); err != nil {
 			t.Fatal(err)
 		}
-		if version > 16 {
+		if version > 17 {
 			break
 		}
 		body, readErr := migrations.FS().ReadFile(entry)
@@ -74,6 +74,21 @@ func TestUpgradeSchema16PreservesExistingMonitoringData(t *testing.T) {
 	if _, err = db.ExecContext(ctx, `INSERT INTO host_samples_10s(ts,host_id,cpu_busy_pct) VALUES(1,'host-1',12.5)`); err != nil {
 		t.Fatal(err)
 	}
+	if _, err = db.ExecContext(ctx, `INSERT INTO users(id,username,password_hash,created_at,updated_at) VALUES('user-1','admin','hash',1,1)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.ExecContext(ctx, `INSERT INTO sessions(id_hash,user_id,created_at,last_seen_at,expires_at,absolute_expires_at,csrf_hash) VALUES('session-hash','user-1',1,1,9999999999999,9999999999999,'csrf-hash')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.ExecContext(ctx, `INSERT INTO encrypted_secrets(key,ciphertext,nonce,algorithm,key_version,updated_at) VALUES('existing.secret',X'0102',X'0304','AES-256-GCM',1,1)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.ExecContext(ctx, `INSERT INTO incidents(id,group_key,status,severity,target_type,target_id,title,opened_at,updated_at) VALUES('incident-1','group-1','open','warning','resource','resource-1','Existing incident',1,1)`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.ExecContext(ctx, `INSERT INTO incident_alerts(incident_id,alert_id,joined_at) VALUES('incident-1','alert-1',1)`); err != nil {
+		t.Fatal(err)
+	}
 	if err = db.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +98,7 @@ func TestUpgradeSchema16PreservesExistingMonitoringData(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer manager.Close()
-	if version, versionErr := manager.SchemaVersion(ctx); versionErr != nil || version != 20 {
+	if version, versionErr := manager.SchemaVersion(ctx); versionErr != nil || version != 21 {
 		t.Fatalf("schema version=%d err=%v", version, versionErr)
 	}
 	var name string
@@ -99,6 +114,21 @@ func TestUpgradeSchema16PreservesExistingMonitoringData(t *testing.T) {
 		if err = manager.DB().QueryRowContext(ctx, "SELECT COUNT(*) FROM "+table+" WHERE id=?", id).Scan(&count); err != nil || count != 1 {
 			t.Fatalf("%s was not preserved: count=%d err=%v", table, count, err)
 		}
+	}
+	for table, key := range map[string][2]string{
+		"incidents":         {"id", "incident-1"},
+		"incident_alerts":   {"incident_id", "incident-1"},
+		"sessions":          {"id_hash", "session-hash"},
+		"encrypted_secrets": {"key", "existing.secret"},
+	} {
+		var count int
+		if err = manager.DB().QueryRowContext(ctx, "SELECT COUNT(*) FROM "+table+" WHERE "+key[0]+"=?", key[1]).Scan(&count); err != nil || count != 1 {
+			t.Fatalf("%s was not preserved: count=%d err=%v", table, count, err)
+		}
+	}
+	var authMethod string
+	if err = manager.DB().QueryRowContext(ctx, `SELECT auth_method FROM sessions WHERE id_hash='session-hash'`).Scan(&authMethod); err != nil || authMethod != "local" {
+		t.Fatalf("session provenance was not migrated: method=%q err=%v", authMethod, err)
 	}
 	var setting string
 	if err = manager.DB().QueryRowContext(ctx, `SELECT value_json FROM settings WHERE key='retention.preset'`).Scan(&setting); err != nil || setting != `"balanced"` {

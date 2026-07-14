@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { LiveStore, LiveSnapshot } from './live.svelte';
   import { formatBytes, formatNumber, formatRate } from './i18n';
   import PostSetupChecklist from './PostSetupChecklist.svelte';
@@ -10,6 +11,7 @@
     staleResource,
   } from './watch';
   import { resourceContext, resourceStatusLabel } from './resource-sort';
+  import { preferences, type UserPreferences } from './preferences';
 
   let {
     live,
@@ -22,13 +24,23 @@
   } = $props();
 
   let snapshot = $derived(live.snapshot);
+  let pins = $state(preferences().pinnedResources);
   let resources = $derived(
     snapshot
       ? prioritizedResources(
           snapshot.resources.filter((resource) => !resource.infrastructure),
+          pins,
         )
       : [],
   );
+
+  onMount(() => {
+    const update = (event: Event) => {
+      pins = (event as CustomEvent<UserPreferences>).detail.pinnedResources;
+    };
+    addEventListener('binnacle:preferences', update);
+    return () => removeEventListener('binnacle:preferences', update);
+  });
   let infrastructure = $derived(
     snapshot?.resources.filter((resource) => resource.infrastructure) ?? [],
   );

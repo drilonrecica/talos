@@ -8,11 +8,25 @@ const rank: Record<string, number> = {
   healthy: 1,
 };
 
-export function prioritizedResources(resources: LiveSnapshot['resources']) {
-  return [...resources].sort(
-    (left, right) =>
-      (rank[right.status] ?? 0) - (rank[left.status] ?? 0) ||
-      left.name.localeCompare(right.name),
+export function prioritizedResources(
+  resources: LiveSnapshot['resources'],
+  pinned: string[] = [],
+) {
+  const available = new Map(
+    resources.map((resource) => [resource.id, resource]),
+  );
+  const pinnedResources = pinned.flatMap((id) => {
+    const resource = available.get(id);
+    if (!resource) return [];
+    available.delete(id);
+    return [resource];
+  });
+  return pinnedResources.concat(
+    [...available.values()].sort(
+      (left, right) =>
+        (rank[right.status] ?? 0) - (rank[left.status] ?? 0) ||
+        left.name.localeCompare(right.name),
+    ),
   );
 }
 
