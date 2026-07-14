@@ -106,6 +106,20 @@ func (c *Credentials) UserByID(ctx context.Context, id string) (User, error) {
 	return user, nil
 }
 
+func (c *Credentials) Administrator(ctx context.Context) (User, error) {
+	if c == nil || c.db == nil {
+		return User{}, ErrInvalidCredentials
+	}
+	var user User
+	var created int64
+	err := c.db.QueryRowContext(ctx, "SELECT id,username,created_at FROM users ORDER BY created_at LIMIT 1").Scan(&user.ID, &user.Username, &created)
+	if err != nil {
+		return User{}, ErrInvalidCredentials
+	}
+	user.CreatedAt = time.UnixMilli(created).UTC()
+	return user, nil
+}
+
 func randomID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {

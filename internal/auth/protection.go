@@ -45,6 +45,10 @@ func (p TrustedProxies) trusted(r *http.Request) bool {
 	}
 	return p.trustedAddr(addr)
 }
+
+// TrustedPeer reports whether the immediate TCP peer is allowlisted. Forwarded
+// headers are deliberately not considered.
+func (p TrustedProxies) TrustedPeer(r *http.Request) bool { return p.trusted(r) }
 func (p TrustedProxies) trustedAddr(addr netip.Addr) bool {
 	for _, prefix := range p.prefixes {
 		if prefix.Contains(addr) {

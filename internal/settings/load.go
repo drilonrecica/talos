@@ -88,6 +88,14 @@ func LoadWith(getenv func(string) string, exists func(string) bool, provider Ove
 			sources[key] = SourceEnvironment
 		}
 	}
+	for env, key := range map[string]string{"BINNACLE_AUTH_MODE": "auth.mode", "BINNACLE_AUTH_PROXY_CIDRS": "auth.proxy_cidrs", "BINNACLE_AUTH_IDENTITY_HEADER": "auth.identity_header", "BINNACLE_AUTH_ALLOWED_SUBJECT": "auth.allowed_subject"} {
+		if value := getenv(env); value != "" {
+			if err := apply(&c, map[string]string{key: value}); err != nil {
+				return Config{}, nil, fmt.Errorf("%s: %w", env, err)
+			}
+			sources[key] = SourceEnvironment
+		}
+	}
 	if token := strings.TrimSpace(getenv("BINNACLE_COOLIFY_API_TOKEN")); token != "" {
 		c.Coolify.APIToken = token
 		sources["coolify.api_token"] = SourceEnvironment
@@ -188,6 +196,9 @@ var supported = func() map[string]bool {
 	for _, key := range []string{"coolify.url", "coolify.api_token", "coolify.api_token_file", "coolify.allow_insecure_http"} {
 		m[key] = true
 	}
+	for _, key := range []string{"auth.mode", "auth.proxy_cidrs", "auth.identity_header", "auth.allowed_subject"} {
+		m[key] = true
+	}
 	return m
 }()
 
@@ -246,6 +257,19 @@ func apply(c *Config, values map[string]string) error {
 			c.Coolify.APITokenFile = value
 		case "coolify.allow_insecure_http":
 			c.Coolify.AllowInsecureHTTP, err = strconv.ParseBool(value)
+		case "auth.mode":
+			c.Auth.Mode = strings.ToLower(strings.TrimSpace(value))
+		case "auth.proxy_cidrs":
+			c.Auth.ProxyCIDRs = nil
+			for _, cidr := range strings.Split(value, ",") {
+				if cidr = strings.TrimSpace(cidr); cidr != "" {
+					c.Auth.ProxyCIDRs = append(c.Auth.ProxyCIDRs, cidr)
+				}
+			}
+		case "auth.identity_header":
+			c.Auth.IdentityHeader = strings.TrimSpace(value)
+		case "auth.allowed_subject":
+			c.Auth.AllowedSubject = value
 		case "http.listen_address":
 			c.HTTP.ListenAddress = value
 		case "http.trusted_proxy_cidrs":
@@ -345,7 +369,7 @@ func effective(c Config, sources map[string]Source) map[string]Effective {
 			source = SourceDefault
 		}
 		value := "configured"
-		secret := key == "paths.master_key" || key == "coolify.api_token"
+		secret := key == "paths.master_key" || key == "coolify.api_token" || key == "auth.allowed_subject"
 		if !secret {
 			value = lookup(c, key)
 		}
@@ -358,6 +382,7 @@ func lookup(c Config, key string) string {
 		"paths.data_dir": c.Paths.DataDir, "paths.database_path": c.Paths.DatabasePath, "paths.runtime_dir": c.Paths.RuntimeDir,
 		"paths.host_proc": c.Paths.HostProc, "paths.host_sys": c.Paths.HostSys, "http.listen_address": c.HTTP.ListenAddress,
 		"paths.host_passwd": c.Paths.HostPasswd, "coolify.url": c.Coolify.URL, "coolify.api_token_file": c.Coolify.APITokenFile, "coolify.allow_insecure_http": strconv.FormatBool(c.Coolify.AllowInsecureHTTP),
+		"auth.mode": c.Auth.Mode, "auth.proxy_cidrs": strings.Join(c.Auth.ProxyCIDRs, ","), "auth.identity_header": c.Auth.IdentityHeader, "auth.allowed_subject": c.Auth.AllowedSubject,
 		"http.trusted_proxy_cidrs": strings.Join(c.HTTP.TrustedProxyCIDRs, ","), "docker.socket_path": c.Docker.SocketPath,
 		"collection.host_interval": c.Collection.HostInterval.String(), "collection.container_interval": c.Collection.ContainerInterval.String(),
 		"collection.minimum_interval": c.Collection.MinimumInterval.String(), "live.sse_interval": c.Live.SSEInterval.String(),

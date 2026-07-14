@@ -8,6 +8,7 @@ import (
 	"net/netip"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -25,6 +26,7 @@ type Config struct {
 	Notifications Notifications `toml:"notifications"`
 	Logs          Logs          `toml:"logs"`
 	Coolify       Coolify       `toml:"coolify"`
+	Auth          Auth          `toml:"auth"`
 	Sessions      Sessions      `toml:"sessions"`
 	Demo          bool          `toml:"demo"`
 }
@@ -98,10 +100,16 @@ type Coolify struct {
 	APITokenFile      string `toml:"api_token_file"`
 	AllowInsecureHTTP bool   `toml:"allow_insecure_http"`
 }
+type Auth struct {
+	Mode           string   `toml:"mode"`
+	ProxyCIDRs     []string `toml:"proxy_cidrs"`
+	IdentityHeader string   `toml:"identity_header"`
+	AllowedSubject string   `toml:"allowed_subject"`
+}
 
 func Defaults() Config {
 	return Config{
-		Paths: Paths{DataDir: "/var/lib/binnacle", HostProc: "/proc", HostSys: "/sys", HostPasswd: "/host/etc/passwd"}, HTTP: HTTP{ListenAddress: ":8080"},
+		Paths: Paths{DataDir: "/var/lib/binnacle", HostProc: "/proc", HostSys: "/sys", HostPasswd: "/host/etc/passwd"}, HTTP: HTTP{ListenAddress: ":8080"}, Auth: Auth{Mode: "local", IdentityHeader: "X-Forwarded-User"},
 		Collection: Collection{HostInterval: 2 * time.Second, ContainerInterval: 2 * time.Second, MinimumInterval: time.Second}, Live: Live{SSEInterval: 2 * time.Second}, Persistence: Persistence{RawInterval: 10 * time.Second, QueueBatchLimit: 60},
 		Retention: Retention{Preset: "balanced", Raw: 48 * time.Hour, OneMinute: 30 * 24 * time.Hour, FifteenMinute: 365 * 24 * time.Hour, OneHour: 0}, Database: Database{TargetBudgetBytes: 1073741824, WarningRatio: .80, CriticalRatio: .95, EmergencyPauseRatio: .98}, Charts: Charts{MaxPointsPerSeries: 1000}, Docker: Docker{SocketPath: "/var/run/docker.sock", MaxConcurrency: 4}, Checks: Checks{MaxConcurrency: 8}, Notifications: Notifications{MaxConcurrency: 4, QueueCapacity: 1000, DeliveryTimeout: 15 * time.Second, ReminderInterval: 2 * time.Hour}, Logs: Logs{MaxResponseBytes: 1048576, MaxLines: 5000}, Sessions: Sessions{IdleTimeout: 12 * time.Hour, AbsoluteLifetime: 720 * time.Hour},
 	}
@@ -140,6 +148,17 @@ func (c Config) Validate() error {
 		if _, err := netip.ParsePrefix(cidr); err != nil {
 			return fmt.Errorf("http.trusted_proxy_cidrs: %w", err)
 		}
+	}
+	if c.Auth.Mode != "local" && c.Auth.Mode != "proxy" && c.Auth.Mode != "local_and_proxy" {
+		return fmt.Errorf("auth.mode must be local, proxy, or local_and_proxy")
+	}
+	for _, cidr := range c.Auth.ProxyCIDRs {
+		if _, err := netip.ParsePrefix(cidr); err != nil {
+			return fmt.Errorf("auth.proxy_cidrs: %w", err)
+		}
+	}
+	if c.Auth.Mode != "local" && (len(c.Auth.ProxyCIDRs) == 0 || strings.TrimSpace(c.Auth.IdentityHeader) == "" || strings.TrimSpace(c.Auth.AllowedSubject) == "") {
+		return fmt.Errorf("proxy auth requires proxy_cidrs, identity_header, and allowed_subject")
 	}
 	if c.Collection.MinimumInterval <= 0 || c.Collection.HostInterval < c.Collection.MinimumInterval || c.Collection.ContainerInterval < c.Collection.MinimumInterval {
 		return fmt.Errorf("collection intervals must be at least minimum_interval")
@@ -182,7 +201,7 @@ func (c Config) Validate() error {
 // UIOverridable reports whether a key can be changed without a deployment change.
 func UIOverridable(key string) bool {
 	switch key {
-	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "coolify.url", "coolify.api_token_file", "coolify.allow_insecure_http", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
+	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "coolify.url", "coolify.api_token_file", "coolify.allow_insecure_http", "auth.mode", "auth.proxy_cidrs", "auth.identity_header", "auth.allowed_subject", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
 		return false
 	}
 	return true

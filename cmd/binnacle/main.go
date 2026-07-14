@@ -197,6 +197,11 @@ func main() {
 
 	apiServer := api.New()
 	proxies, _ := auth.ParseTrustedProxies(config.HTTP.TrustedProxyCIDRs)
+	proxyAuth, err := auth.NewProxyAuthenticator(auth.ProxyAuthConfig{Mode: auth.AuthMode(config.Auth.Mode), IdentityHeader: config.Auth.IdentityHeader, AllowedSubject: config.Auth.AllowedSubject, ProxyCIDRs: config.Auth.ProxyCIDRs}, proxies)
+	if err != nil {
+		log.Error("proxy authentication configuration is invalid", "error", err)
+		os.Exit(1)
+	}
 	protection := auth.NewProtection(4096, proxies)
 	sessions.SetTrustedProxies(proxies)
 
@@ -245,7 +250,8 @@ func main() {
 	})
 	apiServer.EnableDiagnostics(bundleService, authorizer, protection)
 	apiServer.EnableSetup(setup, protection, sessions)
-	apiServer.EnableAuth(credentials, sessions, protection, mfaService)
+	apiServer.EnableAuth(credentials, sessions, protection, mfaService, proxyAuth)
+	apiServer.EnableProxyAuth(proxyAuth, credentials, sessions)
 	apiServer.EnableMFA(mfaService, credentials, sessions, protection)
 	apiServer.EnableOnboarding(onboardingService, sessions, sessions)
 	apiServer.EnableSettings(settingsService, sessions, sessions)

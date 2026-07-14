@@ -30,6 +30,8 @@ type Session struct {
 	LastSeenAt      time.Time
 	ExpiresAt       time.Time
 	AbsoluteExpires time.Time
+	AuthMethod      string
+	AuthSubject     string
 }
 
 type Sessions struct {
@@ -55,18 +57,21 @@ func (s *Sessions) SetConfig(cfg SessionConfig) {
 func (s *Sessions) config() SessionConfig { s.mu.RLock(); defer s.mu.RUnlock(); return s.cfg }
 
 func (s *Sessions) Issue(ctx context.Context, userID string) (string, Session, error) {
-	token, _, session, err := s.issue(ctx, userID, "", "")
+	token, _, session, err := s.issue(ctx, userID, "", "", "local", "")
 	return token, session, err
 }
 
 // IssueWithCSRF returns the only plaintext copy of the anti-CSRF token.
 func (s *Sessions) IssueWithCSRF(ctx context.Context, userID string) (string, string, Session, error) {
-	return s.issue(ctx, userID, "", "")
+	return s.issue(ctx, userID, "", "", "local", "")
 }
 func (s *Sessions) IssueForRequest(ctx context.Context, userID string, r *http.Request, proxies TrustedProxies) (string, string, Session, error) {
-	return s.issue(ctx, userID, fingerprint(r.UserAgent()), fingerprint(proxies.ClientPrefix(r)))
+	return s.issue(ctx, userID, fingerprint(r.UserAgent()), fingerprint(proxies.ClientPrefix(r)), "local", "")
 }
-func (s *Sessions) issue(ctx context.Context, userID, userAgentHash, ipPrefixHash string) (string, string, Session, error) {
+func (s *Sessions) IssueForProxyRequest(ctx context.Context, userID, subject string, r *http.Request, proxies TrustedProxies) (string, string, Session, error) {
+	return s.issue(ctx, userID, fingerprint(r.UserAgent()), fingerprint(proxies.ClientPrefix(r)), "proxy", subject)
+}
+func (s *Sessions) issue(ctx context.Context, userID, userAgentHash, ipPrefixHash, authMethod, authSubject string) (string, string, Session, error) {
 	if s == nil || s.db == nil || userID == "" {
 		return "", "", Session{}, ErrSessionInvalid
 	}
@@ -84,8 +89,11 @@ func (s *Sessions) issue(ctx context.Context, userID, userAgentHash, ipPrefixHas
 	}
 	now := s.now().UTC()
 	absolute := now.Add(cfg.AbsoluteLifetime)
-	session := Session{UserID: userID, CreatedAt: now, LastSeenAt: now, ExpiresAt: minTime(now.Add(cfg.IdleTimeout), absolute), AbsoluteExpires: absolute}
-	if _, err = s.db.ExecContext(ctx, "INSERT INTO sessions(id_hash,user_id,created_at,last_seen_at,expires_at,absolute_expires_at,revoked_at,csrf_hash,user_agent_hash,ip_prefix_hash) VALUES(?,?,?,?,?,?,NULL,?,?,?)", tokenHash(token), userID, now.UnixMilli(), now.UnixMilli(), session.ExpiresAt.UnixMilli(), absolute.UnixMilli(), CSRFHash(csrf), nullFingerprint(userAgentHash), nullFingerprint(ipPrefixHash)); err != nil {
+	if authMethod != "local" && authMethod != "proxy" {
+		return "", "", Session{}, ErrSessionInvalid
+	}
+	session := Session{UserID: userID, CreatedAt: now, LastSeenAt: now, ExpiresAt: minTime(now.Add(cfg.IdleTimeout), absolute), AbsoluteExpires: absolute, AuthMethod: authMethod, AuthSubject: authSubject}
+	if _, err = s.db.ExecContext(ctx, "INSERT INTO sessions(id_hash,user_id,created_at,last_seen_at,expires_at,absolute_expires_at,revoked_at,csrf_hash,user_agent_hash,ip_prefix_hash,auth_method,auth_subject) VALUES(?,?,?,?,?,?,NULL,?,?,?,?,?)", tokenHash(token), userID, now.UnixMilli(), now.UnixMilli(), session.ExpiresAt.UnixMilli(), absolute.UnixMilli(), CSRFHash(csrf), nullFingerprint(userAgentHash), nullFingerprint(ipPrefixHash), authMethod, nullFingerprint(authSubject)); err != nil {
 		return "", "", Session{}, err
 	}
 	return token, csrf, session, nil
@@ -129,12 +137,16 @@ func (s *Sessions) Authenticate(ctx context.Context, token string) (Session, err
 	var session Session
 	var created, seen, expires, absolute int64
 	var revoked sql.NullInt64
-	err := s.db.QueryRowContext(ctx, "SELECT user_id,created_at,last_seen_at,expires_at,absolute_expires_at,revoked_at FROM sessions WHERE id_hash=?", hash).Scan(&session.UserID, &created, &seen, &expires, &absolute, &revoked)
+	var subject sql.NullString
+	err := s.db.QueryRowContext(ctx, "SELECT user_id,created_at,last_seen_at,expires_at,absolute_expires_at,revoked_at,auth_method,auth_subject FROM sessions WHERE id_hash=?", hash).Scan(&session.UserID, &created, &seen, &expires, &absolute, &revoked, &session.AuthMethod, &subject)
 	if err != nil || revoked.Valid {
 		return Session{}, ErrSessionInvalid
 	}
 	session.CreatedAt, session.LastSeenAt = time.UnixMilli(created).UTC(), time.UnixMilli(seen).UTC()
 	session.ExpiresAt, session.AbsoluteExpires = time.UnixMilli(expires).UTC(), time.UnixMilli(absolute).UTC()
+	if subject.Valid {
+		session.AuthSubject = subject.String
+	}
 	now := s.now().UTC()
 	if !now.Before(session.ExpiresAt) || !now.Before(session.AbsoluteExpires) {
 		_, _ = s.db.ExecContext(ctx, "UPDATE sessions SET revoked_at=COALESCE(revoked_at,?) WHERE id_hash=?", now.UnixMilli(), hash)

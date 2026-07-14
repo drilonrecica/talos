@@ -9,10 +9,16 @@ import (
 	"github.com/drilonrecica/binnacle/internal/auth"
 )
 
-func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessions, protection *auth.Protection, mfaServices ...*auth.MFA) {
+func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessions, protection *auth.Protection, options ...any) {
 	var mfa *auth.MFA
-	if len(mfaServices) > 0 {
-		mfa = mfaServices[0]
+	var proxy *auth.ProxyAuthenticator
+	for _, option := range options {
+		switch value := option.(type) {
+		case *auth.MFA:
+			mfa = value
+		case *auth.ProxyAuthenticator:
+			proxy = value
+		}
 	}
 	proxies := protection.Proxies()
 	limited := func(w http.ResponseWriter, r *http.Request, username string) bool {
@@ -28,6 +34,10 @@ func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessio
 	s.Handle("/api/v1/auth/login", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			WriteError(w, 405, Error{Code: "method_not_allowed", Message: "Only POST is supported."})
+			return
+		}
+		if proxy != nil && !proxy.AllowsLocal() {
+			WriteError(w, 404, Error{Code: "not_found", Message: "Local login is disabled."})
 			return
 		}
 		var body struct {
@@ -82,6 +92,7 @@ func (s *Server) EnableAuth(credentials *auth.Credentials, sessions *auth.Sessio
 			"user":              map[string]string{"id": user.ID, "username": user.Username},
 			"expiresAt":         session.ExpiresAt.UTC().Format(time.RFC3339),
 			"absoluteExpiresAt": session.AbsoluteExpires.UTC().Format(time.RFC3339),
+			"authMethod":        session.AuthMethod,
 		})
 	}))
 	s.Handle("/api/v1/auth/logout", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
