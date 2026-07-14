@@ -42,6 +42,7 @@ func TestPreferencesRequireSessionAndCSRF(t *testing.T) {
 	}
 	request = httptest.NewRequest(http.MethodGet, "/api/v1/preferences", nil)
 	request.Header.Set("Authorization", "Bearer invalid")
+	request.AddCookie(&http.Cookie{Name: auth.SessionCookieName, Value: token})
 	response = httptest.NewRecorder()
 	server.Handler().ServeHTTP(response, request)
 	if response.Code != http.StatusUnauthorized {

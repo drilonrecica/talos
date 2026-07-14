@@ -229,6 +229,11 @@ func ClearSessionCookie(w http.ResponseWriter, secure bool) {
 }
 
 func TokenFromRequest(r *http.Request) string {
+	// Bearer credentials and browser sessions are deliberately exclusive. A
+	// caller that supplies Authorization must never fall back to ambient cookies.
+	if r.Header.Get("Authorization") != "" {
+		return ""
+	}
 	c, err := r.Cookie(SessionCookieName)
 	if err != nil {
 		return ""
