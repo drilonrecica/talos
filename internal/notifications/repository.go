@@ -408,6 +408,54 @@ func (r *Repository) Incident(ctx context.Context, id string) (Incident, error) 
 	return *found, nil
 }
 
+func (r *Repository) ExportIncidents(ctx context.Context, from, to time.Time, limit int) ([]Incident, error) {
+	if limit < 1 || limit > 10001 {
+		limit = 10001
+	}
+	rows, err := r.db.QueryContext(ctx, `SELECT i.id,i.group_key,i.status,i.severity,i.target_type,i.target_id,i.title,i.opened_at,i.updated_at,i.resolved_at,i.version,COUNT(ia.alert_id),COALESCE(SUM(CASE WHEN a.status='firing' THEN 1 ELSE 0 END),0) FROM incidents i LEFT JOIN incident_alerts ia ON ia.incident_id=i.id LEFT JOIN alerts a ON a.id=ia.alert_id WHERE i.opened_at>=? AND i.opened_at<=? GROUP BY i.id ORDER BY i.opened_at,i.id LIMIT ?`, from.Unix(), to.Unix(), limit)
+	if err != nil {
+		return nil, err
+	}
+	values := []Incident{}
+	for rows.Next() {
+		value, scanErr := scanIncident(rows)
+		if scanErr != nil {
+			rows.Close()
+			return nil, scanErr
+		}
+		values = append(values, value)
+	}
+	if err = rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
+	for index := range values {
+		value := &values[index]
+		alertRows, alertErr := r.db.QueryContext(ctx, `SELECT a.id,a.family,a.severity,a.status,a.message,a.started_at,a.resolved_at FROM incident_alerts ia JOIN alerts a ON a.id=ia.alert_id WHERE ia.incident_id=? ORDER BY a.started_at`, value.ID)
+		if alertErr != nil {
+			return nil, alertErr
+		}
+		for alertRows.Next() {
+			var alert MemberAlert
+			var started int64
+			var resolved sql.NullInt64
+			if alertErr = alertRows.Scan(&alert.ID, &alert.Family, &alert.Severity, &alert.Status, &alert.Message, &started, &resolved); alertErr != nil {
+				alertRows.Close()
+				return nil, alertErr
+			}
+			alert.StartedAt = time.Unix(started, 0).UTC()
+			if resolved.Valid {
+				at := time.Unix(resolved.Int64, 0).UTC()
+				alert.ResolvedAt = &at
+			}
+			value.Alerts = append(value.Alerts, alert)
+		}
+		alertRows.Close()
+	}
+	return values, nil
+}
+
 func (r *Repository) Channels(ctx context.Context) ([]Channel, error) {
 	rows, err := r.db.QueryContext(ctx, `SELECT c.id,c.name,c.kind,c.enabled,c.minimum_severity,c.notify_resolved,c.config_json,c.secret_ref,c.created_at,c.updated_at,CASE WHEN s.key IS NULL THEN 0 ELSE 1 END FROM notification_channels c LEFT JOIN encrypted_secrets s ON s.key=c.secret_ref WHERE c.deleted_at IS NULL ORDER BY c.name`)
 	if err != nil {

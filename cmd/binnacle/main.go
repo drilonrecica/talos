@@ -266,6 +266,7 @@ func main() {
 	apiServer.EnableAlerts(alertRepository, sessions, sessions, protection)
 	apiServer.EnableIncidentsNotifications(notificationRepository, notificationWorker, incidentsAuthorizer, sessions, protection)
 	apiServer.EnableAPITokens(tokenRepository, sessions)
+	apiServer.EnableExports(store, notificationRepository, engine, metricsAuthorizer, eventsAuthorizer, incidentsAuthorizer, resourceAuthorizer, coolifyIntegration)
 	apiServer.EnableCoolify(coolifyIntegration, sessions, sessions)
 	logService, err := diagnostics.NewLogService(dockerLogs, config.Logs.MaxLines, config.Logs.MaxResponseBytes, config.Logs.RedactionPatterns)
 	if err != nil {
