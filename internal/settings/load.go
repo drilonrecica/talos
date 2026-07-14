@@ -80,6 +80,28 @@ func LoadWith(getenv func(string) string, exists func(string) bool, provider Ove
 		}
 		sources["paths.host_passwd"] = SourceEnvironment
 	}
+	for env, key := range map[string]string{"BINNACLE_COOLIFY_URL": "coolify.url", "BINNACLE_COOLIFY_API_TOKEN_FILE": "coolify.api_token_file", "BINNACLE_COOLIFY_ALLOW_INSECURE_HTTP": "coolify.allow_insecure_http"} {
+		if value := getenv(env); value != "" {
+			if err := apply(&c, map[string]string{key: value}); err != nil {
+				return Config{}, nil, fmt.Errorf("%s: %w", env, err)
+			}
+			sources[key] = SourceEnvironment
+		}
+	}
+	if token := strings.TrimSpace(getenv("BINNACLE_COOLIFY_API_TOKEN")); token != "" {
+		c.Coolify.APIToken = token
+		sources["coolify.api_token"] = SourceEnvironment
+	}
+	if c.Coolify.APIToken == "" && c.Coolify.APITokenFile != "" {
+		raw, err := os.ReadFile(c.Coolify.APITokenFile)
+		if err != nil {
+			return Config{}, nil, fmt.Errorf("read Coolify token file: %w", err)
+		}
+		if len(raw) > 4096 {
+			return Config{}, nil, fmt.Errorf("Coolify token file is too large")
+		}
+		c.Coolify.APIToken = strings.TrimSpace(string(raw))
+	}
 	if provider != nil {
 		overrides, err := provider.Overrides()
 		if err != nil {
@@ -163,6 +185,9 @@ var supported = func() map[string]bool {
 		m[k] = true
 	}
 	m["paths.host_passwd"] = true
+	for _, key := range []string{"coolify.url", "coolify.api_token", "coolify.api_token_file", "coolify.allow_insecure_http"} {
+		m[key] = true
+	}
 	return m
 }()
 
@@ -215,6 +240,12 @@ func apply(c *Config, values map[string]string) error {
 			c.Paths.HostPasswd = value
 		case "paths.master_key":
 			c.Paths.MasterKey = value
+		case "coolify.url":
+			c.Coolify.URL = strings.TrimRight(value, "/")
+		case "coolify.api_token_file":
+			c.Coolify.APITokenFile = value
+		case "coolify.allow_insecure_http":
+			c.Coolify.AllowInsecureHTTP, err = strconv.ParseBool(value)
 		case "http.listen_address":
 			c.HTTP.ListenAddress = value
 		case "http.trusted_proxy_cidrs":
@@ -314,7 +345,7 @@ func effective(c Config, sources map[string]Source) map[string]Effective {
 			source = SourceDefault
 		}
 		value := "configured"
-		secret := key == "paths.master_key"
+		secret := key == "paths.master_key" || key == "coolify.api_token"
 		if !secret {
 			value = lookup(c, key)
 		}
@@ -326,6 +357,7 @@ func lookup(c Config, key string) string {
 	values := map[string]string{
 		"paths.data_dir": c.Paths.DataDir, "paths.database_path": c.Paths.DatabasePath, "paths.runtime_dir": c.Paths.RuntimeDir,
 		"paths.host_proc": c.Paths.HostProc, "paths.host_sys": c.Paths.HostSys, "http.listen_address": c.HTTP.ListenAddress,
+		"paths.host_passwd": c.Paths.HostPasswd, "coolify.url": c.Coolify.URL, "coolify.api_token_file": c.Coolify.APITokenFile, "coolify.allow_insecure_http": strconv.FormatBool(c.Coolify.AllowInsecureHTTP),
 		"http.trusted_proxy_cidrs": strings.Join(c.HTTP.TrustedProxyCIDRs, ","), "docker.socket_path": c.Docker.SocketPath,
 		"collection.host_interval": c.Collection.HostInterval.String(), "collection.container_interval": c.Collection.ContainerInterval.String(),
 		"collection.minimum_interval": c.Collection.MinimumInterval.String(), "live.sse_interval": c.Live.SSEInterval.String(),

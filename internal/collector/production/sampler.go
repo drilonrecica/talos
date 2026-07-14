@@ -380,6 +380,7 @@ type resourceGroup struct {
 	cpu, memory, rx, tx, read, write             float64
 	cpuOK, memoryOK, rxOK, txOK, readOK, writeOK bool
 	status                                       []metrics.ResourceStatus
+	manualName, manualContext                    bool
 }
 
 func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *int64) ([]metrics.ResourceSnapshot, error) {
@@ -406,7 +407,7 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 		}
 		group := groups[identity.StableKey]
 		if group == nil {
-			group = &resourceGroup{identity: identity, category: resolvedCategory, environment: inspect.Labels["coolify.environment"]}
+			group = &resourceGroup{identity: identity, category: resolvedCategory, environment: inspect.Labels["coolify.environment"], manualName: strings.TrimSpace(inspect.Labels["binnacle.name"]) != "", manualContext: strings.TrimSpace(inspect.Labels["binnacle.context"]) != ""}
 			if metadata, ok := coolify.Resolve(inspect.Labels); ok {
 				group.infrastructure = metadata.Infrastructure
 				if metadata.Environment != "" {
@@ -468,7 +469,7 @@ func (s *Sampler) collectDocker(ctx context.Context, now time.Time, hostTotal *i
 	result := make([]metrics.ResourceSnapshot, 0, len(groups))
 	for stable, group := range groups {
 		id := resourceID(stable)
-		result = append(result, metrics.ResourceSnapshot{ID: id, Name: group.identity.Name, Status: resources.RollupStatus(group.status), CPUHostPercent: number(group.cpu, group.cpuOK), MemoryBytes: integer(group.memory, group.memoryOK), RXBPS: number(group.rx, group.rxOK), TXBPS: number(group.tx, group.txOK), BlockReadBPS: number(group.read, group.readOK), BlockWriteBPS: number(group.write, group.writeOK), LastSeenAt: now, Category: group.category, Context: group.identity.Context, Project: group.identity.Project, Environment: group.environment, Infrastructure: group.infrastructure, Components: group.components, StableKey: stable, SourceKind: group.identity.Source})
+		result = append(result, metrics.ResourceSnapshot{ID: id, Name: group.identity.Name, Status: resources.RollupStatus(group.status), CPUHostPercent: number(group.cpu, group.cpuOK), MemoryBytes: integer(group.memory, group.memoryOK), RXBPS: number(group.rx, group.rxOK), TXBPS: number(group.tx, group.txOK), BlockReadBPS: number(group.read, group.readOK), BlockWriteBPS: number(group.write, group.writeOK), LastSeenAt: now, Category: group.category, Context: group.identity.Context, Project: group.identity.Project, Environment: group.environment, Infrastructure: group.infrastructure, Components: group.components, StableKey: stable, SourceKind: group.identity.Source, ManualName: group.manualName, ManualContext: group.manualContext})
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Name < result[j].Name })
 	return result, nil

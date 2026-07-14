@@ -23,6 +23,7 @@ import (
 	"github.com/drilonrecica/binnacle/internal/checks"
 	dockercollector "github.com/drilonrecica/binnacle/internal/collector/docker"
 	"github.com/drilonrecica/binnacle/internal/collector/production"
+	"github.com/drilonrecica/binnacle/internal/coolify"
 	"github.com/drilonrecica/binnacle/internal/demo"
 	"github.com/drilonrecica/binnacle/internal/diagnostics"
 	"github.com/drilonrecica/binnacle/internal/dockerapi"
@@ -98,6 +99,7 @@ func main() {
 		os.Exit(1)
 	}
 	notificationRepository := notifications.NewRepository(nil, secretStore)
+	coolifyIntegration := coolify.NewIntegration(secretStore, coolify.ClientConfig{BaseURL: config.Coolify.URL, Token: config.Coolify.APIToken, AllowInsecureHTTP: config.Coolify.AllowInsecureHTTP})
 	notificationWorker := notifications.NewWorker(notificationRepository, notifications.Config{
 		MaxConcurrency:   config.Notifications.MaxConcurrency,
 		QueueCapacity:    config.Notifications.QueueCapacity,
@@ -156,6 +158,7 @@ func main() {
 		alertRepository.SetDB(store.DB())
 		secretStore.SetDB(store.DB())
 		notificationRepository.SetDB(store.DB())
+		coolifyIntegration.SetDB(store.DB())
 		if err := alertRepository.SeedDefaults(ctx); err != nil {
 			return err
 		}
@@ -182,6 +185,7 @@ func main() {
 		}
 		return err
 	}})
+	application.Add(coolifyIntegration)
 	application.Add(sessions)
 	if !*demoMode && !config.Demo {
 		application.Add(checkScheduler)
@@ -195,9 +199,9 @@ func main() {
 	sessions.SetTrustedProxies(proxies)
 
 	authorizer := sessions
-	apiServer.EnableLive(engine, authorizer, protection, alertRepository)
+	apiServer.EnableLive(engine, authorizer, protection, alertRepository, coolifyIntegration)
 	apiServer.EnableCurrent(engine, authorizer)
-	apiServer.EnableResources(engine, authorizer, store, protection, alertRepository)
+	apiServer.EnableResources(engine, authorizer, store, protection, alertRepository, coolifyIntegration)
 	apiServer.EnableMetrics(store, authorizer, protection)
 	apiServer.EnableEvents(store, authorizer, protection)
 	apiServer.EnableHistoryDeletion(store, authorizer, sessions)
@@ -245,6 +249,7 @@ func main() {
 	apiServer.EnableChecks(checkRepository, checkScheduler, sessions, sessions, protection)
 	apiServer.EnableAlerts(alertRepository, sessions, sessions, protection)
 	apiServer.EnableIncidentsNotifications(notificationRepository, notificationWorker, sessions, sessions, protection)
+	apiServer.EnableCoolify(coolifyIntegration, sessions, sessions)
 	logService, err := diagnostics.NewLogService(dockerLogs, config.Logs.MaxLines, config.Logs.MaxResponseBytes, config.Logs.RedactionPatterns)
 	if err != nil {
 		log.Error("log diagnostics configuration is invalid", "error", err)

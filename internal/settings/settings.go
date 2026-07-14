@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"net/url"
 	"path/filepath"
 	"time"
 )
@@ -23,6 +24,7 @@ type Config struct {
 	Checks        Checks        `toml:"checks"`
 	Notifications Notifications `toml:"notifications"`
 	Logs          Logs          `toml:"logs"`
+	Coolify       Coolify       `toml:"coolify"`
 	Sessions      Sessions      `toml:"sessions"`
 	Demo          bool          `toml:"demo"`
 }
@@ -90,6 +92,12 @@ type Sessions struct {
 	IdleTimeout      time.Duration `toml:"idle_timeout"`
 	AbsoluteLifetime time.Duration `toml:"absolute_lifetime"`
 }
+type Coolify struct {
+	URL               string `toml:"url"`
+	APIToken          string `toml:"-"`
+	APITokenFile      string `toml:"api_token_file"`
+	AllowInsecureHTTP bool   `toml:"allow_insecure_http"`
+}
 
 func Defaults() Config {
 	return Config{
@@ -150,6 +158,12 @@ func (c Config) Validate() error {
 	if c.Logs.MaxResponseBytes > 1<<20 || c.Logs.MaxLines > 5000 || len(c.Logs.RedactionPatterns) > 16 {
 		return fmt.Errorf("log limits exceed the supported ceilings")
 	}
+	if c.Coolify.URL != "" {
+		u, err := url.Parse(c.Coolify.URL)
+		if err != nil || u.Hostname() == "" || u.User != nil || (u.Scheme != "https" && !(c.Coolify.AllowInsecureHTTP && u.Scheme == "http")) {
+			return fmt.Errorf("coolify.url must be a valid HTTPS URL")
+		}
+	}
 	if c.Notifications.MaxConcurrency < 1 || c.Notifications.MaxConcurrency > 32 || c.Notifications.QueueCapacity < 1 || c.Notifications.QueueCapacity > 10000 || c.Notifications.DeliveryTimeout < time.Second || c.Notifications.DeliveryTimeout > time.Minute || c.Notifications.ReminderInterval < time.Minute || c.Notifications.ReminderInterval > 24*time.Hour {
 		return fmt.Errorf("notification limits are outside supported bounds")
 	}
@@ -168,7 +182,7 @@ func (c Config) Validate() error {
 // UIOverridable reports whether a key can be changed without a deployment change.
 func UIOverridable(key string) bool {
 	switch key {
-	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
+	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "coolify.url", "coolify.api_token_file", "coolify.allow_insecure_http", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
 		return false
 	}
 	return true
