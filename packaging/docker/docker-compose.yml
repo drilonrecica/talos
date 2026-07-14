@@ -22,6 +22,7 @@ services:
       BINNACLE_DATA_DIR: /var/lib/binnacle
       BINNACLE_HOST_PROC: /host/proc
       BINNACLE_HOST_SYS: /host/sys
+      BINNACLE_HOST_PASSWD: /host/etc/passwd
       BINNACLE_SETUP_TOKEN: ${BINNACLE_SETUP_TOKEN:?BINNACLE_SETUP_TOKEN is required for the first installation}
       BINNACLE_DOCKER_SOCKET: ${BINNACLE_DOCKER_SOCKET:-/var/run/docker.sock}
       BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS: ${BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS:-false}
@@ -36,6 +37,7 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
+      - /etc/passwd:/host/etc/passwd:ro
       - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       resources:

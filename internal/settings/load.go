@@ -74,6 +74,12 @@ func LoadWith(getenv func(string) string, exists func(string) bool, provider Ove
 			sources[key] = SourceEnvironment
 		}
 	}
+	if value := getenv("BINNACLE_HOST_PASSWD"); value != "" {
+		if err := apply(&c, map[string]string{"paths.host_passwd": value}); err != nil {
+			return Config{}, nil, fmt.Errorf("BINNACLE_HOST_PASSWD: %w", err)
+		}
+		sources["paths.host_passwd"] = SourceEnvironment
+	}
 	if provider != nil {
 		overrides, err := provider.Overrides()
 		if err != nil {
@@ -156,6 +162,7 @@ var supported = func() map[string]bool {
 	for _, k := range environment {
 		m[k] = true
 	}
+	m["paths.host_passwd"] = true
 	return m
 }()
 
@@ -204,6 +211,8 @@ func apply(c *Config, values map[string]string) error {
 			c.Paths.HostProc = value
 		case "paths.host_sys":
 			c.Paths.HostSys = value
+		case "paths.host_passwd":
+			c.Paths.HostPasswd = value
 		case "paths.master_key":
 			c.Paths.MasterKey = value
 		case "http.listen_address":

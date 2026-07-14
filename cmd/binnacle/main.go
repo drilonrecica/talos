@@ -251,6 +251,7 @@ func main() {
 		os.Exit(1)
 	}
 	apiServer.EnableLogs(logService, engine, sessions)
+	apiServer.EnableProcesses(diagnostics.NewProcessScanner(config.Paths.HostProc, config.Paths.HostPasswd), sessions)
 	application.Add(app.NewHTTPServer(config.HTTP.ListenAddress, version, application, apiServer.Handler(), webembed.Handler()))
 	if err := application.Run(ctx); err != nil {
 		log.Error("application exited with error", "error", err)
