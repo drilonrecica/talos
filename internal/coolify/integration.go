@@ -103,6 +103,9 @@ func (i *Integration) Configure(ctx context.Context, url, token string) error {
 	if i.environmentAuthoritative {
 		return errors.New("environment configuration is authoritative")
 	}
+	if token != "" && !i.secrets.Available() {
+		return auth.ErrMasterKeyMissing
+	}
 	config := ClientConfig{BaseURL: url, Token: token, AllowInsecureHTTP: i.env.AllowInsecureHTTP}
 	if token == "" {
 		existing, err := i.secrets.Get(ctx, coolifyTokenSecret)
