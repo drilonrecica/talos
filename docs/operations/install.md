@@ -58,6 +58,9 @@ multiple Binnacle deployments. The Compose service and volume names themselves
 are already stable (`binnacle`, `binnacle-docker-socket-proxy`,
 `binnacle-data`, and `binnacle-docker-api`).
 
+Both Coolify Compose files use the published Binnacle image. They do not require
+the repository or a local Docker build context on the Coolify server.
+
 ## Install with Docker Compose
 
 For a published release:

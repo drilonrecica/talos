@@ -1,4 +1,4 @@
-# Source-build deployment for a Git-backed Coolify application.
+# Published-image deployment for a Git-backed Coolify application.
 #
 # Coolify settings:
 #   Build Pack: Docker Compose
@@ -48,10 +48,6 @@ services:
 
   binnacle:
     image: ghcr.io/drilonrecica/binnacle:stable
-    build:
-      context: .
-      dockerfile: packaging/docker/Dockerfile
-
     labels:
       binnacle.name: Binnacle
       binnacle.context: monitoring

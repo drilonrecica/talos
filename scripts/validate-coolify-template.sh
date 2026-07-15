@@ -54,15 +54,15 @@ print("Coolify template matches canonical Compose deployment.")
 
 s = service(source)
 required = {
-    "build.context": s.get("build", {}).get("context") == ".",
-    "build.dockerfile": s.get("build", {}).get("dockerfile") == "packaging/docker/Dockerfile",
+    "image": s.get("image") == "ghcr.io/drilonrecica/binnacle:stable",
+    "no local build": "build" not in s,
     "read_only": s.get("read_only") is True,
     "privileged": s.get("privileged") is False,
     "healthcheck": s.get("healthcheck", {}).get("test") == ["CMD", "/usr/local/bin/binnacle", "--healthcheck"],
 }
 missing = [name for name, valid in required.items() if not valid]
 if missing:
-    raise SystemExit("Invalid source-build Coolify configuration: " + ", ".join(missing))
+    raise SystemExit("Invalid Git-backed Coolify configuration: " + ", ".join(missing))
 
 for name, expected, actual in (
     ("labels", c.get("labels", {}), s.get("labels", {})),
@@ -74,7 +74,7 @@ for name, expected, actual in (
     ("socket proxy", cp, sp),
 ):
     if expected != actual:
-        raise SystemExit(f"Source-build Coolify drift: {name} differs\n  compose: {expected}\n  source:  {actual}")
+        raise SystemExit(f"Git-backed Coolify drift: {name} differs\n  compose: {expected}\n  source:  {actual}")
 
 expected_coolify_environment = {
     "BINNACLE_DATA_DIR": "/var/lib/binnacle",
@@ -86,7 +86,7 @@ expected_coolify_environment = {
     "BINNACLE_COOLIFY_URL": "${BINNACLE_COOLIFY_URL:-}",
     "BINNACLE_COOLIFY_API_TOKEN": "${BINNACLE_COOLIFY_API_TOKEN:-}",
 }
-for label, doc in (("Coolify template", template), ("source-build Coolify", source)):
+for label, doc in (("Coolify template", template), ("Git-backed Coolify", source)):
     if set(doc.get("services", {})) != {"binnacle", "binnacle-docker-socket-proxy"}:
         raise SystemExit(f"{label} exposes unexpected Compose service names")
     if set(doc.get("volumes", {})) != {"binnacle-data", "binnacle-docker-api"}:
@@ -98,7 +98,7 @@ raw_socket = "/var/run/docker.sock:/var/run/docker.sock:ro"
 for label, doc, proxy_name in (
     ("Compose", compose, "docker-socket-proxy"),
     ("Coolify template", template, "binnacle-docker-socket-proxy"),
-    ("source-build Coolify", source, "binnacle-docker-socket-proxy"),
+    ("Git-backed Coolify", source, "binnacle-docker-socket-proxy"),
 ):
     app = service(doc)
     proxy = service(doc, proxy_name)
@@ -116,5 +116,5 @@ for label, doc, proxy_name in (
 for path in sys.argv[1:]:
     if "DOCKER_GID" in open(path).read():
         raise SystemExit(f"{path} still requires host Docker group discovery")
-print("Source-build Coolify Compose is valid.")
+print("Git-backed Coolify Compose is valid.")
 PY
