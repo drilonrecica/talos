@@ -4,7 +4,7 @@ Binnacle keeps its runtime and build dependency sets narrow. Manifest and
 workflow files are the authoritative inventories; this document records how to
 review them without duplicating version numbers that quickly become stale.
 
-Last reviewed: 2026-07-13
+Last reviewed: 2026-07-15
 
 ## Sources of truth
 
@@ -19,6 +19,9 @@ Last reviewed: 2026-07-13
 Production uses a Go binary, SQLite through CGO, and embedded frontend assets.
 Node.js and frontend packages are build-time dependencies only. Exact versions
 must be read from the files above rather than copied into operational guides.
+Docker integration uses the stable split Moby API and client modules rather
+than the monolithic daemon module. The production runtime requires Docker
+Engine 29.5.1 or newer; update the host before deploying Binnacle.
 
 ## Policy
 

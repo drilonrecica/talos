@@ -55,7 +55,7 @@ image-multi: ## Build a multi-arch container image (requires buildx and a regist
 
 vuln: ## Run dependency vulnerability scans (requires govulncheck and pnpm).
 
-	$(GO) run golang.org/x/vuln/cmd/govulncheck@latest ./...
+	scripts/govulncheck.sh
 	$(PNPM) --dir web audit --audit-level moderate
 
 licenses: ## Check Go dependency licenses (requires go-licenses v2).

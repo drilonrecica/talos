@@ -13,9 +13,8 @@ import (
 	"sync"
 	"time"
 
-	containertypes "github.com/docker/docker/api/types/container"
-	eventtypes "github.com/docker/docker/api/types/events"
-	dockerclient "github.com/docker/docker/client"
+	containertypes "github.com/moby/moby/api/types/container"
+	dockerclient "github.com/moby/moby/client"
 )
 
 // Client is deliberately read-only; mutation operations are not part of Binnacle's boundary.
@@ -38,7 +37,10 @@ type Inspect struct {
 }
 type Mount struct{ Source, Destination, Type string }
 type Event struct{ ID, Action, Time string }
-type Version struct{ APIVersion string }
+type Version struct {
+	EngineVersion string
+	APIVersion    string
+}
 type Diagnostics struct{ Containers int }
 type Stats struct {
 	CPU    CPUStats
@@ -58,28 +60,43 @@ type Limited struct {
 	once   sync.Once
 }
 
-type Engine struct{ client *dockerclient.Client }
+// sdkClient is the complete compile-time boundary to the Docker SDK. Keeping
+// the full SDK client behind this interface prevents mutation methods from
+// becoming available to the adapter implementation.
+type sdkClient interface {
+	ContainerList(context.Context, dockerclient.ContainerListOptions) (dockerclient.ContainerListResult, error)
+	ContainerInspect(context.Context, string, dockerclient.ContainerInspectOptions) (dockerclient.ContainerInspectResult, error)
+	ContainerStats(context.Context, string, dockerclient.ContainerStatsOptions) (dockerclient.ContainerStatsResult, error)
+	ContainerLogs(context.Context, string, dockerclient.ContainerLogsOptions) (dockerclient.ContainerLogsResult, error)
+	Events(context.Context, dockerclient.EventsListOptions) dockerclient.EventsResult
+	ServerVersion(context.Context, dockerclient.ServerVersionOptions) (dockerclient.ServerVersionResult, error)
+}
+
+type Engine struct {
+	client sdkClient
+	close  func() error
+}
 
 func NewEngine(socketPath string) (*Engine, error) {
-	client, err := dockerclient.NewClientWithOpts(dockerclient.WithHost("unix://"+socketPath), dockerclient.WithAPIVersionNegotiation())
+	client, err := dockerclient.New(dockerclient.WithHost("unix://" + socketPath))
 	if err != nil {
 		return nil, err
 	}
-	return &Engine{client: client}, nil
+	return &Engine{client: client, close: client.Close}, nil
 }
 func (e *Engine) Close() error {
-	if e == nil || e.client == nil {
+	if e == nil || e.close == nil {
 		return nil
 	}
-	return e.client.Close()
+	return e.close()
 }
 func (e *Engine) List(ctx context.Context) ([]Container, error) {
-	values, err := e.client.ContainerList(ctx, containertypes.ListOptions{All: true})
+	values, err := e.client.ContainerList(ctx, dockerclient.ContainerListOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
-	result := make([]Container, 0, len(values))
-	for _, value := range values {
+	result := make([]Container, 0, len(values.Items))
+	for _, value := range values.Items {
 		name := ""
 		if len(value.Names) > 0 {
 			name = strings.TrimPrefix(value.Names[0], "/")
@@ -89,10 +106,11 @@ func (e *Engine) List(ctx context.Context) ([]Container, error) {
 	return result, nil
 }
 func (e *Engine) Inspect(ctx context.Context, id string) (Inspect, error) {
-	value, err := e.client.ContainerInspect(ctx, id)
+	response, err := e.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
 	if err != nil {
 		return Inspect{}, err
 	}
+	value := response.Container
 	result := Inspect{ID: value.ID, Name: strings.TrimPrefix(value.Name, "/"), Created: value.Created}
 	if value.Config != nil {
 		result.Image, result.Labels = value.Config.Image, value.Config.Labels
@@ -100,13 +118,15 @@ func (e *Engine) Inspect(ctx context.Context, id string) (Inspect, error) {
 		result.Environment = allowedEnvironment(value.Config.Env)
 	}
 	if value.State != nil {
-		result.State = value.State.Status
+		result.State = string(value.State.Status)
 		if value.State.Health != nil {
-			result.Health = value.State.Health.Status
+			result.Health = string(value.State.Health.Status)
 		}
 	}
-	for name := range value.NetworkSettings.Networks {
-		result.Networks = append(result.Networks, name)
+	if value.NetworkSettings != nil {
+		for name := range value.NetworkSettings.Networks {
+			result.Networks = append(result.Networks, name)
+		}
 	}
 	for _, mount := range value.Mounts {
 		result.Mounts = append(result.Mounts, Mount{Source: mount.Source, Destination: mount.Destination, Type: string(mount.Type)})
@@ -126,7 +146,7 @@ type LogClient interface {
 }
 
 func (e *Engine) ReadLogs(ctx context.Context, id string, options LogOptions, emit func(string, string) error) error {
-	inspect, err := e.client.ContainerInspect(ctx, id)
+	inspect, err := e.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
 	if err != nil {
 		return err
 	}
@@ -134,7 +154,7 @@ func (e *Engine) ReadLogs(ctx context.Context, id string, options LogOptions, em
 	if options.Tail > 0 {
 		tail = fmt.Sprint(options.Tail)
 	}
-	reader, err := e.client.ContainerLogs(ctx, id, containertypes.LogsOptions{
+	reader, err := e.client.ContainerLogs(ctx, id, dockerclient.ContainerLogsOptions{
 		ShowStdout: true, ShowStderr: true, Timestamps: true, Follow: options.Follow,
 		Since: formatDockerTime(options.Since), Until: formatDockerTime(options.Until), Tail: tail,
 	})
@@ -142,7 +162,7 @@ func (e *Engine) ReadLogs(ctx context.Context, id string, options LogOptions, em
 		return err
 	}
 	defer reader.Close()
-	if inspect.Config != nil && inspect.Config.Tty {
+	if inspect.Container.Config != nil && inspect.Container.Config.Tty {
 		return scanLogLines(ctx, reader, "stdout", emit)
 	}
 	return scanMultiplexedLogs(ctx, reader, emit)
@@ -224,7 +244,7 @@ func allowedEnvironment(values []string) map[string]string {
 	return result
 }
 func (e *Engine) Stats(ctx context.Context, id string) (Stats, error) {
-	response, err := e.client.ContainerStatsOneShot(ctx, id)
+	response, err := e.client.ContainerStats(ctx, id, dockerclient.ContainerStatsOptions{Stream: false})
 	if err != nil {
 		return Stats{}, err
 	}
@@ -254,7 +274,8 @@ func (e *Engine) Stats(ctx context.Context, id string) (Stats, error) {
 }
 func (e *Engine) Events(ctx context.Context) <-chan Event {
 	output := make(chan Event, 32)
-	messages, errs := e.client.Events(ctx, eventtypes.ListOptions{})
+	stream := e.client.Events(ctx, dockerclient.EventsListOptions{})
+	messages, errs := stream.Messages, stream.Err
 	go func() {
 		defer close(output)
 		for {
@@ -288,12 +309,12 @@ func (e *Engine) Events(ctx context.Context) <-chan Event {
 	return output
 }
 func (e *Engine) Version(ctx context.Context) (Version, error) {
-	value, err := e.client.ServerVersion(ctx)
-	return Version{APIVersion: value.APIVersion}, err
+	value, err := e.client.ServerVersion(ctx, dockerclient.ServerVersionOptions{})
+	return Version{EngineVersion: value.Version, APIVersion: value.APIVersion}, err
 }
 func (e *Engine) Diagnostics(ctx context.Context) (Diagnostics, error) {
-	values, err := e.client.ContainerList(ctx, containertypes.ListOptions{All: true})
-	return Diagnostics{Containers: len(values)}, err
+	values, err := e.client.ContainerList(ctx, dockerclient.ContainerListOptions{All: true})
+	return Diagnostics{Containers: len(values.Items)}, err
 }
 
 func New(client Client, max int) *Limited {

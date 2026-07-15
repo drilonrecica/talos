@@ -34,7 +34,7 @@ table and captured benchmark output.
 
 | Gate | Notes |
 | --- | --- |
-| Supply-chain scan | `make vuln` (requires network and `govulncheck`) |
+| Supply-chain scan | `make vuln` (uses the same accepted-risk wrapper as CI; requires network, `jq`, and `govulncheck`) |
 | Real-host validation | Run `binnacle` against Docker and compare metrics to `docker stats` / `/proc` |
 | Coolify fresh install | Deploy `packaging/coolify/binnacle.yaml` to a Coolify instance |
 | Compose fresh install | Set `BINNACLE_IMAGE=ghcr.io/drilonrecica/binnacle:local`, then run `docker compose -f packaging/docker/docker-compose.yml up` |

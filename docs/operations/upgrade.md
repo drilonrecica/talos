@@ -33,7 +33,16 @@ image: ghcr.io/drilonrecica/binnacle:stable
 
 ## Upgrade process
 
-1. Stop Binnacle and copy the closed SQLite database. This ensures the WAL is
+1. Verify the host reports Docker Engine 29.5.1 or newer, and upgrade the host
+   Engine first if necessary. Binnacle will refuse production startup on an
+   older, missing, or malformed daemon version, including older release strings
+   whose distribution claims a security backport:
+
+   ```bash
+   docker version --format '{{.Server.Version}}'
+   ```
+
+2. Stop Binnacle and copy the closed SQLite database. This ensures the WAL is
    checkpointed before the backup:
 
    ```bash
@@ -41,14 +50,14 @@ image: ghcr.io/drilonrecica/binnacle:stable
    docker cp binnacle:/var/lib/binnacle/binnacle.db ./binnacle-backup.db
    ```
 
-2. Update the image tag and redeploy:
+3. Update the image tag and redeploy:
 
    ```bash
    docker compose -f packaging/docker/docker-compose.yml pull
    docker compose -f packaging/docker/docker-compose.yml up -d
    ```
 
-3. Verify the container is healthy:
+4. Verify the container is healthy:
 
    ```bash
    curl -f http://127.0.0.1:8080/healthz

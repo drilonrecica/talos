@@ -14,11 +14,17 @@ Binnacle is distributed as a container image. The supported paths are Coolify
 ## Requirements
 
 - Linux host (x86_64 or arm64)
-- Docker Engine with a reachable Unix socket
+- Docker Engine 29.5.1 or newer with a reachable Unix socket
 - Read access to `/proc`, `/sys`, `/etc/passwd`, and `/etc/os-release` on the host
 - A persistent volume mounted at `/var/lib/binnacle`
 
 ## Generate a setup token
+
+Binnacle checks the daemon release during production startup and fails closed
+if the version is missing, malformed, or older than 29.5.1. Upgrade the host
+Engine before deploying Binnacle. A distribution security backport reported
+under an older release string does not satisfy this requirement. Demo mode
+does not connect to Docker and has no Engine requirement.
 
 On first start, Binnacle requires a high-entropy setup token. Generate one before deploying:
 

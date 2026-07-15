@@ -39,7 +39,9 @@ claim automatic root-cause analysis.
 
 One Binnacle instance monitors one Linux Docker server. Supported production
 targets are Ubuntu 22.04/24.04 and Debian 12/13 on amd64 or arm64 with Docker
-Engine 24 or newer. Coolify-managed Docker is the primary deployment path;
+Engine 29.5.1 or newer. Production startup fails closed when the daemon release
+is older, missing, or malformed; operators must upgrade the host first.
+Coolify-managed Docker is the primary deployment path;
 Docker Compose is the portable alternative.
 
 Kubernetes, Podman and other runtimes, Windows, macOS, BSD, multi-server

@@ -37,7 +37,7 @@ status.
 - **Single-server:** one Binnacle instance monitors one Linux Docker server.
 
 Supported targets are Ubuntu 22.04/24.04 and Debian 12/13 on amd64 or arm64,
-with Docker Engine 24 or newer. Coolify is the primary deployment path and
+with Docker Engine 29.5.1 or newer. Coolify is the primary deployment path and
 Docker Compose is the portable alternative. Kubernetes, Podman, non-Linux
 hosts, and workload control are unsupported.
 

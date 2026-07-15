@@ -9,6 +9,6 @@
 package app
 
 import (
-	_ "github.com/docker/docker/client"
+	_ "github.com/moby/moby/client"
 	_ "golang.org/x/crypto/argon2"
 )

@@ -1,17 +1,6 @@
 # Accepted govulncheck findings.
 # Each line is an OSV ID that is documented here as not exploitable in Binnacle.
 
-# Docker daemon-side container archive / plugin vulnerabilities.
-# Binnacle only uses the Docker client SDK for local monitoring endpoints
-# (ContainerList, ContainerInspect, ContainerStats, Events, ServerVersion).
-# It never calls the affected daemon APIs (docker cp, archive PUT, authz,
-# plugin privilege validation) and the daemon runs in a separate process.
-GO-2026-4883
-GO-2026-4887
-GO-2026-5617
-GO-2026-5668
-GO-2026-5746
-
 # golang.org/x/crypto/openpgp is unmaintained and unsafe by design.
 # Binnacle does not use the openpgp package.
 GO-2026-5932

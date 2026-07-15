@@ -143,6 +143,16 @@ func main() {
 			os.Exit(1)
 		}
 		limitedDocker := dockerapi.New(rawEngine, config.Docker.MaxConcurrency)
+		application.Add(app.ComponentFuncs{
+			StartFunc: func(ctx context.Context) error {
+				if err := dockerapi.RequireSupportedEngine(ctx, limitedDocker); err != nil {
+					_ = rawEngine.Close()
+					return err
+				}
+				return nil
+			},
+			StopFunc: func(context.Context) error { return rawEngine.Close() },
+		})
 		dockerEngine, dockerLogs = limitedDocker, limitedDocker
 		onboardingService.SetDocker(dockerEngine)
 		cache := dockercollector.NewCache()
@@ -246,7 +256,7 @@ func main() {
 		if dockerEngine != nil {
 			value, versionErr := dockerEngine.Version(ctx)
 			if versionErr == nil {
-				dockerVersion = value.APIVersion
+				dockerVersion = value.EngineVersion
 			} else {
 				failures = append(failures, "Docker version unavailable")
 			}
