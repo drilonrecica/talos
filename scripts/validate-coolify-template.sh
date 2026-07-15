@@ -29,7 +29,6 @@ checks = [
     ("user", c.get("user"), t.get("user")),
     ("labels", c.get("labels", {}), t.get("labels", {})),
     ("security_opt", sorted(c.get("security_opt", [])), sorted(t.get("security_opt", []))),
-    ("environment keys", sorted(c.get("environment", {}).keys()), sorted(t.get("environment", {}).keys())),
     ("volume mounts", sorted(c.get("volumes", [])), sorted(t.get("volumes", []))),
     ("restart", c.get("restart"), t.get("restart")),
     ("healthcheck", c.get("healthcheck"), t.get("healthcheck")),
@@ -68,7 +67,6 @@ for name, expected, actual in (
     ("restart", c.get("restart"), s.get("restart")),
     ("healthcheck", c.get("healthcheck"), s.get("healthcheck")),
     ("resource configuration", c.get("deploy", {}).get("resources", {}), s.get("deploy", {}).get("resources", {})),
-    ("environment keys", sorted(c.get("environment", {}).keys()), sorted(s.get("environment", {}).keys())),
     ("volume mounts", sorted(c.get("volumes", [])), sorted(s.get("volumes", []))),
     ("depends_on", c.get("depends_on", {}), s.get("depends_on", {})),
     ("socket proxy", cp, sp),
@@ -76,12 +74,23 @@ for name, expected, actual in (
     if expected != actual:
         raise SystemExit(f"Source-build Coolify drift: {name} differs\n  compose: {expected}\n  source:  {actual}")
 
-for key in ("BINNACLE_DOCKER_SOCKET", "BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS", "BINNACLE_MASTER_KEY", "BINNACLE_MASTER_KEY_FILE",
-            "BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS", "BINNACLE_NOTIFICATIONS_MAX_CONCURRENCY",
-            "BINNACLE_NOTIFICATIONS_QUEUE_CAPACITY", "BINNACLE_NOTIFICATIONS_DELIVERY_TIMEOUT",
-            "BINNACLE_NOTIFICATIONS_REMINDER_INTERVAL"):
-    if key not in s.get("environment", {}):
-        raise SystemExit(f"Source-build Coolify configuration does not pass through {key}")
+expected_coolify_environment = {
+    "BINNACLE_DATA_DIR": "/var/lib/binnacle",
+    "BINNACLE_HOST_PROC": "/host/proc",
+    "BINNACLE_HOST_SYS": "/host/sys",
+    "BINNACLE_HOST_PASSWD": "/host/etc/passwd",
+    "BINNACLE_SETUP_TOKEN": "${SERVICE_HEX_64_BINNACLE}",
+    "BINNACLE_DOCKER_SOCKET": "/var/run/binnacle-docker/docker.sock",
+    "BINNACLE_COOLIFY_URL": "${BINNACLE_COOLIFY_URL:-}",
+    "BINNACLE_COOLIFY_API_TOKEN": "${BINNACLE_COOLIFY_API_TOKEN:-}",
+}
+for label, doc in (("Coolify template", template), ("source-build Coolify", source)):
+    if set(doc.get("services", {})) != {"binnacle", "docker-socket-proxy"}:
+        raise SystemExit(f"{label} exposes unexpected Compose service names")
+    if set(doc.get("volumes", {})) != {"binnacle-data", "binnacle-docker-api"}:
+        raise SystemExit(f"{label} exposes unexpected Compose volume names")
+    if service(doc).get("environment", {}) != expected_coolify_environment:
+        raise SystemExit(f"{label} exposes an unexpected environment configuration")
 
 raw_socket = "/var/run/docker.sock:/var/run/docker.sock:ro"
 for label, doc in (("Compose", compose), ("Coolify template", template), ("source-build Coolify", source)):
@@ -97,11 +106,6 @@ for label, doc in (("Compose", compose), ("Coolify template", template), ("sourc
         raise SystemExit(f"{label} exposes the raw Docker socket to Binnacle")
     if raw_socket not in proxy_mounts:
         raise SystemExit(f"{label} socket proxy does not have the read-only daemon socket mount")
-
-generated_setup_token = "${SERVICE_HEX_64_BINNACLE}"
-for label, doc in (("Coolify template", template), ("source-build Coolify", source)):
-    if service(doc).get("environment", {}).get("BINNACLE_SETUP_TOKEN") != generated_setup_token:
-        raise SystemExit(f"{label} does not use Coolify's generated setup token")
 
 for path in sys.argv[1:]:
     if "DOCKER_GID" in open(path).read():

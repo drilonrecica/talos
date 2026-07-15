@@ -37,13 +37,26 @@ Store it in a password manager. After the first administrator is created, the se
 ## Install with Coolify
 
 1. Add the Binnacle service template to your Coolify instance (or use **Docker Compose Empty** and paste `packaging/coolify/binnacle.yaml`).
-2. Deploy the stack. Coolify generates a persistent 64-character setup token automatically.
-3. Expose the service on your chosen domain. Coolify's proxy routes to container port `8080`.
-4. Copy `SERVICE_HEX_64_BINNACLE` from the stack environment, open the URL, and complete onboarding.
+2. In **General**, change the generated **Service Name** (`service-...`) to `binnacle`.
+3. Deploy the stack. Coolify generates a persistent 64-character setup token automatically.
+4. Expose the service on your chosen domain. Coolify's proxy routes to container port `8080`.
+5. Copy `SERVICE_HEX_64_BINNACLE` from the stack environment, open the URL, and complete onboarding.
 
 The Coolify template mounts the host `/proc`, `/sys`, `/etc/passwd`,
 `/etc/os-release`, and the Docker socket. It runs `read_only: true` with
 `no-new-privileges` and a 128 MiB memory limit.
+
+The template intentionally exposes only first-run setup and optional Coolify
+enrichment variables. Binnacle's secure defaults apply to advanced
+authentication, portability, private-network access, Prometheus, and
+notification limits. Edit the Compose file only when deliberately enabling one
+of those features.
+
+Coolify intentionally prefixes Docker containers, networks, and volumes with
+the stack UUID. Keep those generated names: they prevent collisions between
+multiple Binnacle deployments. The Compose service and volume names themselves
+are already stable (`binnacle`, `docker-socket-proxy`, `binnacle-data`, and
+`binnacle-docker-api`).
 
 ## Install with Docker Compose
 
