@@ -34,14 +34,23 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - run: docker build -f packaging/docker/Dockerfile -t binnacle:sbom .
       - uses: anchore/sbom-action@v0.24.0
         with:
+          image: binnacle:sbom
           format: spdx-json
           output-file: binnacle.spdx.json
+      - uses: anchore/sbom-action@v0.24.0
+        with:
+          image: ghcr.io/wollomatic/socket-proxy:1.12.3@sha256:9e781fbe79315355d08901832f639119aa332ac27ee6157fc7f2fab5193c8600
+          format: spdx-json
+          output-file: socket-proxy.spdx.json
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: sbom
-          path: binnacle.spdx.json
+          path: |
+            binnacle.spdx.json
+            socket-proxy.spdx.json
 
   scan:
     runs-on: ubuntu-24.04
@@ -59,3 +68,12 @@ jobs:
       - uses: github/codeql-action/upload-sarif@v4.37.0
         with:
           sarif_file: trivy.sarif
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ghcr.io/wollomatic/socket-proxy:1.12.3@sha256:9e781fbe79315355d08901832f639119aa332ac27ee6157fc7f2fab5193c8600
+          format: sarif
+          output: socket-proxy-trivy.sarif
+          severity: HIGH,CRITICAL
+      - uses: github/codeql-action/upload-sarif@v4.37.0
+        with:
+          sarif_file: socket-proxy-trivy.sarif

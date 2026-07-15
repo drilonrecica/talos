@@ -3,6 +3,7 @@ package diagnostics
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/drilonrecica/binnacle/internal/dockerapi"
@@ -17,6 +18,33 @@ func (f fakeLogs) ReadLogs(ctx context.Context, _ string, _ dockerapi.LogOptions
 		}
 	}
 	return nil
+}
+
+func TestLogServiceRedactsCompleteSecretValues(t *testing.T) {
+	service, err := NewLogService(fakeLogs{}, 5000, 1<<20, []string{`session-[a-z]+`})
+	if err != nil {
+		t.Fatal(err)
+	}
+	privateKey := "-----BEGIN PRIVATE KEY-----\nprivate material\n-----END PRIVATE KEY-----"
+	tests := map[string]string{
+		`{"password":"correct horse battery staple"}`:         `{"password":"[REDACTED]"}`,
+		`secret = 'two words with \'escaped\' quotes'`:        `secret = '[REDACTED]'`,
+		`{"api_key": "value with \"escaped\" quotes"}`:        `{"api_key": "[REDACTED]"}`,
+		`password=correct horse battery staple`:               `password=[REDACTED]`,
+		`token=abc123; user=admin`:                            `token=[REDACTED]; user=admin`,
+		`Authorization: Basic dXNlcjpwYXNz`:                   `Authorization: Basic [REDACTED]`,
+		`postgres://user:correct-horse@example.test/database`: `postgres://user:[REDACTED]@example.test/database`,
+		`request session-secret completed`:                    `request [REDACTED] completed`,
+		privateKey:                                            `[REDACTED PRIVATE KEY]`,
+	}
+	for input, want := range tests {
+		if got := service.Redact(input); got != want {
+			t.Errorf("Redact(%q)=%q, want %q", input, got, want)
+		}
+		if strings.Contains(service.Redact(input), "correct horse") {
+			t.Errorf("Redact(%q) retained secret text", input)
+		}
+	}
 }
 
 func TestLogServiceRedactsBeforeLiteralSearchAndPreservesMessage(t *testing.T) {

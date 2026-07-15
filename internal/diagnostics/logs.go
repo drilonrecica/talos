@@ -40,7 +40,12 @@ type LogService struct {
 	Docker    dockerapi.LogClient
 	MaxLines  int
 	MaxBytes  int64
-	redactors []*regexp.Regexp
+	redactors []redactor
+}
+
+type redactor struct {
+	pattern     *regexp.Regexp
+	replacement string
 }
 
 func NewLogService(client dockerapi.LogClient, maxLines int, maxBytes int64, custom []string) (*LogService, error) {
@@ -53,39 +58,38 @@ func NewLogService(client dockerapi.LogClient, maxLines int, maxBytes int64, cus
 	if len(custom) > 16 {
 		return nil, errors.New("at most 16 custom redaction patterns are allowed")
 	}
-	patterns := []string{
-		`(?i)(authorization\s*[:=]\s*(?:bearer|basic)\s+)[^\s]+`,
-		`(?i)((?:"?(?:password|passwd|pwd|token|api[_-]?key|secret)"?)\s*[:=]\s*)("?)[^"\s,;}]+("?)`,
-		`(?i)([a-z][a-z0-9+.-]*://[^:/\s]+:)[^@/\s]+(@)`,
-		`(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----`,
+	keyPrefix := `(?i)((?:"?(?:password|passwd|pwd|token|api[_-]?key|secret)"?)\s*[:=]\s*)`
+	patterns := []struct {
+		expression, replacement string
+	}{
+		{`(?i)(authorization\s*[:=]\s*(?:bearer|basic)\s+)[^\s]+`, `${1}[REDACTED]`},
+		{keyPrefix + `"(?:\\.|[^"\\])*"`, `${1}"[REDACTED]"`},
+		{keyPrefix + `'(?:\\.|[^'\\])*'`, `${1}'[REDACTED]'`},
+		{keyPrefix + `[^\s"',;}][^"',;}]*`, `${1}[REDACTED]`},
+		{`(?i)([a-z][a-z0-9+.-]*://[^:/\s]+:)[^@/\s]+(@)`, `${1}[REDACTED]${2}`},
+		{`(?s)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----`, `[REDACTED PRIVATE KEY]`},
 	}
-	patterns = append(patterns, custom...)
-	compiled := make([]*regexp.Regexp, 0, len(patterns))
+	compiled := make([]redactor, 0, len(patterns)+len(custom))
 	for _, pattern := range patterns {
-		r, err := regexp.Compile(pattern)
+		r, err := regexp.Compile(pattern.expression)
 		if err != nil {
 			return nil, err
 		}
-		compiled = append(compiled, r)
+		compiled = append(compiled, redactor{pattern: r, replacement: pattern.replacement})
+	}
+	for _, expression := range custom {
+		r, err := regexp.Compile(expression)
+		if err != nil {
+			return nil, err
+		}
+		compiled = append(compiled, redactor{pattern: r, replacement: "[REDACTED]"})
 	}
 	return &LogService{Docker: client, MaxLines: maxLines, MaxBytes: maxBytes, redactors: compiled}, nil
 }
 
 func (s *LogService) Redact(message string) string {
-	for i, r := range s.redactors {
-		if i == 2 {
-			message = r.ReplaceAllString(message, `${1}[REDACTED]${2}`)
-			continue
-		}
-		if i == 0 {
-			message = r.ReplaceAllString(message, `${1}[REDACTED]`)
-			continue
-		}
-		if i == 1 {
-			message = r.ReplaceAllString(message, `${1}${2}[REDACTED]${3}`)
-			continue
-		}
-		message = r.ReplaceAllString(message, "[REDACTED PRIVATE KEY]")
+	for _, r := range s.redactors {
+		message = r.pattern.ReplaceAllString(message, r.replacement)
 	}
 	return message
 }

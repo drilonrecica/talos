@@ -33,13 +33,15 @@ type Config struct {
 	Demo          bool          `toml:"demo"`
 }
 type Paths struct {
-	DataDir      string `toml:"data_dir"`
-	DatabasePath string `toml:"database_path"`
-	RuntimeDir   string `toml:"runtime_dir"`
-	HostProc     string `toml:"host_proc"`
-	HostSys      string `toml:"host_sys"`
-	HostPasswd   string `toml:"host_passwd"`
-	MasterKey    string `toml:"master_key"`
+	DataDir                 string `toml:"data_dir"`
+	DatabasePath            string `toml:"database_path"`
+	RuntimeDir              string `toml:"runtime_dir"`
+	HostProc                string `toml:"host_proc"`
+	HostSys                 string `toml:"host_sys"`
+	HostPasswd              string `toml:"host_passwd"`
+	MasterKey               string `toml:"master_key"`
+	MasterKeyFile           string `toml:"master_key_file"`
+	masterKeyLoadedFromFile bool
 }
 type HTTP struct {
 	ListenAddress     string   `toml:"listen_address"`
@@ -154,7 +156,7 @@ func (c Config) Validate() error {
 		return fmt.Errorf("http.listen_address: %w", err)
 	}
 	for _, cidr := range c.HTTP.TrustedProxyCIDRs {
-		if _, err := netip.ParsePrefix(cidr); err != nil {
+		if err := validateExactProxy(cidr); err != nil {
 			return fmt.Errorf("http.trusted_proxy_cidrs: %w", err)
 		}
 	}
@@ -162,8 +164,16 @@ func (c Config) Validate() error {
 		return fmt.Errorf("auth.mode must be local, proxy, or local_and_proxy")
 	}
 	for _, cidr := range c.Auth.ProxyCIDRs {
-		if _, err := netip.ParsePrefix(cidr); err != nil {
+		if err := validateExactProxy(cidr); err != nil {
 			return fmt.Errorf("auth.proxy_cidrs: %w", err)
+		}
+	}
+	if c.Paths.MasterKeyFile != "" {
+		if !filepath.IsAbs(c.Paths.MasterKeyFile) {
+			return fmt.Errorf("paths.master_key_file must be an absolute path")
+		}
+		if c.Paths.MasterKey != "" && !c.Paths.masterKeyLoadedFromFile {
+			return fmt.Errorf("paths.master_key and paths.master_key_file cannot both be configured")
 		}
 	}
 	if c.Auth.Mode != "local" && (len(c.Auth.ProxyCIDRs) == 0 || strings.TrimSpace(c.Auth.IdentityHeader) == "" || strings.TrimSpace(c.Auth.AllowedSubject) == "") {
@@ -216,8 +226,19 @@ func (c Config) Validate() error {
 // UIOverridable reports whether a key can be changed without a deployment change.
 func UIOverridable(key string) bool {
 	switch key {
-	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "coolify.url", "coolify.api_token_file", "coolify.allow_insecure_http", "auth.mode", "auth.proxy_cidrs", "auth.identity_header", "auth.allowed_subject", "features.advanced_auth", "features.portability", "prometheus.enabled", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
+	case "paths.data_dir", "paths.database_path", "paths.runtime_dir", "paths.master_key", "paths.master_key_file", "http.listen_address", "docker.socket_path", "paths.host_proc", "paths.host_sys", "paths.host_passwd", "coolify.url", "coolify.api_token_file", "coolify.allow_insecure_http", "auth.mode", "auth.proxy_cidrs", "auth.identity_header", "auth.allowed_subject", "features.advanced_auth", "features.portability", "prometheus.enabled", "notifications.allow_private_targets", "notifications.max_concurrency", "notifications.queue_capacity", "notifications.delivery_timeout", "notifications.reminder_interval":
 		return false
 	}
 	return true
+}
+
+func validateExactProxy(value string) error {
+	prefix, err := netip.ParsePrefix(value)
+	if err != nil {
+		return err
+	}
+	if prefix.Bits() != prefix.Addr().BitLen() {
+		return fmt.Errorf("must identify one exact host (/32 for IPv4 or /128 for IPv6)")
+	}
+	return nil
 }

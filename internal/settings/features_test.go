@@ -40,7 +40,7 @@ func TestFeatureFlagCombinationValidation(t *testing.T) {
 			name: "proxy authentication",
 			values: map[string]string{
 				"BINNACLE_AUTH_MODE":            "proxy",
-				"BINNACLE_AUTH_PROXY_CIDRS":     "10.0.0.0/8",
+				"BINNACLE_AUTH_PROXY_CIDRS":     "10.0.0.1/32",
 				"BINNACLE_AUTH_ALLOWED_SUBJECT": "admin@example.test",
 			},
 			want: "features.advanced_auth=true",

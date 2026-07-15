@@ -64,11 +64,15 @@ licenses: ## Check Go dependency licenses (requires go-licenses v2).
 
 sbom: ## Generate an SPDX SBOM for the container image (requires syft).
 
-	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:sbom . && syft ghcr.io/drilonrecica/binnacle:sbom -o spdx-json=binnacle.spdx.json
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:sbom .
+	syft ghcr.io/drilonrecica/binnacle:sbom -o spdx-json=binnacle.spdx.json
+	syft ghcr.io/wollomatic/socket-proxy:1.12.3@sha256:9e781fbe79315355d08901832f639119aa332ac27ee6157fc7f2fab5193c8600 -o spdx-json=socket-proxy.spdx.json
 
 scan: ## Scan the container image for vulnerabilities (requires trivy).
 
-	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:scan . && trivy image ghcr.io/drilonrecica/binnacle:scan
+	$(DOCKER) build -f packaging/docker/Dockerfile -t ghcr.io/drilonrecica/binnacle:scan .
+	trivy image ghcr.io/drilonrecica/binnacle:scan
+	trivy image ghcr.io/wollomatic/socket-proxy:1.12.3@sha256:9e781fbe79315355d08901832f639119aa332ac27ee6157fc7f2fab5193c8600
 
 format-check: ## Check Go and frontend formatting without modifying source.
 

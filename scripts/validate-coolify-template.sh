@@ -13,10 +13,11 @@ compose = yaml.safe_load(open(sys.argv[1]))
 template = yaml.safe_load(open(sys.argv[2]))
 source = yaml.safe_load(open(sys.argv[3]))
 
-def service(doc):
-    return doc["services"]["binnacle"]
+def service(doc, name="binnacle"):
+    return doc["services"][name]
 
 c, t = service(compose), service(template)
+cp, tp, sp = service(compose, "docker-socket-proxy"), service(template, "docker-socket-proxy"), service(source, "docker-socket-proxy")
 compose_image = c.get("image")
 if compose_image == "${BINNACLE_IMAGE:-ghcr.io/drilonrecica/binnacle:stable}":
     compose_image = "ghcr.io/drilonrecica/binnacle:stable"
@@ -34,6 +35,7 @@ checks = [
     ("healthcheck", c.get("healthcheck"), t.get("healthcheck")),
     ("resource configuration", c.get("deploy", {}).get("resources", {}),
                                t.get("deploy", {}).get("resources", {})),
+    ("socket proxy", cp, tp),
 ]
 
 failed = False
@@ -66,15 +68,28 @@ for name, expected, actual in (
     ("restart", c.get("restart"), s.get("restart")),
     ("healthcheck", c.get("healthcheck"), s.get("healthcheck")),
     ("resource configuration", c.get("deploy", {}).get("resources", {}), s.get("deploy", {}).get("resources", {})),
+    ("environment keys", sorted(c.get("environment", {}).keys()), sorted(s.get("environment", {}).keys())),
+    ("volume mounts", sorted(c.get("volumes", [])), sorted(s.get("volumes", []))),
+    ("depends_on", c.get("depends_on", {}), s.get("depends_on", {})),
+    ("socket proxy", cp, sp),
 ):
     if expected != actual:
         raise SystemExit(f"Source-build Coolify drift: {name} differs\n  compose: {expected}\n  source:  {actual}")
 
-for key in ("BINNACLE_DOCKER_SOCKET", "BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS", "BINNACLE_MASTER_KEY",
+for key in ("BINNACLE_DOCKER_SOCKET", "BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS", "BINNACLE_MASTER_KEY", "BINNACLE_MASTER_KEY_FILE",
             "BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS", "BINNACLE_NOTIFICATIONS_MAX_CONCURRENCY",
             "BINNACLE_NOTIFICATIONS_QUEUE_CAPACITY", "BINNACLE_NOTIFICATIONS_DELIVERY_TIMEOUT",
             "BINNACLE_NOTIFICATIONS_REMINDER_INTERVAL"):
     if key not in s.get("environment", {}):
         raise SystemExit(f"Source-build Coolify configuration does not pass through {key}")
+
+raw_socket = "/var/run/docker.sock:/var/run/docker.sock:ro"
+for label, doc in (("Compose", compose), ("Coolify template", template), ("source-build Coolify", source)):
+    app_mounts = service(doc).get("volumes", [])
+    proxy_mounts = service(doc, "docker-socket-proxy").get("volumes", [])
+    if any("/var/run/docker.sock" in mount for mount in app_mounts):
+        raise SystemExit(f"{label} exposes the raw Docker socket to Binnacle")
+    if raw_socket not in proxy_mounts:
+        raise SystemExit(f"{label} socket proxy does not have the read-only daemon socket mount")
 print("Source-build Coolify Compose is valid.")
 PY

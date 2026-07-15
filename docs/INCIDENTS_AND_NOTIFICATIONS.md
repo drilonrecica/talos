@@ -16,10 +16,12 @@ Up to 32 channels may be configured under Alerts → Channels. HTTPS webhooks
 support an optional bearer token and HMAC-SHA256 signature. SMTP requires
 STARTTLS or implicit TLS, one sender, and 1–20 recipients.
 
-Set `BINNACLE_MASTER_KEY` before creating channels. It accepts a raw 32-byte
-value, a base64 encoding of 32 bytes, or a 64-character hexadecimal key. If it
-is absent, monitoring and incidents continue, but channel creation and delivery
-report `master_key_missing`.
+Set `BINNACLE_MASTER_KEY_FILE` before creating channels and point it to a
+Docker/Coolify secret containing a raw 32-byte value, a base64 encoding of 32
+bytes, or a 64-character hexadecimal key. The legacy `BINNACLE_MASTER_KEY`
+environment variable accepts the same formats, but must not be configured at
+the same time. If neither is present, monitoring and incidents continue, but
+channel creation and delivery report `master_key_missing`.
 
 New channels receive only later updates or reminders. Open and update events
 wait 15 seconds to coalesce simultaneous alerts. If an incident resolves

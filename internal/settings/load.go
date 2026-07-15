@@ -4,6 +4,7 @@ package settings
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -124,6 +125,12 @@ func LoadWith(getenv func(string) string, exists func(string) bool, provider Ove
 		}
 		c.Coolify.APIToken = strings.TrimSpace(string(raw))
 	}
+	if err := resolveMasterKeyFile(&c); err != nil {
+		return Config{}, nil, err
+	}
+	if c.Paths.MasterKeyFile != "" {
+		sources["paths.master_key"] = sources["paths.master_key_file"]
+	}
 	if provider != nil {
 		overrides, err := provider.Overrides()
 		if err != nil {
@@ -200,7 +207,7 @@ func readTOML(path string) (map[string]string, error) {
 }
 
 var environment = map[string]string{
-	"BINNACLE_DATA_DIR": "paths.data_dir", "BINNACLE_DATABASE_PATH": "paths.database_path", "BINNACLE_RUNTIME_DIR": "paths.runtime_dir", "BINNACLE_HOST_PROC": "paths.host_proc", "BINNACLE_HOST_SYS": "paths.host_sys", "BINNACLE_MASTER_KEY": "paths.master_key", "BINNACLE_LISTEN_ADDRESS": "http.listen_address", "BINNACLE_TRUSTED_PROXY_CIDRS": "http.trusted_proxy_cidrs", "BINNACLE_HOST_INTERVAL": "collection.host_interval", "BINNACLE_CONTAINER_INTERVAL": "collection.container_interval", "BINNACLE_MINIMUM_INTERVAL": "collection.minimum_interval", "BINNACLE_SSE_INTERVAL": "live.sse_interval", "BINNACLE_RAW_INTERVAL": "persistence.raw_interval", "BINNACLE_QUEUE_BATCH_LIMIT": "persistence.queue_batch_limit", "BINNACLE_RETENTION_PRESET": "retention.preset", "BINNACLE_RETENTION_RAW": "retention.raw", "BINNACLE_RETENTION_ONE_MINUTE": "retention.one_minute", "BINNACLE_RETENTION_FIFTEEN_MINUTE": "retention.fifteen_minute", "BINNACLE_RETENTION_ONE_HOUR": "retention.one_hour", "BINNACLE_DATABASE_TARGET_BUDGET_BYTES": "database.target_budget_bytes", "BINNACLE_DATABASE_WARNING_RATIO": "database.warning_ratio", "BINNACLE_DATABASE_CRITICAL_RATIO": "database.critical_ratio", "BINNACLE_DATABASE_EMERGENCY_PAUSE_RATIO": "database.emergency_pause_ratio", "BINNACLE_CHARTS_MAX_POINTS": "charts.max_points_per_series", "BINNACLE_DOCKER_SOCKET": "docker.socket_path", "BINNACLE_DOCKER_MAX_CONCURRENCY": "docker.max_concurrency", "BINNACLE_CHECKS_MAX_CONCURRENCY": "checks.max_concurrency", "BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS": "notifications.allow_private_targets", "BINNACLE_NOTIFICATIONS_MAX_CONCURRENCY": "notifications.max_concurrency", "BINNACLE_NOTIFICATIONS_QUEUE_CAPACITY": "notifications.queue_capacity", "BINNACLE_NOTIFICATIONS_DELIVERY_TIMEOUT": "notifications.delivery_timeout", "BINNACLE_NOTIFICATIONS_REMINDER_INTERVAL": "notifications.reminder_interval", "BINNACLE_LOGS_MAX_RESPONSE_BYTES": "logs.max_response_bytes", "BINNACLE_LOGS_MAX_LINES": "logs.max_lines", "BINNACLE_LOGS_REDACTION_PATTERNS": "logs.redaction_patterns", "BINNACLE_SESSION_IDLE_TIMEOUT": "sessions.idle_timeout", "BINNACLE_SESSION_ABSOLUTE_LIFETIME": "sessions.absolute_lifetime", "BINNACLE_DEMO": "demo"}
+	"BINNACLE_DATA_DIR": "paths.data_dir", "BINNACLE_DATABASE_PATH": "paths.database_path", "BINNACLE_RUNTIME_DIR": "paths.runtime_dir", "BINNACLE_HOST_PROC": "paths.host_proc", "BINNACLE_HOST_SYS": "paths.host_sys", "BINNACLE_MASTER_KEY": "paths.master_key", "BINNACLE_MASTER_KEY_FILE": "paths.master_key_file", "BINNACLE_LISTEN_ADDRESS": "http.listen_address", "BINNACLE_TRUSTED_PROXY_CIDRS": "http.trusted_proxy_cidrs", "BINNACLE_HOST_INTERVAL": "collection.host_interval", "BINNACLE_CONTAINER_INTERVAL": "collection.container_interval", "BINNACLE_MINIMUM_INTERVAL": "collection.minimum_interval", "BINNACLE_SSE_INTERVAL": "live.sse_interval", "BINNACLE_RAW_INTERVAL": "persistence.raw_interval", "BINNACLE_QUEUE_BATCH_LIMIT": "persistence.queue_batch_limit", "BINNACLE_RETENTION_PRESET": "retention.preset", "BINNACLE_RETENTION_RAW": "retention.raw", "BINNACLE_RETENTION_ONE_MINUTE": "retention.one_minute", "BINNACLE_RETENTION_FIFTEEN_MINUTE": "retention.fifteen_minute", "BINNACLE_RETENTION_ONE_HOUR": "retention.one_hour", "BINNACLE_DATABASE_TARGET_BUDGET_BYTES": "database.target_budget_bytes", "BINNACLE_DATABASE_WARNING_RATIO": "database.warning_ratio", "BINNACLE_DATABASE_CRITICAL_RATIO": "database.critical_ratio", "BINNACLE_DATABASE_EMERGENCY_PAUSE_RATIO": "database.emergency_pause_ratio", "BINNACLE_CHARTS_MAX_POINTS": "charts.max_points_per_series", "BINNACLE_DOCKER_SOCKET": "docker.socket_path", "BINNACLE_DOCKER_MAX_CONCURRENCY": "docker.max_concurrency", "BINNACLE_CHECKS_MAX_CONCURRENCY": "checks.max_concurrency", "BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS": "notifications.allow_private_targets", "BINNACLE_NOTIFICATIONS_MAX_CONCURRENCY": "notifications.max_concurrency", "BINNACLE_NOTIFICATIONS_QUEUE_CAPACITY": "notifications.queue_capacity", "BINNACLE_NOTIFICATIONS_DELIVERY_TIMEOUT": "notifications.delivery_timeout", "BINNACLE_NOTIFICATIONS_REMINDER_INTERVAL": "notifications.reminder_interval", "BINNACLE_LOGS_MAX_RESPONSE_BYTES": "logs.max_response_bytes", "BINNACLE_LOGS_MAX_LINES": "logs.max_lines", "BINNACLE_LOGS_REDACTION_PATTERNS": "logs.redaction_patterns", "BINNACLE_SESSION_IDLE_TIMEOUT": "sessions.idle_timeout", "BINNACLE_SESSION_ABSOLUTE_LIFETIME": "sessions.absolute_lifetime", "BINNACLE_DEMO": "demo"}
 var supported = func() map[string]bool {
 	m := map[string]bool{}
 	for _, k := range environment {
@@ -268,6 +275,8 @@ func apply(c *Config, values map[string]string) error {
 			c.Paths.HostPasswd = value
 		case "paths.master_key":
 			c.Paths.MasterKey = value
+		case "paths.master_key_file":
+			c.Paths.MasterKeyFile = value
 		case "coolify.url":
 			c.Coolify.URL = strings.TrimRight(value, "/")
 		case "coolify.api_token_file":
@@ -404,7 +413,7 @@ func lookup(c Config, key string) string {
 	values := map[string]string{
 		"paths.data_dir": c.Paths.DataDir, "paths.database_path": c.Paths.DatabasePath, "paths.runtime_dir": c.Paths.RuntimeDir,
 		"paths.host_proc": c.Paths.HostProc, "paths.host_sys": c.Paths.HostSys, "http.listen_address": c.HTTP.ListenAddress,
-		"paths.host_passwd": c.Paths.HostPasswd, "coolify.url": c.Coolify.URL, "coolify.api_token_file": c.Coolify.APITokenFile, "coolify.allow_insecure_http": strconv.FormatBool(c.Coolify.AllowInsecureHTTP),
+		"paths.host_passwd": c.Paths.HostPasswd, "paths.master_key_file": c.Paths.MasterKeyFile, "coolify.url": c.Coolify.URL, "coolify.api_token_file": c.Coolify.APITokenFile, "coolify.allow_insecure_http": strconv.FormatBool(c.Coolify.AllowInsecureHTTP),
 		"auth.mode": c.Auth.Mode, "auth.proxy_cidrs": strings.Join(c.Auth.ProxyCIDRs, ","), "auth.identity_header": c.Auth.IdentityHeader, "auth.allowed_subject": c.Auth.AllowedSubject,
 		"prometheus.enabled":       strconv.FormatBool(c.Prometheus.Enabled),
 		"features.advanced_auth":   strconv.FormatBool(c.Features.AdvancedAuth),
@@ -429,3 +438,41 @@ func lookup(c Config, key string) string {
 	return "configured"
 }
 func ConfigPath(path string) string { return filepath.Clean(path) }
+
+func resolveMasterKeyFile(c *Config) error {
+	if c.Paths.MasterKeyFile == "" {
+		return nil
+	}
+	if c.Paths.MasterKey != "" {
+		return fmt.Errorf("paths.master_key and paths.master_key_file cannot both be configured")
+	}
+	if !filepath.IsAbs(c.Paths.MasterKeyFile) {
+		return fmt.Errorf("paths.master_key_file must be an absolute path")
+	}
+	file, err := os.Open(c.Paths.MasterKeyFile)
+	if err != nil {
+		return fmt.Errorf("read master key file: %w", err)
+	}
+	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("inspect master key file: %w", err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("master key file must be a regular file")
+	}
+	raw, err := io.ReadAll(io.LimitReader(file, 4097))
+	if err != nil {
+		return fmt.Errorf("read master key file: %w", err)
+	}
+	if len(raw) > 4096 {
+		return fmt.Errorf("master key file is too large")
+	}
+	key := strings.TrimRight(string(raw), "\r\n")
+	if key == "" {
+		return fmt.Errorf("master key file is empty")
+	}
+	c.Paths.MasterKey = key
+	c.Paths.masterKeyLoadedFromFile = true
+	return nil
+}

@@ -85,7 +85,32 @@ When bootstrap credentials are present and no user exists, Binnacle creates the 
 
 ## Docker socket security
 
-The Docker Unix socket is not logically read-only. Mounting it read-only (`:ro`) does not prevent container mutation through the Engine API. Binnacle contains no Docker mutation code paths and does not proxy the Docker API, but the socket still grants broad privileges. For hardened deployments, run a restricted read-only Docker socket proxy and set `BINNACLE_DOCKER_SOCKET` to its address.
+The Docker Unix socket is not logically read-only. Mounting it read-only (`:ro`)
+does not prevent container mutation through the Engine API. The production
+Compose and Coolify manifests therefore mount the daemon socket only into a
+pinned socket-proxy sidecar. Binnacle receives a separate Unix socket that
+allows only ping, version, container list/inspect/stats/logs, and events reads.
+Do not replace this with a direct daemon-socket mount in production. A direct
+mount remains possible only as an explicit legacy deployment override.
+
+For Docker secrets, mount the master key as a file rather than exposing it in
+the container environment:
+
+```yaml
+services:
+  binnacle:
+    environment:
+      BINNACLE_MASTER_KEY_FILE: /run/secrets/binnacle_master_key
+    secrets:
+      - binnacle_master_key
+secrets:
+  binnacle_master_key:
+    file: ./secrets/binnacle-master-key
+```
+
+The file must contain a raw or encoded 32-byte key and should be readable only
+by the Binnacle container. `BINNACLE_MASTER_KEY` remains supported for upgrades,
+but do not configure it together with `BINNACLE_MASTER_KEY_FILE`.
 
 ## Environment variables
 
@@ -99,14 +124,16 @@ Key variables you may need to set at deployment time:
 - `BINNACLE_LOGS_MAX_LINES` — bounded log response ceiling; defaults to `5000`.
 - `BINNACLE_LOGS_MAX_RESPONSE_BYTES` — bounded log byte ceiling; defaults to `1048576`.
 - `BINNACLE_LOGS_REDACTION_PATTERNS` — up to 16 additional RE2 patterns separated by `||`.
-- `BINNACLE_DOCKER_SOCKET` — defaults to `/var/run/docker.sock`.
+- `BINNACLE_DOCKER_SOCKET` — the packaged default is the filtered socket at `/var/run/binnacle-docker/docker.sock`; standalone binaries default to `/var/run/docker.sock`.
 - `BINNACLE_MASTER_KEY` — raw/base64 32-byte key or 64-character hex key for notification secrets.
+- `BINNACLE_MASTER_KEY_FILE` — absolute path to a file containing the master key; preferred for production secrets.
 - `BINNACLE_COOLIFY_URL` and `BINNACLE_COOLIFY_API_TOKEN[_FILE]` — optional read-only Coolify enrichment.
 - `BINNACLE_FEATURE_ADVANCED_AUTH` — enables TOTP and trusted-proxy authentication; defaults to `false` pending qualification.
 - `BINNACLE_FEATURE_PORTABILITY` — enables personal API tokens, exports, and eligibility for Prometheus; defaults to `false` pending qualification.
 - `BINNACLE_PROMETHEUS_ENABLED` — enables token-authenticated `/metrics` only when portability is also enabled; defaults to `false`.
 - `BINNACLE_AUTH_MODE` — `local`, `proxy`, or `local_and_proxy`; defaults to `local`. Proxy modes require advanced authentication to be enabled.
-- `BINNACLE_AUTH_PROXY_CIDRS`, `BINNACLE_AUTH_IDENTITY_HEADER`, and `BINNACLE_AUTH_ALLOWED_SUBJECT` — required together for proxy modes.
+- `BINNACLE_AUTH_PROXY_CIDRS`, `BINNACLE_AUTH_IDENTITY_HEADER`, and `BINNACLE_AUTH_ALLOWED_SUBJECT` — required together for proxy modes; CIDRs must be exact `/32` or `/128` immediate peers.
+- `BINNACLE_TRUSTED_PROXY_CIDRS` — exact `/32` or `/128` immediate peers allowed to supply forwarding headers.
 - `BINNACLE_NOTIFICATIONS_ALLOW_PRIVATE_TARGETS` — private webhook/SMTP opt-in; defaults to `false` and requires restart.
 - `BINNACLE_NOTIFICATIONS_MAX_CONCURRENCY` — delivery workers; defaults to `4`.
 - `BINNACLE_NOTIFICATIONS_QUEUE_CAPACITY` — dispatch queue; defaults to `1000`.

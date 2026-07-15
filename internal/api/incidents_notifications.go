@@ -148,7 +148,7 @@ func (s *Server) EnableIncidentsNotifications(repo *notifications.Repository, wo
 				message := "The notification channel could not be created."
 				if errors.Is(err, auth.ErrMasterKeyMissing) {
 					code = "master_key_missing"
-					message = "BINNACLE_MASTER_KEY is required to configure notification channels."
+					message = "BINNACLE_MASTER_KEY or BINNACLE_MASTER_KEY_FILE is required to configure notification channels."
 				}
 				WriteError(w, 400, Error{Code: code, Message: message})
 				return

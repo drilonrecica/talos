@@ -103,6 +103,7 @@ run_check "binary version" bash -c 'test "$(./bin/binnacle --version)" = "$1"' _
 
 # Packaging templates must be valid before an image can be published.
 run_check "Compose validation" scripts/validate-compose.sh
+run_check "Socket proxy policy" scripts/smoke-socket-proxy.sh
 run_check "Coolify validation" scripts/validate-coolify-template.sh
 
 # 4. Build container image.

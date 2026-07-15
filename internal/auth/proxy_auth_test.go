@@ -7,7 +7,7 @@ import (
 )
 
 func TestProxyIdentityRejectsSpoofingAndRequiresExactSubject(t *testing.T) {
-	proxy, err := NewProxyAuthenticator(ProxyAuthConfig{Mode: LocalAndProxyAuth, ProxyCIDRs: []string{"10.0.0.0/8"}, IdentityHeader: "X-Forwarded-User", AllowedSubject: "admin@example.test"}, TrustedProxies{})
+	proxy, err := NewProxyAuthenticator(ProxyAuthConfig{Mode: LocalAndProxyAuth, ProxyCIDRs: []string{"10.0.0.2/32"}, IdentityHeader: "X-Forwarded-User", AllowedSubject: "admin@example.test"}, TrustedProxies{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,6 +26,14 @@ func TestProxyIdentityRejectsSpoofingAndRequiresExactSubject(t *testing.T) {
 	request.Header.Set("X-Forwarded-User", "admin@example.test")
 	if subject, ok := proxy.Subject(request); !ok || subject != "admin@example.test" {
 		t.Fatal("trusted exact subject rejected")
+	}
+	request.Header.Add("X-Forwarded-User", "admin@example.test")
+	if _, ok := proxy.Subject(request); ok {
+		t.Fatal("duplicate identity headers accepted")
+	}
+	request.Header.Set("X-Forwarded-User", "admin@example.test,attacker")
+	if _, ok := proxy.Subject(request); ok {
+		t.Fatal("appended identity header accepted")
 	}
 }
 

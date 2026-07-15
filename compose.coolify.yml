@@ -10,6 +10,44 @@
 #   BINNACLE_SETUP_TOKEN=$(openssl rand -hex 32)
 
 services:
+  docker-socket-proxy:
+    image: ghcr.io/wollomatic/socket-proxy:1.12.3@sha256:9e781fbe79315355d08901832f639119aa332ac27ee6157fc7f2fab5193c8600
+    restart: unless-stopped
+    read_only: true
+    privileged: false
+    user: "0:${DOCKER_GID:?DOCKER_GID is required; run export DOCKER_GID=$(getent group docker | cut -d: -f3)}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - '-loglevel=warn'
+      - '-allowHEAD=/_ping'
+      - '-allowGET=/_ping'
+      - '-allowGET=/v1\.[0-9]+/version'
+      - '-allowGET=/v1\.[0-9]+/containers/json'
+      - '-allowGET=/v1\.[0-9]+/containers/[^/]+/(json|stats|logs)'
+      - '-allowGET=/v1\.[0-9]+/events'
+      - '-proxysocketendpoint=/var/run/binnacle-docker/docker.sock'
+      - '-proxysocketendpointfilemode=0660'
+      - '-allowhealthcheck'
+      - '-watchdoginterval=60'
+      - '-stoponwatchdog'
+      - '-shutdowngracetime=5'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - binnacle-docker-api:/var/run/binnacle-docker
+    healthcheck:
+      test: ["CMD", "./healthcheck"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
   binnacle:
     build:
       context: .
@@ -27,6 +65,10 @@ services:
     security_opt:
       - no-new-privileges:true
 
+    depends_on:
+      docker-socket-proxy:
+        condition: service_healthy
+
     expose:
       - "8080"
 
@@ -36,9 +78,10 @@ services:
       BINNACLE_HOST_SYS: /host/sys
       BINNACLE_HOST_PASSWD: /host/etc/passwd
       BINNACLE_SETUP_TOKEN: ${BINNACLE_SETUP_TOKEN:?BINNACLE_SETUP_TOKEN is required for first-run setup}
-      BINNACLE_DOCKER_SOCKET: ${BINNACLE_DOCKER_SOCKET:-/var/run/docker.sock}
+      BINNACLE_DOCKER_SOCKET: ${BINNACLE_DOCKER_SOCKET:-/var/run/binnacle-docker/docker.sock}
       BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS: ${BINNACLE_CHECKS_ALLOW_PRIVATE_TARGETS:-false}
       BINNACLE_MASTER_KEY: ${BINNACLE_MASTER_KEY:-}
+      BINNACLE_MASTER_KEY_FILE: ${BINNACLE_MASTER_KEY_FILE:-}
       BINNACLE_COOLIFY_URL: ${BINNACLE_COOLIFY_URL:-}
       BINNACLE_COOLIFY_API_TOKEN: ${BINNACLE_COOLIFY_API_TOKEN:-}
       BINNACLE_COOLIFY_ALLOW_INSECURE_HTTP: ${BINNACLE_COOLIFY_ALLOW_INSECURE_HTTP:-false}
@@ -61,7 +104,7 @@ services:
       - /sys:/host/sys:ro
       - /etc/os-release:/host/etc/os-release:ro
       - /etc/passwd:/host/etc/passwd:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - binnacle-docker-api:/var/run/binnacle-docker:ro
 
     healthcheck:
       test: ["CMD", "/usr/local/bin/binnacle", "--healthcheck"]
@@ -79,3 +122,4 @@ services:
 
 volumes:
   binnacle-data:
+  binnacle-docker-api:

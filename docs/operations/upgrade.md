@@ -42,6 +42,11 @@ image: ghcr.io/drilonrecica/binnacle:stable
    docker version --format '{{.Server.Version}}'
    ```
 
+   Update production manifests to include the pinned `docker-socket-proxy`
+   sidecar. Binnacle must mount only the shared filtered socket. Existing proxy
+   authentication ranges must also be replaced with stable exact `/32` or
+   `/128` peers; broader ranges now fail startup.
+
 2. Stop Binnacle and copy the closed SQLite database. This ensures the WAL is
    checkpointed before the backup:
 
@@ -50,7 +55,9 @@ image: ghcr.io/drilonrecica/binnacle:stable
    docker cp binnacle:/var/lib/binnacle/binnacle.db ./binnacle-backup.db
    ```
 
-3. Update the image tag and redeploy:
+3. Update the image tag and redeploy. If a master key is configured directly in
+   the environment, migrate it to a Docker/Coolify secret and set
+   `BINNACLE_MASTER_KEY_FILE=/run/secrets/binnacle_master_key`:
 
    ```bash
    docker compose -f packaging/docker/docker-compose.yml pull

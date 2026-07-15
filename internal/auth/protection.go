@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"net"
 	"net/http"
 	"net/netip"
@@ -29,6 +30,9 @@ func ParseTrustedProxies(values []string) (TrustedProxies, error) {
 		prefix, err := netip.ParsePrefix(value)
 		if err != nil {
 			return TrustedProxies{}, err
+		}
+		if prefix.Bits() != prefix.Addr().BitLen() {
+			return TrustedProxies{}, errors.New("trusted proxy CIDRs must identify one exact host (/32 for IPv4 or /128 for IPv6)")
 		}
 		p.prefixes = append(p.prefixes, prefix)
 	}

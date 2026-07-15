@@ -6,8 +6,9 @@ Binnacle can use a team-scoped Coolify v4 token with only the `read`
 permission. Configure `BINNACLE_COOLIFY_URL` and either
 `BINNACLE_COOLIFY_API_TOKEN` or `BINNACLE_COOLIFY_API_TOKEN_FILE`. Environment
 configuration is authoritative. Alternatively, configure the URL and token in
-Settings; UI token storage requires `BINNACLE_MASTER_KEY` and the token is never
-returned.
+Settings; UI token storage requires `BINNACLE_MASTER_KEY` or
+`BINNACLE_MASTER_KEY_FILE` and the token is never returned. Prefer a Coolify
+secret mounted under `/run/secrets` and point `BINNACLE_MASTER_KEY_FILE` to it.
 
 The integration follows Coolify's [team-scoped authorization
 model](https://coolify.io/docs/api-reference/authorization) and the pinned
@@ -50,12 +51,34 @@ TOTP applies only to local login; an external identity provider owns its MFA.
 Set `BINNACLE_AUTH_MODE` to `local`, `proxy`, or `local_and_proxy` (`local` is
 the default). Proxy modes require `BINNACLE_FEATURE_ADVANCED_AUTH=true` and:
 
-- `BINNACLE_AUTH_PROXY_CIDRS`: a separate allowlist for immediate proxy peers;
+- `BINNACLE_AUTH_PROXY_CIDRS`: exact immediate proxy peers, expressed only as
+  `/32` IPv4 or `/128` IPv6 prefixes;
 - `BINNACLE_AUTH_IDENTITY_HEADER`: the trusted identity header;
 - `BINNACLE_AUTH_ALLOWED_SUBJECT`: the one exact accepted subject.
 
-The normal forwarded-header proxy list does not grant identity. Headers from
-untrusted peers are ignored. A same-origin bootstrap maps the exact subject to
-the single local administrator and issues normal Binnacle session and CSRF
+The proxy must have a stable address. It must remove client-supplied
+`X-Forwarded-For`, `X-Forwarded-Proto`, and the configured identity header,
+then set fresh values from the authenticated request. Appending to an incoming
+identity header is unsafe; Binnacle rejects duplicate and comma-joined identity
+values. The normal forwarded-header proxy list does not grant identity. Headers
+from untrusted peers are ignored. A same-origin bootstrap maps the exact subject
+to the single local administrator and issues normal Binnacle session and CSRF
 cookies. In `proxy` mode local login is disabled after setup. Never expose
 Binnacle directly while relying on proxy authentication.
+
+For Nginx, overwrite the identity value after `auth_request`; do not forward
+the client's value:
+
+```nginx
+auth_request /verify;
+auth_request_set $binnacle_subject $upstream_http_x_forwarded_user;
+proxy_set_header X-Forwarded-User $binnacle_subject;
+proxy_set_header X-Forwarded-For $remote_addr;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+For Traefik/Coolify, place a Headers middleware that clears the identity header
+before ForwardAuth, then list that header under ForwardAuth
+`authResponseHeaders` so it is copied from the authentication response. Put the
+middlewares in that order and configure the resulting stable Traefik container
+address as an exact Binnacle proxy CIDR.

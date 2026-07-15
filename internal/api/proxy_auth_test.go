@@ -27,8 +27,8 @@ func TestExternalSessionBootstrapRecordsProvenance(t *testing.T) {
 		t.Fatal(err)
 	}
 	sessions := auth.NewSessions(manager.DB(), auth.SessionConfig{IdleTimeout: time.Hour, AbsoluteLifetime: 24 * time.Hour})
-	forwarded, _ := auth.ParseTrustedProxies([]string{"10.0.0.0/8"})
-	proxy, err := auth.NewProxyAuthenticator(auth.ProxyAuthConfig{Mode: auth.ProxyAuthOnly, ProxyCIDRs: []string{"10.0.0.0/8"}, IdentityHeader: "X-Auth-Subject", AllowedSubject: "subject-1"}, forwarded)
+	forwarded, _ := auth.ParseTrustedProxies([]string{"10.0.0.2/32"})
+	proxy, err := auth.NewProxyAuthenticator(auth.ProxyAuthConfig{Mode: auth.ProxyAuthOnly, ProxyCIDRs: []string{"10.0.0.2/32"}, IdentityHeader: "X-Auth-Subject", AllowedSubject: "subject-1"}, forwarded)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestExternalSessionRejectsUntrustedPeerAndCrossOrigin(t *testing.T) {
 	credentials := auth.NewCredentials(manager.DB())
 	_, _ = credentials.CreateAdmin(ctx, "admin", "correct horse battery staple")
 	sessions := auth.NewSessions(manager.DB(), auth.SessionConfig{IdleTimeout: time.Hour, AbsoluteLifetime: time.Hour})
-	proxy, _ := auth.NewProxyAuthenticator(auth.ProxyAuthConfig{Mode: auth.ProxyAuthOnly, ProxyCIDRs: []string{"10.0.0.0/8"}, IdentityHeader: "X-User", AllowedSubject: "admin"}, auth.TrustedProxies{})
+	proxy, _ := auth.NewProxyAuthenticator(auth.ProxyAuthConfig{Mode: auth.ProxyAuthOnly, ProxyCIDRs: []string{"10.0.0.1/32"}, IdentityHeader: "X-User", AllowedSubject: "admin"}, auth.TrustedProxies{})
 	server := New()
 	server.EnableProxyAuth(proxy, credentials, sessions)
 	for _, test := range []struct {

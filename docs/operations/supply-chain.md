@@ -9,8 +9,8 @@ Binnacle keeps a narrow dependency set and verifies it in CI.
 - **Frontend audit** — `pnpm audit --audit-level moderate` runs on every PR/push.
 - **License review** — `go-licenses` checks Go dependencies against the
   repository's explicit license allowlist.
-- **SBOM** — Anchore's SBOM action generates an SPDX JSON SBOM on every push.
-- **Container scan** — `trivy` scans the production image for HIGH/CRITICAL vulnerabilities on every push.
+- **SBOM** — Anchore's SBOM action generates SPDX JSON inventories for Binnacle and the pinned socket-proxy image on every push.
+- **Container scan** — `trivy` scans the production and socket-proxy images for HIGH/CRITICAL vulnerabilities on every push.
 
 ## Local targets
 

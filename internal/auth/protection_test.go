@@ -93,12 +93,12 @@ func TestLoginAndSetupLimitsRecover(t *testing.T) {
 }
 
 func TestTrustedProxyStripsSpoofedForwardingEntries(t *testing.T) {
-	proxies, err := ParseTrustedProxies([]string{"10.0.0.0/8"})
+	proxies, err := ParseTrustedProxies([]string{"10.0.0.2/32"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	r := httptest.NewRequest("GET", "http://binnacle.test", nil)
-	r.RemoteAddr = "10.0.0.1:1234"
+	r.RemoteAddr = "10.0.0.2:1234"
 	r.Header.Set("X-Forwarded-For", "203.0.113.9, 198.51.100.25, 10.0.0.2")
 	if got := proxies.ClientPrefix(r); got != "198.51.100.0/24" {
 		t.Fatalf("client prefix=%s", got)

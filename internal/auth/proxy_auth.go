@@ -66,7 +66,11 @@ func (p *ProxyAuthenticator) Subject(r *http.Request) (string, bool) {
 	if !p.AllowsProxy() || !p.identityPeers.TrustedPeer(r) {
 		return "", false
 	}
-	subject := r.Header.Get(p.config.IdentityHeader)
+	values := r.Header.Values(p.config.IdentityHeader)
+	if len(values) != 1 || strings.Contains(values[0], ",") {
+		return "", false
+	}
+	subject := values[0]
 	if len(subject) != len(p.config.AllowedSubject) || subtle.ConstantTimeCompare([]byte(subject), []byte(p.config.AllowedSubject)) != 1 {
 		return "", false
 	}

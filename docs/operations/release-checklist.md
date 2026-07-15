@@ -22,6 +22,7 @@ table and captured benchmark output.
 | License and security policy | Legal and responsible disclosure baseline | `LICENSE` or `SECURITY.md` missing |
 | Binary build | Production artifact compiles | Build error |
 | Compose and Coolify validation | Deployment settings and templates agree | Template validation fails |
+| Socket proxy policy | Only required Docker reads pass; mutation and archive paths are denied | Raw socket reaches Binnacle or a forbidden path succeeds |
 | Container image build | Installation artifacts exist | Image build fails |
 | Demo container smoke | Unauthenticated liveness responds from the locally built candidate image | `/healthz` fails |
 | Benchmark | Performance regressions detected | RSS, CPU, write latency, or SSE exceed documented goals on reference hardware |

@@ -12,7 +12,7 @@ Last reviewed: 2026-07-15
 | --- | --- |
 | Go toolchain and modules | [`go.mod`](../go.mod), [`go.sum`](../go.sum) |
 | Frontend toolchain and packages | [`package.json`](../package.json), [`web/package.json`](../web/package.json), [`pnpm-lock.yaml`](../pnpm-lock.yaml) |
-| Container base images | [`packaging/docker/Dockerfile`](../packaging/docker/Dockerfile) |
+| Container base and sidecar images | [`packaging/docker/Dockerfile`](../packaging/docker/Dockerfile), [`packaging/docker/docker-compose.yml`](../packaging/docker/docker-compose.yml) |
 | GitHub Actions | [`.github/workflows/`](../.github/workflows/) |
 | Vendored fonts and licenses | [`web/static/fonts/`](../web/static/fonts/), [`landing/assets/fonts/`](../landing/assets/fonts/) |
 
@@ -22,6 +22,9 @@ must be read from the files above rather than copied into operational guides.
 Docker integration uses the stable split Moby API and client modules rather
 than the monolithic daemon module. The production runtime requires Docker
 Engine 29.5.1 or newer; update the host before deploying Binnacle.
+Production packaging also pins `wollomatic/socket-proxy` by release and digest.
+It is the only container that receives the raw daemon socket and exposes only
+Binnacle's required read paths through a private filtered Unix socket.
 
 ## Policy
 
